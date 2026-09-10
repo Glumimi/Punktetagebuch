@@ -437,6 +437,48 @@ function calcFoodPoints(food, matrix) {
 // Wiederverwendet für den "Heute"-Bereich und die Tages-Detailansicht im Verlauf.
 // Kohlenhydrate werden, falls nicht direkt erfasst (Basis "Kalorien"), aus der Differenz
 // Kalorien - Fett*9 - Protein*4 geschätzt. "Punkte direkt"-Einträge haben keine Nährwerte.
+// Formuliert die Wochenzusammenfassung als 2-3 natürliche Sätze statt nüchterner Kennzahlen-Liste.
+function buildWeekSummarySentences(weeklyTotal, daysWithData, flexUsed, weeklyFlexTotal, weekAvgWeight, prevAvgWeight, weekAvgWaist, prevAvgWaist) {
+  const sentences = [];
+  if (daysWithData === 0) {
+    sentences.push("Für diese Woche liegen noch keine Einträge vor.");
+    return sentences;
+  }
+  const dayWord = daysWithData === 1 ? "einem Tag" : `${daysWithData} Tagen`;
+  if (flexUsed <= 0) {
+    sentences.push(`Diese Woche hast du dein Budget an ${dayWord} im Griff gehabt — ${weeklyTotal} Punkte insgesamt, ganz ohne den Flexpuffer anzurühren.`);
+  } else if (flexUsed >= weeklyFlexTotal) {
+    sentences.push(`Diese Woche war ordentlich was los: ${weeklyTotal} Punkte über ${dayWord}, und dein Wochenpuffer ist komplett aufgebraucht.`);
+  } else {
+    sentences.push(`Diese Woche kamst du auf ${weeklyTotal} Punkte über ${dayWord} — dabei hast du ${flexUsed} von ${weeklyFlexTotal} Flexpoints genutzt, um dir etwas Luft zu verschaffen.`);
+  }
+  if (weekAvgWeight !== null) {
+    const diff = prevAvgWeight !== null ? round1(weekAvgWeight - prevAvgWeight) : null;
+    if (diff === null) {
+      sentences.push(`Dein Gewichtsschnitt liegt diese Woche bei ${weekAvgWeight} kg — für einen Vergleich fehlt noch eine Vorwoche.`);
+    } else if (diff <= -0.1) {
+      sentences.push(`Beim Gewicht ging's im Schnitt ${Math.abs(diff)} kg nach unten gegenüber der Vorwoche — weiter so!`);
+    } else if (diff >= 0.1) {
+      sentences.push(`Beim Gewicht lag der Schnitt diese Woche ${diff} kg höher als in der Vorwoche.`);
+    } else {
+      sentences.push(`Dein Gewicht ist im Vergleich zur Vorwoche stabil geblieben (Ø ${weekAvgWeight} kg).`);
+    }
+  }
+  if (weekAvgWaist !== null) {
+    const diff = prevAvgWaist !== null ? round1(weekAvgWaist - prevAvgWaist) : null;
+    if (diff === null) {
+      sentences.push(`Beim Bauchumfang liegt der Schnitt diese Woche bei ${weekAvgWaist} cm — für einen Vergleich fehlt noch eine Vorwoche.`);
+    } else if (diff <= -0.2) {
+      sentences.push(`Der Bauchumfang ist im Schnitt um ${Math.abs(diff)} cm zurückgegangen — schön zu sehen!`);
+    } else if (diff >= 0.2) {
+      sentences.push(`Der Bauchumfang lag diese Woche im Schnitt ${diff} cm höher als in der Vorwoche.`);
+    } else {
+      sentences.push(`Der Bauchumfang ist im Vergleich zur Vorwoche stabil geblieben (Ø ${weekAvgWaist} cm).`);
+    }
+  }
+  return sentences;
+}
+
 function computeMacroBreakdown(entriesList) {
   const macroEntries = entriesList.filter((e) => !e.isDirect);
   const totals = macroEntries.reduce(
@@ -457,15 +499,21 @@ function computeMacroBreakdown(entriesList) {
     : { protein: 0, fat: 0, carbs: 0 };
   const r = 46;
   const c = 2 * Math.PI * r;
-  let cumulative = 0;
+  let cumulativeLen = 0;
+  // Standard-Technik für mehrfarbige SVG-Ringsegmente: dasharray "Segmentlänge Restlänge" (nicht
+  // die volle Kreislänge als Lücke!) und dashoffset als NEGATIVE, aufsummierte Länge der bereits
+  // platzierten Segmente. Die vorherige Formel (Lücke = volle Kreislänge, positiver Offset) hat
+  // rechnerisch dazu geführt, dass spätere Segmente (v. a. Protein) im Kreis praktisch unsichtbar
+  // wurden statt am richtigen Platz zu erscheinen.
   const segments = [
     { key: "carbs", label: "Kohlenhydrate", grams: round1(totals.carbs), share: shares.carbs, colorVar: "--amber" },
     { key: "fat", label: "Fett", grams: round1(totals.fat), share: shares.fat, colorVar: "--coral" },
     { key: "protein", label: "Protein", grams: round1(totals.protein), share: shares.protein, colorVar: "--teal" },
   ].map((seg) => {
-    const dashOffset = c * (1 - cumulative);
-    cumulative += seg.share;
-    return { ...seg, dashArray: `${c * seg.share} ${c}`, dashOffset };
+    const segLen = c * seg.share;
+    const dashOffset = -cumulativeLen;
+    cumulativeLen += segLen;
+    return { ...seg, dashArray: `${segLen} ${c - segLen}`, dashOffset };
   });
   return { totals, directCount, kcalTotal, shares, segments, r, c };
 }
@@ -657,6 +705,8 @@ function resolveAmountToGrams(food, amount, unit) {
 }
 
 const WEEKLY_FLEX_TOTAL = 49;
+// Reihenfolge der Tabs für die Swipe-Navigation (links/rechts wischen statt nur unten antippen).
+const TAB_ORDER = ["heute", "verlauf", "gewicht", "profil"];
 // Mindestanforderungen für eine verlässliche Trendprognose (siehe computeLinearTrend):
 // mindestens 6 Messungen, die mindestens 14 Tage (2 Wochen) auseinanderliegen — deckt so einen
 // vollen Wochenzyklus ab (Wochenend-/Wochentags-Schwankungen mitteln sich aus) und verlangt genug
@@ -670,6 +720,153 @@ const METS_BY_INTENSITY = [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.5, 12.0];
 // ---------- Onboarding-Tour ----------
 // Jeder Schritt: welcher Tab (null = kein Tabwechsel, für Intro/Outro), welcher Ref-Key markiert
 // wird (null = keine Hervorhebung, Karte erscheint zentriert), Titel + Erklärtext.
+
+// ---------- Fakt des Tages ----------
+const NUTRITION_FACTS = [
+  "Wasser macht etwa 60 % des menschlichen Körpergewichts aus.",
+  "Bereits ein Flüssigkeitsverlust von rund 2 % des Körpergewichts kann die Konzentrationsfähigkeit spürbar beeinträchtigen.",
+  "Vitamin C ist hitze- und wasserlöslich und wird beim Kochen leichter zerstört als beim schonenden Dünsten.",
+  "Der Mythos, Spinat enthalte extrem viel Eisen, geht vermutlich auf einen historischen Kommafehler in einer alten Nährwerttabelle zurück.",
+  "Der menschliche Körper kann kein Vitamin C selbst herstellen – anders als die meisten anderen Säugetiere.",
+  "Ballaststoffe werden im Dünndarm nicht verdaut, sondern erst im Dickdarm von Bakterien teilweise zersetzt.",
+  "Koffein wird im Körper unterschiedlich schnell abgebaut – genetisch bedingt kann die Halbwertszeit zwischen 2 und 10 Stunden schwanken.",
+  "Der Grundumsatz macht bei den meisten Menschen 60 bis 75 % des gesamten täglichen Energieverbrauchs aus.",
+  "Muskelgewebe verbrennt in Ruhe mehr Kalorien als Fettgewebe – der Unterschied ist aber geringer, als oft behauptet wird.",
+  "Der glykämische Index eines Lebensmittels kann sich durch die Zubereitung verändern: Abgekühlte, gekochte Kartoffeln haben einen niedrigeren GI als frisch gekochte.",
+  "Omega-3-Fettsäuren gelten als essentiell, weil der Körper sie nicht in ausreichender Menge selbst herstellen kann.",
+  "Der menschliche Geschmackssinn unterscheidet grundsätzlich fünf Grundgeschmacksrichtungen: süß, sauer, salzig, bitter und umami.",
+  "Umami wurde erst 1908 von einem japanischen Chemiker als eigene Geschmacksrichtung beschrieben und hängt eng mit Glutamat zusammen.",
+  "Der Verzehr von Chilischoten kann Endorphine ausschütten – vermutlich eine körperliche Reaktion auf den Schmerzreiz durch Capsaicin.",
+  "Bananen enthalten geringe Mengen des natürlich radioaktiven Kalium-Isotops Kalium-40 – in völlig unbedenklicher Menge.",
+  "Trocken und dicht verschlossen gelagert verdirbt Honig praktisch nicht – in Jahrtausende alten Gräbern wurde noch genießbarer Honig gefunden.",
+  "Cholesterin aus der Nahrung hat bei den meisten Menschen einen geringeren Einfluss auf den Blutcholesterinspiegel, als lange angenommen wurde.",
+  "Fruktose wird anders verstoffwechselt als Glukose – sie wird vorwiegend in der Leber verarbeitet.",
+  "Der menschliche Darm beherbergt schätzungsweise mehrere Billionen Bakterien, die zusammen als Mikrobiom bezeichnet werden.",
+  "Fermentierte Lebensmittel wie Sauerkraut, Kimchi oder Joghurt enthalten lebende Bakterienkulturen, die das Mikrobiom beeinflussen können.",
+  "Der tägliche Proteinbedarf eines durchschnittlich aktiven Erwachsenen liegt laut gängigen Empfehlungen bei etwa 0,8 g pro Kilogramm Körpergewicht.",
+  "Sportlich sehr aktive Menschen und Kraftsportler haben oft einen höheren Proteinbedarf von bis zu 1,6 bis 2,2 g pro Kilogramm Körpergewicht.",
+  "Der thermische Effekt der Nahrung ist bei Protein mit bis zu 30 % deutlich höher als bei Fett mit nur etwa 3 %.",
+  "Grüner und schwarzer Tee stammen von derselben Pflanze – der Unterschied entsteht durch die Fermentation der Blätter.",
+  "Der Koffeingehalt in Kaffee variiert je nach Röstung: Heller gerösteter Kaffee enthält tendenziell mehr Koffein als sehr dunkel gerösteter.",
+  "Zucker versteckt sich auf Zutatenlisten unter vielen Namen, etwa Glukosesirup, Maltodextrin, Dextrose oder Fruktosesirup.",
+  "Der Körper kann überschüssiges Protein nicht speichern – es wird zur Energiegewinnung genutzt oder in Fett umgewandelt.",
+  "Vitamin D wird zu einem großen Teil durch Sonnenlicht auf der Haut selbst gebildet, weniger über die Nahrung aufgenommen.",
+  "In nördlichen Breitengraden haben viele Menschen im Winter einen niedrigeren Vitamin-D-Spiegel wegen geringerer Sonneneinstrahlung.",
+  "Nüsse enthalten viel Fett, gelten aber wegen des hohen Anteils ungesättigter Fettsäuren als günstig für die Herzgesundheit.",
+  "Zink spielt eine wichtige Rolle für das Immunsystem und die Wundheilung.",
+  "Eisen aus tierischen Quellen wird vom Körper besser aufgenommen als Eisen aus pflanzlichen Quellen.",
+  "Vitamin C kann die Aufnahme von pflanzlichem Eisen verbessern – deshalb passt ein Glas Orangensaft gut zu einer Linsenmahlzeit.",
+  "Große Mengen Milchprodukte zur gleichen Mahlzeit können die Eisenaufnahme leicht hemmen, da Kalzium und Eisen im Darm konkurrieren.",
+  "Der Begriff \"Superfood\" ist keine wissenschaftliche oder rechtlich geschützte Kategorie, sondern ein Marketingbegriff.",
+  "Avocados sind botanisch gesehen Beeren, kein Gemüse.",
+  "Tomaten, Gurken und Paprika zählen botanisch zu den Früchten, werden aber kulinarisch als Gemüse behandelt.",
+  "Erdnüsse sind botanisch keine Nüsse, sondern Hülsenfrüchte.",
+  "Der menschliche Körper besteht im Schnitt zu etwa 15 bis 20 % aus Fettgewebe, bei Frauen tendenziell etwas mehr als bei Männern.",
+  "Braunes Fettgewebe kann aktiv Wärme erzeugen und Kalorien verbrennen – Erwachsene besitzen davon allerdings nur noch geringe Mengen.",
+  "Ob Intervallfasten gegenüber klassischer Kalorienreduktion einen zusätzlichen Stoffwechselvorteil bringt, ist wissenschaftlich noch nicht abschließend geklärt.",
+  "Beim sogenannten Jojo-Effekt senkt der Körper bei Kalorienreduktion seinen Energieverbrauch ab, um dem Gewichtsverlust entgegenzuwirken.",
+  "Schlafmangel kann den Hormonhaushalt beeinflussen und die Hunger- und Sättigungshormone Ghrelin und Leptin aus dem Gleichgewicht bringen.",
+  "Wer zu wenig schläft, trifft in Studien am Folgetag häufiger kalorienreichere Lebensmittelentscheidungen.",
+  "Stress kann über das Hormon Cortisol appetitsteigernd wirken und Heißhunger auf zucker- und fettreiche Lebensmittel begünstigen.",
+  "Regelmäßige Bewegung kann die Insulinsensitivität verbessern, unabhängig von einer Gewichtsveränderung.",
+  "Krafttraining hilft, Muskelmasse während einer Diät zu erhalten – reine Kalorienreduktion ohne Training führt oft auch zu Muskelabbau.",
+  "Der \"Nachbrenneffekt\" nach intensivem Training existiert tatsächlich, ist in der Praxis aber meist kleiner als in der Fitness-Werbung dargestellt.",
+  "Ein Kilogramm Körperfett entspricht rechnerisch etwa 7.700 Kilokalorien – ein grober Richtwert, keine exakte Stoffwechselformel.",
+  "Kohlenhydrate werden im Körper teils als Glykogen in Leber und Muskeln gespeichert, gebunden an Wasser.",
+  "Jedes Gramm gespeichertes Glykogen bindet im Körper etwa drei Gramm Wasser – das erklärt schnelle anfängliche Gewichtsverluste bei kohlenhydratarmen Diäten.",
+  "Alkohol liefert mit etwa 7 kcal pro Gramm fast so viel Energie wie Fett, aber ohne nennenswerte Nährstoffe.",
+  "Der Körper baut Alkohol bevorzugt ab, bevor er andere Energiequellen wie Fett verstoffwechselt.",
+  "Der langfristige Effekt künstlicher Süßstoffe auf Appetit und Stoffwechsel wird in der Forschung weiterhin diskutiert.",
+  "Der Begriff \"Detox\" hat keine anerkannte wissenschaftliche Grundlage – Leber und Nieren entgiften den Körper eigenständig.",
+  "Vollkornprodukte enthalten mehr Ballaststoffe, Vitamine und Mineralstoffe als Weißmehlprodukte, da Randschicht und Keimling erhalten bleiben.",
+  "Ausreichend Ballaststoffe werden mit einem geringeren Risiko für Herz-Kreislauf-Erkrankungen in Verbindung gebracht.",
+  "Die meisten Menschen nehmen weniger Ballaststoffe zu sich, als Ernährungsgesellschaften empfehlen (häufig 25 bis 30 g pro Tag).",
+  "Grünes Blattgemüse wie Grünkohl oder Spinat liefert nennenswerte Mengen Vitamin K, das bei der Blutgerinnung eine Rolle spielt.",
+  "Die fettlöslichen Vitamine A, D, E und K werden besser aufgenommen, wenn gleichzeitig etwas Fett verzehrt wird.",
+  "Wasserlösliche Vitamine wie die B-Vitamine und Vitamin C werden vom Körper kaum gespeichert und müssen regelmäßig zugeführt werden.",
+  "Vitamin B12 kommt praktisch nur in tierischen Lebensmitteln vor – bei veganer Ernährung wird meist eine Supplementierung empfohlen.",
+  "Bei einer Laktoseintoleranz fehlt dem Körper das Enzym Laktase, um den Milchzucker vollständig zu verdauen.",
+  "Gluten ist ein Sammelbegriff für bestimmte Proteine in Weizen, Roggen und Gerste – ein Verzicht ist nur bei Zöliakie oder Glutensensitivität medizinisch notwendig.",
+  "Die WHO empfiehlt maximal 5 Gramm Speisesalz pro Tag – deutlich weniger, als viele Menschen tatsächlich zu sich nehmen.",
+  "Verstecktes Salz in Brot, Wurst oder Käse trägt oft mehr zur täglichen Salzaufnahme bei als das Nachsalzen am Tisch.",
+  "Kalium und Natrium arbeiten im Körper als Gegenspieler und regulieren gemeinsam Wasserhaushalt und Nervenfunktion.",
+  "Rote Bete kann Urin und Stuhl harmlos rötlich verfärben – ein Effekt der enthaltenen Betalain-Farbstoffe.",
+  "Ob man den charakteristischen Geruch im Urin nach Spargel wahrnimmt, hängt auch von genetischer Veranlagung ab.",
+  "Zu viel Vitamin A aus Nahrungsergänzungsmitteln kann sich im Körper anreichern und zu Vergiftungserscheinungen führen.",
+  "Moderater Kaffeekonsum von bis zu etwa 400 mg Koffein pro Tag gilt laut aktueller Studienlage für die meisten gesunden Erwachsenen als unbedenklich.",
+  "Grüner Tee enthält Katechine, sekundäre Pflanzenstoffe, denen antioxidative Eigenschaften zugeschrieben werden.",
+  "Zu viel Zucker wird mit einem erhöhten Risiko für Karies, Übergewicht und Typ-2-Diabetes in Verbindung gebracht.",
+  "Der Fruchtzucker in ganzen Früchten wirkt durch die enthaltenen Ballaststoffe langsamer auf den Blutzucker als isolierter Zucker in Getränken.",
+  "Fruchtsäfte enthalten oft ähnlich viel Zucker wie Softdrinks, aber ohne die sättigenden Ballaststoffe der ganzen Frucht.",
+  "Die glykämische Last berücksichtigt zusätzlich zum glykämischen Index auch die tatsächlich verzehrte Kohlenhydratmenge.",
+  "Essig kann in Studien den Blutzuckeranstieg nach einer kohlenhydratreichen Mahlzeit leicht abschwächen.",
+  "Protein oder Fett vor den Kohlenhydraten einer Mahlzeit zu essen kann den Blutzuckeranstieg verlangsamen.",
+  "Langsames Essen und gründliches Kauen wird mit einem stärkeren Sättigungsgefühl in Verbindung gebracht.",
+  "Das Sättigungsgefühl braucht laut Studien im Schnitt etwa 15 bis 20 Minuten, um sich nach Beginn einer Mahlzeit einzustellen.",
+  "Vor einer Mahlzeit Wasser zu trinken kann kurzfristig das Sättigungsgefühl unterstützen.",
+  "Durst und leichter Hunger werden im Gehirn über ähnliche Regionen verarbeitet und lassen sich deshalb manchmal verwechseln.",
+  "Entgegen einem verbreiteten Mythos wirken Kaffee und Tee trotz Koffein nicht relevant entwässernd und tragen zur Flüssigkeitsbilanz bei.",
+  "Blassgelber Urin gilt als grober Hinweis auf eine ausreichende Flüssigkeitszufuhr.",
+  "Der Körper verliert auch über Atemluft und Haut kontinuierlich Flüssigkeit, nicht nur über Schweiß und Urin.",
+  "Probiotika sind lebende Mikroorganismen mit möglichem Gesundheitsnutzen, Präbiotika sind unverdauliche Ballaststoffe, die diese Bakterien \"füttern\".",
+  "Zwiebeln, Knoblauch und Chicorée enthalten von Natur aus den präbiotisch wirkenden Ballaststoff Inulin.",
+  "Die WHO bringt einen hohen Verzehr von rotem und verarbeitetem Fleisch mit einem erhöhten Risiko für bestimmte Krebsarten in Verbindung.",
+  "Fettreiche Fischsorten wie Lachs oder Makrele gelten als gute Quelle für Omega-3-Fettsäuren.",
+  "Leinsamen und Walnüsse zählen zu den besten pflanzlichen Quellen für Omega-3-Fettsäuren.",
+  "Industriell gehärtete Transfette gelten als besonders ungünstig für die Herzgesundheit und sind in der EU inzwischen stark reguliert.",
+  "Der Körper braucht etwas Fett, um fettlösliche Vitamine überhaupt aufnehmen zu können – komplett fettfreie Ernährung ist daher ungünstig.",
+  "Natives Olivenöl extra enthält viele einfach ungesättigte Fettsäuren und ist Teil der sogenannten mediterranen Ernährung.",
+  "Die mediterrane Ernährung wird in zahlreichen Studien mit einem geringeren Risiko für Herz-Kreislauf-Erkrankungen assoziiert.",
+  "Quinoa zählt botanisch nicht zu den Getreidearten, sondern zu den Pseudogetreiden, ist aber von Natur aus glutenfrei.",
+  "Hülsenfrüchte wie Linsen, Bohnen und Kichererbsen liefern pflanzliches Protein und reichlich Ballaststoffe zugleich.",
+  "Werden Hülsenfrüchte und Getreide kombiniert, ergänzen sich ihre Aminosäureprofile zu einer vollständigeren Proteinversorgung.",
+  "Die neun essentiellen Aminosäuren kann der Körper nicht selbst herstellen und muss sie über die Nahrung aufnehmen.",
+  "Der Begriff \"Clean Eating\" ist keine geschützte oder wissenschaftlich definierte Ernährungsform, sondern ein Lifestyle-Trend.",
+  "Kurkuma enthält den Farbstoff Curcumin, der in Kombination mit schwarzem Pfeffer vom Körper deutlich besser aufgenommen wird.",
+];
+// Liefert Fisher-Yates-gemischte Indizes einer Länge n (für die Rotation ohne Wiederholung).
+function shuffledFactIndices(n) {
+  const arr = Array.from({ length: n }, (_, i) => i);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
+// Ein Fakt pro Tag, persistiert über eine gemischte Reihenfolge + Zeiger. Erst wenn alle Fakten
+// einmal dran waren, wird neu gemischt — so wiederholt sich innerhalb eines Zyklus nichts.
+function getDailyFact(resetMinutes) {
+  const todayKey = effectiveTodayKey(resetMinutes);
+  let order = null, pointer = 0, lastDay = null;
+  const res = storageGet("dailyFactState");
+  if (res && res.value) {
+    try {
+      const parsed = JSON.parse(res.value);
+      order = Array.isArray(parsed.order) ? parsed.order : null;
+      pointer = Number(parsed.pointer) || 0;
+      lastDay = parsed.lastDay || null;
+    } catch (e) {}
+  }
+  if (!order || order.length !== NUTRITION_FACTS.length) {
+    order = shuffledFactIndices(NUTRITION_FACTS.length);
+    pointer = 0;
+    lastDay = null;
+  }
+  if (lastDay === null) {
+    lastDay = todayKey;
+    storageSet("dailyFactState", JSON.stringify({ order, pointer, lastDay }));
+  } else if (lastDay !== todayKey) {
+    pointer += 1;
+    if (pointer >= order.length) {
+      order = shuffledFactIndices(NUTRITION_FACTS.length);
+      pointer = 0;
+    }
+    lastDay = todayKey;
+    storageSet("dailyFactState", JSON.stringify({ order, pointer, lastDay }));
+  }
+  return NUTRITION_FACTS[order[pointer]];
+}
+
 const TOUR_STEPS = [
   { id: "intro", tab: null, ref: null, title: "Willkommen im Punktetagebuch", text: "Kurzer Rundgang durch die wichtigsten Funktionen — du kannst jederzeit über die Pfeile durchblättern oder über die Punkte unten direkt zu einem Abschnitt springen." },
   { id: "heute-ring", tab: "heute", ref: "heute-ring", title: "Deine Tagespunkte", text: "Der Kreis zeigt, wie viele Punkte dir heute noch zur Verfügung stehen. Grün heißt: alles im Rahmen. Gelb: du näherst dich dem Limit. Rot: das Budget inklusive Flexpuffer ist aufgebraucht." },
@@ -715,6 +912,7 @@ function NutritionPointsTracker() {
   const [sportHours, setSportHours] = useState("");
   const [sportMinutes, setSportMinutes] = useState("");
   const [showIntensityInfo, setShowIntensityInfo] = useState(false);
+  const [openMatrixInfo, setOpenMatrixInfo] = useState(null);
   const [historyDays, setHistoryDays] = useState([]);
   const [historyWeekMonday, setHistoryWeekMonday] = useState(() => mondayOf(new Date()));
   const [historyFlexForWeek, setHistoryFlexForWeek] = useState(0);
@@ -790,6 +988,8 @@ function NutritionPointsTracker() {
   const [customFoods, setCustomFoods] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [heuteSubTab, setHeuteSubTab] = useState("essen");
+  const [showTodayEntries, setShowTodayEntries] = useState(true);
+  const [dailyFact, setDailyFact] = useState("");
   const [formMode, setFormMode] = useState("naehrwerte");
   const [nutrientBasis, setNutrientBasis] = useState("kalorien");
   const [form, setForm] = useState(EMPTY_FORM);
@@ -873,6 +1073,11 @@ function NutritionPointsTracker() {
 
     setLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    setDailyFact(getDailyFact(profile.dayResetMinutes || 0));
+  }, [loaded, profile.dayResetMinutes]);
 
   useEffect(() => {
     if (loaded) setTargetWeightInput(profile.targetWeightKg ? String(profile.targetWeightKg) : "");
@@ -1419,6 +1624,30 @@ function NutritionPointsTracker() {
   function resetPointForm() { setPointForm(EMPTY_POINT_FORM); setDishSearchQuery(""); setDishDropdownOpen(false); }
   function closeForm() { resetForm(); resetPointForm(); resetRecipeBuilder(); setShowForm(false); setEditingEntryId(null); setFormTargetDay(null); setFormMode("naehrwerte"); }
 
+  // ---------- Swipe-Navigation zwischen den Tabs ----------
+  const touchStartRef = useRef(null);
+  function handleTabSwipeStart(ev) {
+    // Während Tour, Formularen, Scanner oder gezoomtem Diagramm keine Swipe-Navigation, und nicht
+    // wenn die Berührung auf einem Regler/Eingabefeld beginnt (die brauchen horizontales Ziehen).
+    if (tourActive || showForm || showScanner || chartZoomed) { touchStartRef.current = null; return; }
+    const target = ev.target;
+    if (target.closest && target.closest("input, select, textarea, .npt-tour-overlay")) { touchStartRef.current = null; return; }
+    const t = ev.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  }
+  function handleTabSwipeEnd(ev) {
+    if (!touchStartRef.current) return;
+    const t = ev.changedTouches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    // Mindestens 60px und deutlich horizontaler als vertikaler Ausschlag, sonst war's Scrollen.
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const idx = TAB_ORDER.indexOf(tab);
+    if (dx < 0 && idx < TAB_ORDER.length - 1) setTab(TAB_ORDER[idx + 1]);
+    else if (dx > 0 && idx > 0) setTab(TAB_ORDER[idx - 1]);
+  }
+
   // ---------- Onboarding-Tour ----------
   function stopTourSpeech() {
     if (window.speechSynthesis) window.speechSynthesis.cancel();
@@ -1458,25 +1687,34 @@ function NutritionPointsTracker() {
 
   // Bei Schrittwechsel: passenden Tab (und ggf. Essen/Sport-Unterreiter) aktivieren, zum
   // markierten Element scrollen und dessen Position für das Spotlight-Overlay vermessen.
+  // Bei Schrittwechsel: passenden Tab (und ggf. Essen/Sport-Unterreiter) aktivieren, zum
+  // markierten Element scrollen und dessen Position mehrfach nachjustiert vermessen — eine
+  // einzelne Messung kurz nach dem Wechsel war zu unzuverlässig, wenn sich das Layout (Tab-
+  // Wechsel, bedingt gerenderte Karten) erst mit etwas Verzögerung endgültig stabilisiert hat.
   useEffect(() => {
     if (!tourActive) return;
     const step = TOUR_STEPS[tourStep];
     if (step.tab) setTab(step.tab);
     if (step.forceHeuteSubTab) setHeuteSubTab(step.forceHeuteSubTab);
     stopTourSpeech();
-    const t = setTimeout(() => {
+    let cancelled = false;
+    const timers = [];
+    const measure = () => {
+      if (cancelled) return;
       const el = step.ref ? tourRefs.current[step.ref] : null;
       if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => {
-          const rect = el.getBoundingClientRect();
-          setTourSpotlight({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
-        }, 320);
+        const rect = el.getBoundingClientRect();
+        setTourSpotlight({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
       } else {
         setTourSpotlight(null);
       }
-    }, 60);
-    return () => clearTimeout(t);
+    };
+    const t0 = setTimeout(() => {
+      const el = step.ref ? tourRefs.current[step.ref] : null;
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      [150, 350, 550, 800].forEach((delay) => timers.push(setTimeout(measure, delay)));
+    }, 50);
+    return () => { cancelled = true; clearTimeout(t0); timers.forEach(clearTimeout); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tourActive, tourStep]);
 
@@ -2076,6 +2314,8 @@ function NutritionPointsTracker() {
         .npt-flex-box { background: var(--surface); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .npt-adjust-card { background: var(--surface); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
         .npt-adjust-title { font-size: 13.5px; font-weight: 700; color: var(--chalk); padding: 14px 16px 6px; }
+        .npt-adjust-title-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; cursor: pointer; padding: 0 16px 0 0; color: var(--chalk-dim); }
+        .npt-adjust-title-toggle .npt-adjust-title { padding-left: 16px; }
         .npt-adjust-row { padding: 6px 16px 14px; }
         .npt-adjust-divider { height: 1px; background: var(--line); margin: 0 16px; }
         .npt-accordion-section { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
@@ -2140,7 +2380,7 @@ function NutritionPointsTracker() {
         .npt-form-row input:focus { outline: none; border-color: var(--teal); }
         .npt-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .npt-form-actions { display: flex; gap: 10px; margin-top: 4px; }
-        .npt-btn-primary, .npt-btn-secondary { flex: 1; padding: 10px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
+        .npt-btn-primary, .npt-btn-secondary { flex: 1; padding: 10px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; white-space: nowrap; gap: 4px; }
         .npt-btn-primary { background: var(--teal); color: #12201d; }
         .npt-btn-secondary { background: transparent; color: var(--chalk-dim); border: 1px solid var(--line); }
         .npt-dropdown { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; overflow-y: auto; max-height: 220px; z-index: 5; }
@@ -2158,6 +2398,9 @@ function NutritionPointsTracker() {
         .npt-field input[type="number"], .npt-field input[type="text"] { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; color: var(--chalk); font-size: 15px; }
         .npt-field input[type="range"] { width: 100%; accent-color: var(--teal); }
         .npt-range-val { font-family: ${currentFont.display}; font-size: 13px; color: var(--teal); float: right; }
+        .npt-matrix-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .npt-matrix-label-row label { flex: 1; }
+        .npt-matrix-info-btn { width: 22px; height: 22px; flex-shrink: 0; padding: 0; font-size: 13px; }
         .npt-target-box { background: var(--surface); border-radius: 12px; padding: 14px 16px; margin-top: 4px; }
         .npt-target-box .npt-target-num { font-family: ${currentFont.display}; font-size: 26px; font-weight: 700; }
         .npt-target-breakdown { font-size: 11.5px; color: var(--chalk-dim); margin-top: 6px; line-height: 1.6; }
@@ -2243,7 +2486,7 @@ function NutritionPointsTracker() {
 
       {saveError && <div className="npt-warn">Speichern hat gerade nicht geklappt — bitte Browser-Speicher/privaten Modus prüfen.</div>}
 
-      <div className="npt-body">
+      <div className="npt-body" onTouchStart={handleTabSwipeStart} onTouchEnd={handleTabSwipeEnd}>
         {tab === "heute" && (
           <div style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
             <div className="npt-today-date">{effectiveNow(profile.dayResetMinutes || 0).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })}</div>
@@ -2278,7 +2521,17 @@ function NutritionPointsTracker() {
             <div className="npt-chip-row" style={{ marginBottom: 14 }} ref={setTourRef("heute-subtabs")}>
               <button className={`npt-chip ${heuteSubTab === "essen" ? "active" : ""}`} onClick={() => setHeuteSubTab("essen")}>Essen heute</button>
               <button className={`npt-chip ${heuteSubTab === "sport" ? "active" : ""}`} onClick={() => setHeuteSubTab("sport")}>Sport heute</button>
+              <button className={`npt-chip ${heuteSubTab === "fakt" ? "active" : ""}`} onClick={() => setHeuteSubTab("fakt")}>Fakt des Tages</button>
             </div>
+
+            {heuteSubTab === "fakt" && (
+              <div className="npt-adjust-card">
+                <div className="npt-adjust-title">Fakt des Tages</div>
+                <div className="npt-adjust-row">
+                  <div style={{ fontSize: 14, lineHeight: 1.6 }}>{dailyFact}</div>
+                </div>
+              </div>
+            )}
 
             {heuteSubTab === "sport" && (
               <div className="npt-adjust-card">
@@ -2347,7 +2600,10 @@ function NutritionPointsTracker() {
                             {seg.label}: <strong className="npt-font-display">{seg.grams} g</strong>&nbsp;({Math.round(seg.share * 100)}%)
                           </div>
                         ))}
-                        <div style={{ fontSize: 11.5, color: "var(--chalk-dim)", marginTop: 6 }}>Ballaststoffe: {round1(macroTotals.fiber)} g</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}>
+                          <span style={{ width: 10, height: 10, borderRadius: 3, border: "1.5px solid var(--chalk-dim)", display: "inline-block", flexShrink: 0 }}></span>
+                          Ballaststoffe: <strong className="npt-font-display">{round1(macroTotals.fiber)} g</strong>
+                        </div>
                       </div>
                     </div>
                     {directEntriesCount > 0 && (
@@ -2362,29 +2618,34 @@ function NutritionPointsTracker() {
                 )}
 
                 <div className="npt-adjust-card">
-                  <div className="npt-adjust-title">Heute gegessen</div>
-                  <div className="npt-adjust-row">
-                    {entries.length === 0 && <div className="npt-empty">Noch nichts eingetragen. Leg mit dem ersten Eintrag los.</div>}
-                    {entries.map((e) => (
-                      <div className="npt-entry-row" key={e.id}>
-                        <div>
-                          <div className="npt-entry-name">{e.name}</div>
-                          <div className="npt-entry-meta">
-                            {e.isDirect
-                              ? "Direkt eingetragen"
-                              : e.calcBasis === "kohlenhydrate"
-                              ? `≈ ${e.calories} kcal (aus ${e.carbs} g Kohlenhydrate) · ${e.fat} g Fett · ${e.protein} g Protein${e.fiber ? ` · ${e.fiber} g Ballaststoffe` : ""}`
-                              : `${e.calories} kcal · ${e.fat} g Fett · ${e.protein} g Protein${e.fiber ? ` · ${e.fiber} g Ballaststoffe` : ""}`}
+                  <button className="npt-adjust-title-toggle" onClick={() => setShowTodayEntries((v) => !v)} aria-expanded={showTodayEntries}>
+                    <div className="npt-adjust-title">Heute gegessen{entries.length > 0 ? ` · ${entries.length}` : ""}</div>
+                    <IconChevronDown size={18} style={{ transform: showTodayEntries ? "none" : "rotate(-90deg)", transition: "transform 0.2s ease" }} />
+                  </button>
+                  {showTodayEntries && (
+                    <div className="npt-adjust-row">
+                      {entries.length === 0 && <div className="npt-empty">Noch nichts eingetragen. Leg mit dem ersten Eintrag los.</div>}
+                      {entries.map((e) => (
+                        <div className="npt-entry-row" key={e.id}>
+                          <div>
+                            <div className="npt-entry-name">{e.name}</div>
+                            <div className="npt-entry-meta">
+                              {e.isDirect
+                                ? "Direkt eingetragen"
+                                : e.calcBasis === "kohlenhydrate"
+                                ? `≈ ${e.calories} kcal (aus ${e.carbs} g Kohlenhydrate) · ${e.fat} g Fett · ${e.protein} g Protein${e.fiber ? ` · ${e.fiber} g Ballaststoffe` : ""}`
+                                : `${e.calories} kcal · ${e.fat} g Fett · ${e.protein} g Protein${e.fiber ? ` · ${e.fiber} g Ballaststoffe` : ""}`}
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center" }}>
+                            <div className="npt-entry-points npt-font-display">{e.points}</div>
+                            <button className="npt-del-btn" onClick={() => startEditEntry(e)} aria-label="Eintrag bearbeiten"><IconPencil size={15} /></button>
+                            <button className="npt-del-btn" onClick={() => deleteEntry(e.id)} aria-label="Eintrag löschen"><IconTrash size={16} /></button>
                           </div>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center" }}>
-                          <div className="npt-entry-points npt-font-display">{e.points}</div>
-                          <button className="npt-del-btn" onClick={() => startEditEntry(e)} aria-label="Eintrag bearbeiten"><IconPencil size={15} /></button>
-                          <button className="npt-del-btn" onClick={() => deleteEntry(e.id)} aria-label="Eintrag löschen"><IconTrash size={16} /></button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 0 8px" }}>
@@ -2421,24 +2682,9 @@ function NutritionPointsTracker() {
               </button>
               {showWeekSummary && (
                 <div className="npt-accordion-body">
-                  <div>Wochensumme: <strong className="npt-font-display">{weeklyTotal} Punkte</strong> über {daysWithData} erfasste {daysWithData === 1 ? "Tag" : "Tage"}</div>
-                  <div style={{ marginTop: 4 }}>Flexpoints diese Woche: <strong className="npt-font-display">{flexForDisplayedWeek}/{WEEKLY_FLEX_TOTAL}</strong></div>
-                  {(weekAvgWeight !== null || weekAvgWaist !== null) && (
-                    <div style={{ marginTop: 8 }}>
-                      {weekAvgWeight !== null && (
-                        <div>
-                          Gewicht: Ø {weekAvgWeight} kg
-                          {prevAvgWeight !== null ? ` (${round1(weekAvgWeight - prevAvgWeight) > 0 ? "+" : ""}${round1(weekAvgWeight - prevAvgWeight)} kg ggü. Vorwoche)` : " (keine Vorwoche zum Vergleich)"}
-                        </div>
-                      )}
-                      {weekAvgWaist !== null && (
-                        <div>
-                          Bauchumfang: Ø {weekAvgWaist} cm
-                          {prevAvgWaist !== null ? ` (${round1(weekAvgWaist - prevAvgWaist) > 0 ? "+" : ""}${round1(weekAvgWaist - prevAvgWaist)} cm ggü. Vorwoche)` : " (keine Vorwoche zum Vergleich)"}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {buildWeekSummarySentences(weeklyTotal, daysWithData, flexForDisplayedWeek, WEEKLY_FLEX_TOTAL, weekAvgWeight, prevAvgWeight, weekAvgWaist, prevAvgWaist).map((sentence, idx) => (
+                    <div key={idx} style={{ marginTop: idx > 0 ? 8 : 0, lineHeight: 1.5 }}>{sentence}</div>
+                  ))}
                 </div>
               )}
             </div>
@@ -2910,12 +3156,54 @@ function NutritionPointsTracker() {
               </button>
               {openProfilSection === "matrix" && (
                 <div className="npt-accordion-body">
-                  <div className="npt-field"><label>Kalorien-Divisor <span className="npt-range-val">{matrix.calDiv}</span></label><input type="range" min="20" max="80" step="1" value={matrix.calDiv} onChange={(ev) => setMatrix({ ...matrix, calDiv: Number(ev.target.value) })} /></div>
-                  <div className="npt-field"><label>Fett-Divisor <span className="npt-range-val">{matrix.fatDiv}</span></label><input type="range" min="5" max="20" step="1" value={matrix.fatDiv} onChange={(ev) => setMatrix({ ...matrix, fatDiv: Number(ev.target.value) })} /></div>
-                  <div className="npt-field"><label>Protein-Divisor (höher = Protein zählt weniger) <span className="npt-range-val">{matrix.proteinDiv}</span></label><input type="range" min="5" max="25" step="1" value={matrix.proteinDiv} onChange={(ev) => setMatrix({ ...matrix, proteinDiv: Number(ev.target.value) })} /></div>
-                  <div className="npt-field"><label>Ballaststoff-Divisor <span className="npt-range-val">{matrix.fiberDiv}</span></label><input type="range" min="2" max="10" step="1" value={matrix.fiberDiv} onChange={(ev) => setMatrix({ ...matrix, fiberDiv: Number(ev.target.value) })} /></div>
-                  <div className="npt-field"><label>Ballaststoff-Deckel (g) <span className="npt-range-val">{matrix.fiberCap}</span></label><input type="range" min="0" max="10" step="1" value={matrix.fiberCap} onChange={(ev) => setMatrix({ ...matrix, fiberCap: Number(ev.target.value) })} /></div>
-                  <div className="npt-field"><label>Sport-Anrechnung (%) <span className="npt-range-val">{Math.round((matrix.sportFactor ?? 0.5) * 100)}</span></label><input type="range" min="0" max="100" step="5" value={Math.round((matrix.sportFactor ?? 0.5) * 100)} onChange={(ev) => setMatrix({ ...matrix, sportFactor: Number(ev.target.value) / 100 })} /></div>
+                  <div className="npt-field">
+                    <div className="npt-matrix-label-row">
+                      <label>Kalorien-Divisor <span className="npt-range-val">{matrix.calDiv}</span></label>
+                      <button className="npt-info-btn npt-matrix-info-btn" onClick={() => setOpenMatrixInfo(openMatrixInfo === "calDiv" ? null : "calDiv")} aria-label="Kalorien-Divisor erklären">ⓘ</button>
+                    </div>
+                    <input type="range" min="20" max="80" step="1" value={matrix.calDiv} onChange={(ev) => setMatrix({ ...matrix, calDiv: Number(ev.target.value) })} />
+                    {openMatrixInfo === "calDiv" && <div className="npt-field-hint">Bestimmt, wie stark Kalorien ins Gewicht fallen. Niedrigerer Wert = kalorienreiches Essen kostet mehr Punkte (strenger). Höherer Wert = Kalorien fallen weniger stark ins Gewicht (lockerer).</div>}
+                  </div>
+                  <div className="npt-field">
+                    <div className="npt-matrix-label-row">
+                      <label>Fett-Divisor <span className="npt-range-val">{matrix.fatDiv}</span></label>
+                      <button className="npt-info-btn npt-matrix-info-btn" onClick={() => setOpenMatrixInfo(openMatrixInfo === "fatDiv" ? null : "fatDiv")} aria-label="Fett-Divisor erklären">ⓘ</button>
+                    </div>
+                    <input type="range" min="5" max="20" step="1" value={matrix.fatDiv} onChange={(ev) => setMatrix({ ...matrix, fatDiv: Number(ev.target.value) })} />
+                    {openMatrixInfo === "fatDiv" && <div className="npt-field-hint">Bestimmt, wie stark Fett bewertet wird. Niedrigerer Wert = fettreiches Essen kostet mehr Punkte. Höherer Wert = Fett fällt weniger ins Gewicht.</div>}
+                  </div>
+                  <div className="npt-field">
+                    <div className="npt-matrix-label-row">
+                      <label>Protein-Divisor <span className="npt-range-val">{matrix.proteinDiv}</span></label>
+                      <button className="npt-info-btn npt-matrix-info-btn" onClick={() => setOpenMatrixInfo(openMatrixInfo === "proteinDiv" ? null : "proteinDiv")} aria-label="Protein-Divisor erklären">ⓘ</button>
+                    </div>
+                    <input type="range" min="5" max="25" step="1" value={matrix.proteinDiv} onChange={(ev) => setMatrix({ ...matrix, proteinDiv: Number(ev.target.value) })} />
+                    {openMatrixInfo === "proteinDiv" && <div className="npt-field-hint">Protein senkt die Punktzahl eines Lebensmittels — anders als bei den anderen Reglern zählt hier: niedrigerer Wert = Protein wird stärker belohnt (mehr Punkterabatt). Höherer Wert = Protein zählt weniger.</div>}
+                  </div>
+                  <div className="npt-field">
+                    <div className="npt-matrix-label-row">
+                      <label>Ballaststoff-Divisor <span className="npt-range-val">{matrix.fiberDiv}</span></label>
+                      <button className="npt-info-btn npt-matrix-info-btn" onClick={() => setOpenMatrixInfo(openMatrixInfo === "fiberDiv" ? null : "fiberDiv")} aria-label="Ballaststoff-Divisor erklären">ⓘ</button>
+                    </div>
+                    <input type="range" min="2" max="10" step="1" value={matrix.fiberDiv} onChange={(ev) => setMatrix({ ...matrix, fiberDiv: Number(ev.target.value) })} />
+                    {openMatrixInfo === "fiberDiv" && <div className="npt-field-hint">Ballaststoffe senken die Punktzahl ebenfalls. Niedrigerer Wert = ballaststoffreiches Essen (Gemüse, Vollkorn) wird stärker belohnt. Höherer Wert = Ballaststoffe zählen weniger.</div>}
+                  </div>
+                  <div className="npt-field">
+                    <div className="npt-matrix-label-row">
+                      <label>Ballaststoff-Deckel (g) <span className="npt-range-val">{matrix.fiberCap}</span></label>
+                      <button className="npt-info-btn npt-matrix-info-btn" onClick={() => setOpenMatrixInfo(openMatrixInfo === "fiberCap" ? null : "fiberCap")} aria-label="Ballaststoff-Deckel erklären">ⓘ</button>
+                    </div>
+                    <input type="range" min="0" max="10" step="1" value={matrix.fiberCap} onChange={(ev) => setMatrix({ ...matrix, fiberCap: Number(ev.target.value) })} />
+                    {openMatrixInfo === "fiberCap" && <div className="npt-field-hint">Begrenzt, wie viele Ballaststoffe pro Portion höchstens angerechnet werden — verhindert, dass extrem ballaststoffreiche Lebensmittel unrealistisch viele Punkte abziehen.</div>}
+                  </div>
+                  <div className="npt-field">
+                    <div className="npt-matrix-label-row">
+                      <label>Sport-Anrechnung (%) <span className="npt-range-val">{Math.round((matrix.sportFactor ?? 0.5) * 100)}</span></label>
+                      <button className="npt-info-btn npt-matrix-info-btn" onClick={() => setOpenMatrixInfo(openMatrixInfo === "sportFactor" ? null : "sportFactor")} aria-label="Sport-Anrechnung erklären">ⓘ</button>
+                    </div>
+                    <input type="range" min="0" max="100" step="5" value={Math.round((matrix.sportFactor ?? 0.5) * 100)} onChange={(ev) => setMatrix({ ...matrix, sportFactor: Number(ev.target.value) / 100 })} />
+                    {openMatrixInfo === "sportFactor" && <div className="npt-field-hint">Legt fest, wie viel Prozent der beim Sport verbrannten Kalorien als zusätzliches Punktebudget gutgeschrieben werden. Höherer Wert = mehr Bonuspunkte pro Trainingseinheit.</div>}
+                  </div>
                   <div className="npt-sample-box info">Beispiel: 250 kcal · 10 g Fett · 20 g Protein · 3 g Ballaststoffe → <strong>{samplePoints} Punkte</strong></div>
                   <button className="npt-reset-btn" onClick={() => setMatrix(DEFAULT_MATRIX)}><IconReset size={14} /> Matrix auf Standard zurücksetzen</button>
                 </div>
