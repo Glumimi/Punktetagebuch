@@ -108,8 +108,8 @@ function IconScan({ size = 16 }) {
 // ---------- Lebensmittel-Datenbank (Werte je 100 g / 100 ml) ----------
 
 const FOOD_DATABASE = [
-  { id: 1, name: "Haferflocken (trocken)", calories: 372, fat: 7, protein: 13, fiber: 10 },
-  { id: 2, name: "Vollkornbrot", calories: 215, fat: 3, protein: 8, fiber: 7 },
+  { id: 1, name: "Haferflocken (trocken)", calories: 372, fat: 7, protein: 13, fiber: 10, units: { EL: 7, TL: 2 } },
+  { id: 2, name: "Vollkornbrot", calories: 215, fat: 3, protein: 8, fiber: 7, units: { Scheibe: 40 } },
   { id: 3, name: "Reis, weiß (gekocht)", calories: 130, fat: 0.3, protein: 2.7, fiber: 0.4 },
   { id: 4, name: "Reis, Vollkorn (gekocht)", calories: 111, fat: 0.9, protein: 2.6, fiber: 1.8 },
   { id: 5, name: "Nudeln (gekocht)", calories: 131, fat: 1.1, protein: 5, fiber: 1.8 },
@@ -134,16 +134,16 @@ const FOOD_DATABASE = [
   { id: 24, name: "Sojamilch (ungesüßt)", calories: 33, fat: 1.8, protein: 3.3, fiber: 0.6 },
   { id: 25, name: "Hafermilch", calories: 47, fat: 1.5, protein: 1, fiber: 0.8 },
   { id: 26, name: "Mandelmilch (ungesüßt)", calories: 13, fat: 1.1, protein: 0.4, fiber: 0.2 },
-  { id: 27, name: "Naturjoghurt (3,5%)", calories: 61, fat: 3.3, protein: 3.5, fiber: 0 },
+  { id: 27, name: "Naturjoghurt (3,5%)", calories: 61, fat: 3.3, protein: 3.5, fiber: 0, units: { EL: 10, TL: 3 } },
   { id: 28, name: "Sojajoghurt (natur)", calories: 55, fat: 2.7, protein: 3.5, fiber: 0.8 },
   { id: 29, name: "Skyr (natur)", calories: 63, fat: 0.2, protein: 11, fiber: 0 },
   { id: 30, name: "Hüttenkäse", calories: 98, fat: 4.3, protein: 11, fiber: 0 },
-  { id: 31, name: "Gouda", calories: 356, fat: 27, protein: 25, fiber: 0 },
+  { id: 31, name: "Gouda", calories: 356, fat: 27, protein: 25, fiber: 0, units: { Scheibe: 20 } },
   { id: 32, name: "Feta", calories: 264, fat: 21, protein: 14, fiber: 0 },
   { id: 33, name: "Mozzarella", calories: 280, fat: 22, protein: 18, fiber: 0 },
   { id: 34, name: "Parmesan", calories: 392, fat: 26, protein: 36, fiber: 0 },
-  { id: 35, name: "Frischkäse (Doppelrahmstufe)", calories: 250, fat: 24, protein: 6, fiber: 0 },
-  { id: 36, name: "Butter", calories: 717, fat: 81, protein: 0.9, fiber: 0 },
+  { id: 35, name: "Frischkäse (Doppelrahmstufe)", calories: 250, fat: 24, protein: 6, fiber: 0, units: { EL: 15, TL: 5 } },
+  { id: 36, name: "Butter", calories: 717, fat: 81, protein: 0.9, fiber: 0, units: { EL: 10, TL: 3 } },
   { id: 37, name: "Hühnerei (gekocht)", calories: 155, fat: 11, protein: 13, fiber: 0 },
   { id: 38, name: "Brokkoli (gedämpft)", calories: 35, fat: 0.4, protein: 2.4, fiber: 3.3 },
   { id: 39, name: "Spinat (roh)", calories: 23, fat: 0.4, protein: 2.9, fiber: 2.2 },
@@ -156,20 +156,20 @@ const FOOD_DATABASE = [
   { id: 46, name: "Avocado", calories: 160, fat: 15, protein: 2, fiber: 6.7 },
   { id: 47, name: "Blattsalat", calories: 15, fat: 0.2, protein: 1.4, fiber: 1.3 },
   { id: 48, name: "Rotkohl", calories: 25, fat: 0.2, protein: 1.4, fiber: 2.1 },
-  { id: 49, name: "Apfel", calories: 52, fat: 0.2, protein: 0.3, fiber: 2.4 },
-  { id: 50, name: "Banane", calories: 89, fat: 0.3, protein: 1.1, fiber: 2.6 },
+  { id: 49, name: "Apfel", calories: 52, fat: 0.2, protein: 0.3, fiber: 2.4, units: { Stück: 180 } },
+  { id: 50, name: "Banane", calories: 89, fat: 0.3, protein: 1.1, fiber: 2.6, units: { Stück: 120 } },
   { id: 51, name: "Beerenmischung (TK)", calories: 43, fat: 0.4, protein: 0.8, fiber: 4 },
   { id: 52, name: "Orange", calories: 47, fat: 0.1, protein: 0.9, fiber: 2.4 },
   { id: 53, name: "Birne", calories: 57, fat: 0.1, protein: 0.4, fiber: 3.1 },
   { id: 54, name: "Trauben", calories: 69, fat: 0.2, protein: 0.7, fiber: 0.9 },
   { id: 55, name: "Walnüsse", calories: 654, fat: 65, protein: 15, fiber: 6.7 },
   { id: 56, name: "Mandeln", calories: 579, fat: 50, protein: 21, fiber: 12.5 },
-  { id: 57, name: "Erdnussbutter", calories: 588, fat: 50, protein: 25, fiber: 6 },
+  { id: 57, name: "Erdnussbutter", calories: 588, fat: 50, protein: 25, fiber: 6, units: { EL: 16, TL: 5 } },
   { id: 58, name: "Chiasamen", calories: 486, fat: 31, protein: 17, fiber: 34 },
   { id: 59, name: "Leinsamen", calories: 534, fat: 42, protein: 18, fiber: 27 },
-  { id: 60, name: "Rapsöl", calories: 884, fat: 100, protein: 0, fiber: 0 },
-  { id: 61, name: "Olivenöl", calories: 884, fat: 100, protein: 0, fiber: 0 },
-  { id: 62, name: "Honig", calories: 304, fat: 0, protein: 0.3, fiber: 0.2 },
+  { id: 60, name: "Rapsöl", calories: 884, fat: 100, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } },
+  { id: 61, name: "Olivenöl", calories: 884, fat: 100, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } },
+  { id: 62, name: "Honig", calories: 304, fat: 0, protein: 0.3, fiber: 0.2, units: { EL: 15, TL: 5 } },
   { id: 63, name: "Haferkleie", calories: 246, fat: 7, protein: 17, fiber: 15 },
   { id: 64, name: "Dunkle Schokolade (70%)", calories: 546, fat: 31, protein: 7.8, fiber: 11 },
   { id: 65, name: "Vollkornkekse", calories: 471, fat: 20, protein: 7, fiber: 6 },
@@ -177,8 +177,8 @@ const FOOD_DATABASE = [
   { id: 67, name: "Weißwein", calories: 82, fat: 0, protein: 0.1, fiber: 0 },
   { id: 68, name: "Hähnchenbrust (gegart)", calories: 165, fat: 3.6, protein: 31, fiber: 0 },
   { id: 69, name: "Rinderhack, mager (gebraten)", calories: 217, fat: 12, protein: 26, fiber: 0 },
-  { id: 70, name: "Toastbrot", calories: 250, fat: 3.5, protein: 8, fiber: 3 },
-  { id: 71, name: "Roggenbrot", calories: 197, fat: 1, protein: 6, fiber: 6 },
+  { id: 70, name: "Toastbrot", calories: 250, fat: 3.5, protein: 8, fiber: 3, units: { Scheibe: 25 } },
+  { id: 71, name: "Roggenbrot", calories: 197, fat: 1, protein: 6, fiber: 6, units: { Scheibe: 45 } },
   { id: 72, name: "Knäckebrot", calories: 366, fat: 1.5, protein: 10, fiber: 15 },
   { id: 73, name: "Brötchen (Weizen)", calories: 280, fat: 1.8, protein: 9, fiber: 3.5 },
   { id: 74, name: "Müsli, fertig (mit Trockenfrüchten)", calories: 370, fat: 6, protein: 8, fiber: 8 },
@@ -192,7 +192,7 @@ const FOOD_DATABASE = [
   { id: 82, name: "Orangensaft", calories: 45, fat: 0.2, protein: 0.7, fiber: 0.2 },
   { id: 83, name: "Cola", calories: 42, fat: 0, protein: 0, fiber: 0 },
   { id: 84, name: "Bier (Pils)", calories: 43, fat: 0, protein: 0.5, fiber: 0 },
-  { id: 85, name: "Zucker, weiß", calories: 400, fat: 0, protein: 0, fiber: 0 },
+  { id: 85, name: "Zucker, weiß", calories: 400, fat: 0, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } },
   { id: 86, name: "Marmelade", calories: 250, fat: 0.1, protein: 0.3, fiber: 0.8 },
   { id: 87, name: "Nuss-Nougat-Creme", calories: 539, fat: 31, protein: 6, fiber: 3.4 },
   { id: 88, name: "Kartoffelchips", calories: 536, fat: 34, protein: 6.6, fiber: 4.4 },
@@ -214,13 +214,32 @@ const FOOD_DATABASE = [
   { id: 104, name: "Wassermelone", calories: 30, fat: 0.2, protein: 0.6, fiber: 0.4 },
   { id: 105, name: "Zitrone", calories: 29, fat: 0.3, protein: 1.1, fiber: 2.8 },
   { id: 106, name: "Erdbeeren", calories: 32, fat: 0.3, protein: 0.7, fiber: 2 },
-  { id: 107, name: "Schinken, gekocht", calories: 107, fat: 3, protein: 18, fiber: 0 },
-  { id: 108, name: "Salami", calories: 407, fat: 34, protein: 22, fiber: 0 },
+  { id: 107, name: "Schinken, gekocht", calories: 107, fat: 3, protein: 18, fiber: 0, units: { Scheibe: 15 } },
+  { id: 108, name: "Salami", calories: 407, fat: 34, protein: 22, fiber: 0, units: { Scheibe: 8 } },
   { id: 109, name: "Bratwurst (gebraten)", calories: 300, fat: 26, protein: 13, fiber: 0 },
   { id: 110, name: "Speck", calories: 541, fat: 42, protein: 37, fiber: 0 },
   { id: 111, name: "Pute, Brustfilet (gegart)", calories: 135, fat: 1.7, protein: 29, fiber: 0 },
   { id: 112, name: "Schweineschnitzel (gebraten)", calories: 226, fat: 11, protein: 31, fiber: 0 },
   { id: 113, name: "Pizza Margherita", calories: 266, fat: 10, protein: 11, fiber: 2 },
+  // Grundzutaten für den Rezeptbaukasten (fehlten bisher komplett)
+  { id: 114, name: "Mehl (Weizen, Type 405)", calories: 348, fat: 1, protein: 10, fiber: 2.7, units: { EL: 7, TL: 2 } },
+  { id: 115, name: "Salz", calories: 0, fat: 0, protein: 0, fiber: 0, units: { EL: 13, TL: 4, Prise: 0.5 } },
+  { id: 116, name: "Ei (Huhn, ganz)", calories: 155, fat: 11, protein: 13, fiber: 0, units: { Stück: 58 } },
+  { id: 117, name: "Sahne (Schlagsahne, 30%)", calories: 292, fat: 30, protein: 2.2, fiber: 0, units: { EL: 10, TL: 3 } },
+  { id: 118, name: "Speisestärke", calories: 343, fat: 0.1, protein: 0.6, fiber: 0.5, units: { EL: 7, TL: 2 } },
+  { id: 119, name: "Puderzucker", calories: 387, fat: 0, protein: 0, fiber: 0, units: { EL: 4, TL: 1 } },
+  // Getränke-Erweiterung
+  { id: 120, name: "Wasser (still/mit Kohlensäure)", calories: 0, fat: 0, protein: 0, fiber: 0 },
+  { id: 121, name: "Tee, ungesüßt (schwarz/grün)", calories: 1, fat: 0, protein: 0.1, fiber: 0 },
+  { id: 122, name: "Cola Zero / Light", calories: 0.3, fat: 0, protein: 0, fiber: 0 },
+  { id: 123, name: "Apfelschorle", calories: 23, fat: 0, protein: 0.1, fiber: 0.1 },
+  { id: 124, name: "Sekt / Prosecco", calories: 78, fat: 0, protein: 0.1, fiber: 0 },
+  { id: 125, name: "Spirituosen, klar (Wodka/Korn, 40% vol)", calories: 231, fat: 0, protein: 0, fiber: 0 },
+  { id: 126, name: "Whisky (40% vol)", calories: 250, fat: 0, protein: 0, fiber: 0 },
+  { id: 127, name: "Tonic Water", calories: 34, fat: 0, protein: 0, fiber: 0 },
+  { id: 128, name: "Energy Drink", calories: 45, fat: 0, protein: 0, fiber: 0 },
+  { id: 129, name: "Buttermilch", calories: 35, fat: 1, protein: 3.5, fiber: 0 },
+  { id: 130, name: "Kakao (Fertiggetränk, gesüßt)", calories: 75, fat: 3, protein: 3.4, fiber: 0 },
 ];
 
 // ---------- Hilfsfunktionen ----------
@@ -229,6 +248,48 @@ function dateKeyFor(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 function todayKey() { return dateKeyFor(new Date()); }
+// ---------- Individuelle Tages-Reset-Zeit ----------
+// "Effektiv jetzt" verschiebt die Uhrzeit um die eingestellte Reset-Minute zurück, bevor der
+// Kalendertag bestimmt wird. Beispiel: Reset um 02:00 Uhr (=120 Minuten) -> 01:30 Uhr zählt noch
+// zum Vortag, 02:30 Uhr zählt schon zum neuen Tag.
+function effectiveNow(resetMinutes) {
+  const d = new Date();
+  if (!resetMinutes) return d;
+  return new Date(d.getTime() - resetMinutes * 60000);
+}
+function effectiveTodayKey(resetMinutes) {
+  return dateKeyFor(effectiveNow(resetMinutes));
+}
+// Summiert die Flexpoint-Überschreitung (Tagespunkte > Tagesbudget inkl. Sportbonus) über eine
+// Woche (Montag als Date). Der Tag, der der effektiven "heute"-Grenze entspricht, wird nicht aus
+// dem Speicher gelesen (der könnte noch nicht persistiert sein), sondern über liveTodayOverage
+// übergeben, damit der Live-Stand aus dem React-State sofort korrekt einfließt.
+function computeWeekFlexUsage(mondayDate, resetMinutes, liveTodayOverage) {
+  const effToday = effectiveTodayKey(resetMinutes);
+  let total = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mondayDate);
+    d.setDate(mondayDate.getDate() + i);
+    const key = dateKeyFor(d);
+    if (key === effToday) {
+      total += Math.max(0, liveTodayOverage || 0);
+      continue;
+    }
+    const res = storageGet(`log:${key}`);
+    if (res && res.value) {
+      try {
+        const parsed = JSON.parse(res.value);
+        const list = Array.isArray(parsed) ? parsed : parsed.entries || [];
+        const dayUsed = list.reduce((s, e) => s + e.points, 0);
+        const baseTarget = (!Array.isArray(parsed) && parsed.target) || null;
+        const sportBonusDay = (!Array.isArray(parsed) && parsed.sport && parsed.sport.done) ? Number(parsed.sport.bonusPoints) || 0 : 0;
+        const dayEffectiveTarget = baseTarget !== null ? baseTarget + sportBonusDay : null;
+        if (dayEffectiveTarget !== null) total += Math.max(0, dayUsed - dayEffectiveTarget);
+      } catch (e) {}
+    }
+  }
+  return total;
+}
 function weekKey() {
   const d = new Date();
   const day = d.getDay();
@@ -414,13 +475,15 @@ function applyZoomToDomain(domain, rawValues, zoomFactor) {
   return [round1(center - targetHalfRange), round1(center + targetHalfRange)];
 }
 
-// Trendprognose: lineare Regression über die 7-Tage-geglätteten Gewichtswerte der letzten 3 Wochen.
-// Braucht mind. 10 Tage mit Daten in diesem Fenster, sonst gilt die Prognose als nicht verlässlich.
+// Trendprognose: lineare Regression über die 7-Tage-geglätteten Werte der letzten 4 Wochen.
+// Verlässlichkeits-Mindestanforderung: mind. MIN_TREND_MEASUREMENTS echte Messungen, die
+// mind. MIN_TREND_SPAN_DAYS Tage auseinanderliegen (siehe Konstanten oben) — statt starr an der
+// Anzahl geglätteter Tage zu hängen, wie es hier vorher der Fall war.
 function computeLinearTrend(log, valueKey, targetValue) {
   if (log.length === 0) return { insufficientData: true };
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const windowDays = 21;
+  const windowDays = TREND_WINDOW_DAYS;
   const totalDays = windowDays + 7;
   const dailyMap = {};
   for (let i = totalDays - 1; i >= 0; i--) {
@@ -440,6 +503,21 @@ function computeLinearTrend(log, valueKey, targetValue) {
     }
     return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
   }
+
+  // Verlässlichkeits-Check auf Basis der tatsächlichen (nicht geglätteten) Messungen im Fenster.
+  const windowStart = new Date(today);
+  windowStart.setDate(windowStart.getDate() - (windowDays - 1));
+  const measuredDayKeys = new Set(
+    log
+      .map((w) => new Date(w.timestamp))
+      .filter((d) => d >= windowStart && d <= today)
+      .map((d) => dateKeyFor(d))
+  );
+  if (measuredDayKeys.size < MIN_TREND_MEASUREMENTS) return { insufficientData: true };
+  const sortedKeys = [...measuredDayKeys].sort();
+  const spanDays = Math.round((new Date(sortedKeys[sortedKeys.length - 1] + "T00:00:00") - new Date(sortedKeys[0] + "T00:00:00")) / 86400000);
+  if (spanDays < MIN_TREND_SPAN_DAYS) return { insufficientData: true };
+
   const regressionPoints = [];
   for (let i = windowDays - 1; i >= 0; i--) {
     const d = new Date(today);
@@ -447,7 +525,7 @@ function computeLinearTrend(log, valueKey, targetValue) {
     const ma = maFor(d);
     if (ma !== null) regressionPoints.push({ x: windowDays - 1 - i, y: ma });
   }
-  if (regressionPoints.length < 10) return { insufficientData: true };
+  if (regressionPoints.length === 0) return { insufficientData: true };
 
   const n = regressionPoints.length;
   const sumX = regressionPoints.reduce((s, p) => s + p.x, 0);
@@ -512,7 +590,7 @@ const FONTS = [
   { id: "fredoka", name: "Fredoka & Mulish", display: "'Fredoka', sans-serif", body: "'Mulish', sans-serif" },
 ];
 
-const DEFAULT_PROFILE = { name: "", gender: "neutral", weightKg: 86, heightCm: 186, age: 42, birthDate: "", birthDateConfirmed: false, activity: "sitzend", deficitPercent: 20, targetWeightKg: "", targetWaistCm: "" };
+const DEFAULT_PROFILE = { name: "", gender: "neutral", weightKg: 86, heightCm: 186, age: 42, birthDate: "", birthDateConfirmed: false, activity: "sitzend", deficitPercent: 20, targetWeightKg: "", targetWaistCm: "", dayResetMinutes: 0 };
 
 // Feste, themenunabhängige Diagrammfarben, damit sich Kurven auch im
 // Pastellrosa-Thema klar voneinander unterscheiden.
@@ -524,7 +602,31 @@ const COLOR_DEFICIT = "#e2534a";
 const COLOR_DEFICIT_LIGHT = "rgba(226,83,74,0.5)";
 const DEFAULT_MATRIX = { calDiv: 40, fatDiv: 12, proteinDiv: 10, fiberDiv: 5, fiberCap: 4, sportFactor: 0.5 };
 const SAMPLE_FOOD = { calories: 250, fat: 10, protein: 20, fiber: 3 };
+
+// ---------- Alltagseinheiten (Rezeptbaukasten) & Flüssigkeitseinheiten ----------
+// Generischer Fallback in Gramm, falls ein Lebensmittel keine eigene units-Angabe hat.
+// Richtwerte für gestrichene Löffel bei "durchschnittlicher" Dichte; bewusst grobe Näherung.
+const UNIT_DEFAULTS_G = { TL: 5, EL: 15, Tasse: 200, Prise: 0.5, Scheibe: 25, Stück: 100 };
+const RECIPE_UNITS = ["g", "ml", "l", "TL", "EL", "Tasse", "Prise", "Scheibe", "Stück"];
+// Rechnet eine Menge in einer beliebigen Einheit in Gramm um. Für ml/l wird vereinfachend
+// 1 ml = 1 g angenommen (siehe Recherche: gilt gut für wässrige Lebensmittel/Getränke, bei sehr
+// fett- oder zuckerreichen Flüssigkeiten leichte Abweichung, bewusst in Kauf genommen).
+function resolveAmountToGrams(food, amount, unit) {
+  const amt = Number(amount) || 0;
+  if (unit === "g" || unit === "ml") return amt;
+  if (unit === "l") return amt * 1000;
+  const perUnit = (food && food.units && food.units[unit] !== undefined) ? food.units[unit] : UNIT_DEFAULTS_G[unit];
+  return amt * (perUnit || 0);
+}
+
 const WEEKLY_FLEX_TOTAL = 49;
+// Mindestanforderungen für eine verlässliche Trendprognose (siehe computeLinearTrend):
+// mindestens 6 Messungen, die mindestens 14 Tage (2 Wochen) auseinanderliegen — deckt so einen
+// vollen Wochenzyklus ab (Wochenend-/Wochentags-Schwankungen mitteln sich aus) und verlangt genug
+// unabhängige Messpunkte, damit einzelne Wasser-/Salz-Ausreißer die Regression nicht dominieren.
+const MIN_TREND_MEASUREMENTS = 6;
+const MIN_TREND_SPAN_DAYS = 14;
+const TREND_WINDOW_DAYS = 28;
 
 const METS_BY_INTENSITY = [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.5, 12.0];
 const INTENSITY_INFO = [
@@ -539,7 +641,7 @@ const INTENSITY_INFO = [
   "Hart – sehr schnelles Laufen, HIIT-Intervalle",
   "Maximal – Wettkampftempo, Sprints, extremes Kraftausdauertraining an der Belastungsgrenze",
 ];
-const EMPTY_FORM = { name: "", calories: "", carbs: "", fat: "", protein: "", fiber: "", amountG: 100, selectedFoodId: null };
+const EMPTY_FORM = { name: "", calories: "", carbs: "", fat: "", protein: "", fiber: "", amountG: 100, amountUnit: "g", selectedFoodId: null };
 const EMPTY_POINT_FORM = { name: "", points: "", selectedDishId: null };
 
 // ---------- Komponente ----------
@@ -550,7 +652,6 @@ function NutritionPointsTracker() {
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [matrix, setMatrix] = useState(DEFAULT_MATRIX);
   const [entries, setEntries] = useState([]);
-  const [flexUsed, setFlexUsed] = useState(0);
   const [sportDone, setSportDone] = useState(false);
   const [sportIntensity, setSportIntensity] = useState(5);
   const [sportHours, setSportHours] = useState("");
@@ -614,6 +715,7 @@ function NutritionPointsTracker() {
   const [customDishes, setCustomDishes] = useState([]);
   const [customFoods, setCustomFoods] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [heuteSubTab, setHeuteSubTab] = useState("essen");
   const [formMode, setFormMode] = useState("naehrwerte");
   const [nutrientBasis, setNutrientBasis] = useState("kalorien");
   const [form, setForm] = useState(EMPTY_FORM);
@@ -627,7 +729,8 @@ function NutritionPointsTracker() {
   const [recipeServings, setRecipeServings] = useState(1);
   const [recipeIngredientQuery, setRecipeIngredientQuery] = useState("");
   const [recipeIngredientDropdownOpen, setRecipeIngredientDropdownOpen] = useState(false);
-  const [recipeIngredientAmountG, setRecipeIngredientAmountG] = useState(100);
+  const [recipeIngredientAmount, setRecipeIngredientAmount] = useState(100);
+  const [recipeIngredientUnit, setRecipeIngredientUnit] = useState("g");
   const [recipeIngredientSelected, setRecipeIngredientSelected] = useState(null);
   const [expandedRecipeId, setExpandedRecipeId] = useState(null);
   const [saveError, setSaveError] = useState(false);
@@ -643,10 +746,12 @@ function NutritionPointsTracker() {
 
   useEffect(() => {
     const s = storageGet("settings");
+    let resetMinutesFromSettings = 0;
     if (s && s.value) {
       try {
         const parsed = JSON.parse(s.value);
         if (parsed.profile) setProfile((prev) => ({ ...prev, ...parsed.profile }));
+        if (parsed.profile && parsed.profile.dayResetMinutes) resetMinutesFromSettings = Number(parsed.profile.dayResetMinutes) || 0;
         if (parsed.matrix) setMatrix((prev) => ({ ...prev, ...parsed.matrix }));
         if (parsed.chartPrefs) {
           if (typeof parsed.chartPrefs.showWeightLine === "boolean") setShowWeightLine(parsed.chartPrefs.showWeightLine);
@@ -661,7 +766,7 @@ function NutritionPointsTracker() {
         }
       } catch (e) {}
     }
-    const l = storageGet(`log:${todayKey()}`);
+    const l = storageGet(`log:${effectiveTodayKey(resetMinutesFromSettings)}`);
     if (l && l.value) {
       try {
         const parsed = JSON.parse(l.value);
@@ -674,8 +779,6 @@ function NutritionPointsTracker() {
         }
       } catch (e) {}
     }
-    const f = storageGet(`flex:${weekKey()}`);
-    if (f && f.value) setFlexUsed(Number(f.value) || 0);
     const cd = storageGet("customDishes");
     if (cd && cd.value) {
       try { setCustomDishes(JSON.parse(cd.value)); } catch (e) {}
@@ -766,6 +869,49 @@ function NutritionPointsTracker() {
   const used = entries.reduce((sum, e) => sum + e.points, 0);
   const effectiveTarget = target.total + sportBonus;
 
+  // ---------- Nährstoffverteilung & Coach-Tipps (Heute-Bereich) ----------
+  // Kohlenhydrate werden, falls nicht direkt erfasst (Basis "Kalorien"), aus der Differenz
+  // Kalorien - Fett*9 - Protein*4 geschätzt. "Punkte direkt"-Einträge haben keine Nährwerte und
+  // fließen nicht in die Verteilung ein.
+  const macroEntries = entries.filter((e) => !e.isDirect);
+  const macroTotals = macroEntries.reduce(
+    (acc, e) => {
+      const calories = Number(e.calories) || 0;
+      const fat = Number(e.fat) || 0;
+      const protein = Number(e.protein) || 0;
+      const fiber = Number(e.fiber) || 0;
+      const carbs = e.carbs !== null && e.carbs !== undefined ? Number(e.carbs) || 0 : Math.max(0, round1((calories - fat * 9 - protein * 4) / 4));
+      return { calories: acc.calories + calories, fat: acc.fat + fat, protein: acc.protein + protein, fiber: acc.fiber + fiber, carbs: acc.carbs + carbs };
+    },
+    { calories: 0, fat: 0, protein: 0, fiber: 0, carbs: 0 }
+  );
+  const directEntriesCount = entries.length - macroEntries.length;
+  const macroKcalTotal = macroTotals.protein * 4 + macroTotals.fat * 9 + macroTotals.carbs * 4;
+  const macroShares = macroKcalTotal > 0
+    ? { protein: (macroTotals.protein * 4) / macroKcalTotal, fat: (macroTotals.fat * 9) / macroKcalTotal, carbs: (macroTotals.carbs * 4) / macroKcalTotal }
+    : { protein: 0, fat: 0, carbs: 0 };
+  // Regelbasierte, lokale Coach-Tipps (kein KI-Aufruf) — orientiert an groben Ernährungsrichtwerten.
+  const coachTips = [];
+  if (macroTotals.calories >= 150) {
+    if (macroShares.protein < 0.15) coachTips.push("Du könntest heute noch etwas mehr Protein einbauen.");
+    if (macroShares.fat > 0.4) coachTips.push("Die Fettzufuhr liegt heute schon recht hoch — im Blick behalten.");
+    if ((macroTotals.fiber / macroTotals.calories) * 1000 < 10) coachTips.push("Etwas mehr Ballaststoffe (Gemüse, Vollkorn, Hülsenfrüchte) würden guttun.");
+    if (coachTips.length === 0) coachTips.push("Sieht ausgewogen aus — weiter so!");
+  }
+  // Segmente für den Nährstoff-Donut (Anteile an den Gesamtkalorien aus Kohlenhydraten/Fett/Protein).
+  const DONUT_R = 46;
+  const DONUT_C = 2 * Math.PI * DONUT_R;
+  let macroCumulative = 0;
+  const macroSegments = [
+    { key: "carbs", label: "Kohlenhydrate", grams: round1(macroTotals.carbs), share: macroShares.carbs, colorVar: "--amber" },
+    { key: "fat", label: "Fett", grams: round1(macroTotals.fat), share: macroShares.fat, colorVar: "--coral" },
+    { key: "protein", label: "Protein", grams: round1(macroTotals.protein), share: macroShares.protein, colorVar: "--teal" },
+  ].map((seg) => {
+    const dashOffset = DONUT_C * (1 - macroCumulative);
+    macroCumulative += seg.share;
+    return { ...seg, dashArray: `${DONUT_C * seg.share} ${DONUT_C}`, dashOffset };
+  });
+
   useEffect(() => {
     if (!loaded) return;
     const payload = {
@@ -773,15 +919,9 @@ function NutritionPointsTracker() {
       entries,
       sport: { done: sportDone, intensity: sportIntensity, hours: Number(sportHours) || 0, minutes: Number(sportMinutes) || 0, bonusPoints: sportBonus, caloriesBurned },
     };
-    const ok = storageSet(`log:${todayKey()}`, JSON.stringify(payload));
+    const ok = storageSet(`log:${effectiveTodayKey(profile.dayResetMinutes || 0)}`, JSON.stringify(payload));
     setSaveError(!ok);
-  }, [entries, loaded, target.total, sportDone, sportIntensity, sportHours, sportMinutes, sportBonus, caloriesBurned]);
-
-  useEffect(() => {
-    if (!loaded) return;
-    const ok = storageSet(`flex:${weekKey()}`, String(flexUsed));
-    setSaveError(!ok);
-  }, [flexUsed, loaded]);
+  }, [entries, loaded, target.total, sportDone, sportIntensity, sportHours, sportMinutes, sportBonus, caloriesBurned, profile.dayResetMinutes]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -816,7 +956,7 @@ function NutritionPointsTracker() {
       d.setDate(historyWeekMonday.getDate() + i);
       const key = dateKeyFor(d);
       const label = d.toLocaleDateString("de-DE", { weekday: "short" });
-      if (key === todayKey()) {
+      if (key === effectiveTodayKey(profile.dayResetMinutes || 0)) {
         days.push({ key, label, used: null, target: null, isToday: true });
         continue;
       }
@@ -836,13 +976,13 @@ function NutritionPointsTracker() {
         days.push({ key, label, used: null, target: null });
       }
     }
-    let flexForWeek = 0;
-    const f = storageGet(`flex:${dateKeyFor(historyWeekMonday)}`);
-    if (f && f.value) flexForWeek = Number(f.value) || 0;
+    // Flexpoints der Vortage dieser Woche (heutiger Tag wird bewusst mit 0 übergeben und im
+    // Render live nachgetragen, siehe flexForDisplayedWeek).
+    const flexForWeek = computeWeekFlexUsage(historyWeekMonday, profile.dayResetMinutes || 0, 0);
     setHistoryDays(days);
     setHistoryFlexForWeek(flexForWeek);
     setHistoryLoading(false);
-  }, [historyWeekMonday, loaded]);
+  }, [historyWeekMonday, loaded, profile.dayResetMinutes]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -907,7 +1047,7 @@ function NutritionPointsTracker() {
         }
         let pointsUsed = null;
         let dayEffectiveTarget = null;
-        if (key === todayKey()) {
+        if (key === effectiveTodayKey(profile.dayResetMinutes || 0)) {
           pointsUsed = used;
           dayEffectiveTarget = effectiveTarget;
         } else {
@@ -971,7 +1111,7 @@ function NutritionPointsTracker() {
         for (let day = 1; day <= daysInMonth; day++) {
           const d = new Date(year, month, day);
           const key = dateKeyFor(d);
-          if (key === todayKey()) {
+          if (key === effectiveTodayKey(profile.dayResetMinutes || 0)) {
             dailyValues.push({ pointsUsed: used, deficitPercent: effectiveTarget ? ((effectiveTarget - used) / effectiveTarget) * 100 : null });
             continue;
           }
@@ -1002,7 +1142,7 @@ function NutritionPointsTracker() {
     setWeightChartData(points);
     setWeightChartLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weightViewMode, weightViewMonth, weightViewYear, weightLog, waistLog, trend, waistTrend, loaded]);
+  }, [weightViewMode, weightViewMonth, weightViewYear, weightLog, waistLog, trend, waistTrend, loaded, profile.dayResetMinutes]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -1012,7 +1152,7 @@ function NutritionPointsTracker() {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const key = dateKeyFor(d);
-      if (key === todayKey()) { values.push(used); continue; }
+      if (key === effectiveTodayKey(profile.dayResetMinutes || 0)) { values.push(used); continue; }
       const res = storageGet(`log:${key}`);
       if (res && res.value) {
         try {
@@ -1031,7 +1171,7 @@ function NutritionPointsTracker() {
     const weeklyKgChange = ((avgDailyKcal - target.tdee) * 7) / 7700;
     setTheoreticalWeeklyRate(round1(weeklyKgChange));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weightLog, matrix.calDiv, target.tdee, loaded]);
+  }, [weightLog, matrix.calDiv, target.tdee, loaded, profile.dayResetMinutes]);
 
   function buildWeightChartConfig() {
     const c = currentTheme.vars;
@@ -1159,9 +1299,21 @@ function NutritionPointsTracker() {
     );
   }
 
-  const remaining = effectiveTarget - used;
+  const todayOverage = Math.max(0, used - effectiveTarget);
+  const currentWeekMonday = mondayOf(effectiveNow(profile.dayResetMinutes || 0));
+  const flexUsedPriorDaysThisWeek = computeWeekFlexUsage(currentWeekMonday, profile.dayResetMinutes || 0, 0);
+  const flexAvailableBeforeToday = Math.max(0, WEEKLY_FLEX_TOTAL - flexUsedPriorDaysThisWeek);
+  const flexOverflowToday = Math.max(0, todayOverage - flexAvailableBeforeToday);
+  const flexConsumedToday = todayOverage - flexOverflowToday;
+  const flexUsedThisWeekTotal = flexUsedPriorDaysThisWeek + flexConsumedToday;
+  const flexRemaining = Math.max(0, WEEKLY_FLEX_TOTAL - flexUsedThisWeekTotal);
+  const isOverLimit = flexOverflowToday > 0;
+
+  // remaining bleibt bei 0 stehen, solange die Überschreitung durch Flexpoints gedeckt ist;
+  // erst wenn auch die Flexpoints aufgebraucht sind, geht der Wert ins Negative.
+  const remaining = used <= effectiveTarget ? effectiveTarget - used : isOverLimit ? -flexOverflowToday : 0;
   const ratio = effectiveTarget > 0 ? used / effectiveTarget : 0;
-  const status = ratio <= 0.8 ? "teal" : ratio <= 1 ? "amber" : "coral";
+  const status = isOverLimit ? "coral" : "teal";
 
   const r = 74;
   const circumference = 2 * Math.PI * r;
@@ -1183,7 +1335,7 @@ function NutritionPointsTracker() {
     const defaultAmountG = food.isRecipe && food.recipeServingG ? food.recipeServingG : 100;
     const factor = defaultAmountG / 100;
     setForm({
-      ...form, name: food.name, selectedFoodId: food.id, amountG: defaultAmountG, carbs: "",
+      ...form, name: food.name, selectedFoodId: food.id, amountG: defaultAmountG, amountUnit: "g", carbs: "",
       calories: Math.round(food.calories * factor), fat: round1(food.fat * factor), protein: round1(food.protein * factor), fiber: round1(food.fiber * factor),
     });
     setNutrientBasis("kalorien");
@@ -1191,20 +1343,23 @@ function NutritionPointsTracker() {
     setDropdownOpen(false);
   }
 
-  function updateAmount(newAmountG) {
+  // Setzt Menge + Einheit (g, ml oder l) und rechnet die Nährwerte proportional um.
+  function updateAmountUnit(rawAmount, unit) {
+    const grams = resolveAmountToGrams(null, rawAmount, unit);
     const food = combinedFoods.find((f) => f.id === form.selectedFoodId);
-    if (!food) { setForm({ ...form, amountG: newAmountG }); return; }
-    const factor = newAmountG / 100;
+    const factor = grams / 100;
     setForm({
-      ...form, amountG: newAmountG,
-      calories: Math.round(food.calories * factor), fat: round1(food.fat * factor),
-      protein: round1(food.protein * factor), fiber: round1(food.fiber * factor),
+      ...form, amountG: round1(grams), amountUnit: unit,
+      calories: food ? Math.round(food.calories * factor) : form.calories,
+      fat: food ? round1(food.fat * factor) : form.fat,
+      protein: food ? round1(food.protein * factor) : form.protein,
+      fiber: food ? round1(food.fiber * factor) : form.fiber,
     });
   }
 
   function resetForm() { setForm(EMPTY_FORM); setSearchQuery(""); setDropdownOpen(false); }
   function resetPointForm() { setPointForm(EMPTY_POINT_FORM); setDishSearchQuery(""); setDishDropdownOpen(false); }
-  function closeForm() { resetForm(); resetPointForm(); setShowForm(false); setEditingEntryId(null); setFormTargetDay(null); }
+  function closeForm() { resetForm(); resetPointForm(); resetRecipeBuilder(); setShowForm(false); setEditingEntryId(null); setFormTargetDay(null); setFormMode("naehrwerte"); }
 
   function persistDayEntries(dayKey, list) {
     const res = storageGet(`log:${dayKey}`);
@@ -1267,7 +1422,7 @@ function NutritionPointsTracker() {
       name: form.name.trim(), calories, carbs: carbsForEntry, fat, protein, fiber,
       calcBasis: form.selectedFoodId ? "kalorien" : nutrientBasis, points,
     };
-    if (formTargetDay && formTargetDay !== todayKey()) {
+    if (formTargetDay && formTargetDay !== effectiveTodayKey(profile.dayResetMinutes || 0)) {
       const entryWithId = editingEntryId ? { ...entryData, id: editingEntryId } : { ...entryData, id: Date.now() };
       setExpandedDayEntries((prev) => {
         const updated = editingEntryId ? prev.map((e) => (e.id === editingEntryId ? entryWithId : e)) : [...prev, entryWithId];
@@ -1389,7 +1544,7 @@ function NutritionPointsTracker() {
     const pts = Math.round(Number(pointForm.points)) || 0;
     const dishName = pointForm.name.trim();
     const entryData = { name: dishName, points: pts, isDirect: true };
-    if (formTargetDay && formTargetDay !== todayKey()) {
+    if (formTargetDay && formTargetDay !== effectiveTodayKey(profile.dayResetMinutes || 0)) {
       const entryWithId = editingEntryId ? { ...entryData, id: editingEntryId } : { ...entryData, id: Date.now() };
       setExpandedDayEntries((prev) => {
         const updated = editingEntryId ? prev.map((e) => (e.id === editingEntryId ? entryWithId : e)) : [...prev, entryWithId];
@@ -1444,7 +1599,7 @@ function NutritionPointsTracker() {
   }
 
   function deleteExpandedDayEntry(entryId) {
-    if (expandedHistoryDay === todayKey()) { deleteEntry(entryId); return; }
+    if (expandedHistoryDay === effectiveTodayKey(profile.dayResetMinutes || 0)) { deleteEntry(entryId); return; }
     const item = expandedDayEntries.find((e) => e.id === entryId);
     const updated = expandedDayEntries.filter((e) => e.id !== entryId);
     setExpandedDayEntries(updated);
@@ -1484,14 +1639,21 @@ function NutritionPointsTracker() {
     setRecipeIngredientDropdownOpen(false);
   }
   function addRecipeIngredient() {
-    if (!recipeIngredientSelected || !recipeIngredientAmountG || recipeIngredientAmountG <= 0) return;
+    if (!recipeIngredientSelected || !recipeIngredientAmount || recipeIngredientAmount <= 0) return;
+    const amountG = resolveAmountToGrams(recipeIngredientSelected, recipeIngredientAmount, recipeIngredientUnit);
+    if (!amountG || amountG <= 0) return;
     setRecipeIngredients((prev) => [
       ...prev,
-      { tempId: Date.now(), foodId: recipeIngredientSelected.id, name: recipeIngredientSelected.name, amountG: recipeIngredientAmountG, calories100: recipeIngredientSelected.calories, fat100: recipeIngredientSelected.fat, protein100: recipeIngredientSelected.protein, fiber100: recipeIngredientSelected.fiber },
+      {
+        tempId: Date.now(), foodId: recipeIngredientSelected.id, name: recipeIngredientSelected.name,
+        amount: recipeIngredientAmount, unit: recipeIngredientUnit, amountG: round1(amountG),
+        calories100: recipeIngredientSelected.calories, fat100: recipeIngredientSelected.fat, protein100: recipeIngredientSelected.protein, fiber100: recipeIngredientSelected.fiber,
+      },
     ]);
     setRecipeIngredientSelected(null);
     setRecipeIngredientQuery("");
-    setRecipeIngredientAmountG(100);
+    setRecipeIngredientAmount(100);
+    setRecipeIngredientUnit("g");
   }
   function removeRecipeIngredient(tempId) {
     setRecipeIngredients((prev) => prev.filter((i) => i.tempId !== tempId));
@@ -1518,13 +1680,13 @@ function NutritionPointsTracker() {
     setRecipeServings(1);
     setRecipeIngredientQuery("");
     setRecipeIngredientSelected(null);
-    setRecipeIngredientAmountG(100);
+    setRecipeIngredientAmount(100);
+    setRecipeIngredientUnit("g");
   }
-  function saveRecipe() {
-    if (!recipeName.trim() || recipeIngredients.length === 0 || recipeTotals.totalG <= 0) return;
+  function buildRecipeFood() {
     const servings = Math.max(1, Number(recipeServings) || 1);
     const factor100 = 100 / recipeTotals.totalG;
-    const newFood = {
+    return {
       id: Date.now(),
       name: recipeName.trim(),
       calories: round1(recipeTotals.calories * factor100),
@@ -1532,13 +1694,42 @@ function NutritionPointsTracker() {
       protein: round1(recipeTotals.protein * factor100),
       fiber: round1(recipeTotals.fiber * factor100),
       isRecipe: true,
-      recipeIngredients: recipeIngredients.map((i) => ({ name: i.name, amountG: i.amountG })),
+      recipeIngredients: recipeIngredients.map((i) => ({ name: i.name, amountG: i.amountG, amount: i.amount, unit: i.unit })),
       recipeTotalG: round1(recipeTotals.totalG),
       recipeServings: servings,
       recipeServingG: round1(recipeTotals.totalG / servings),
     };
+  }
+  function saveRecipe() {
+    if (!recipeName.trim() || recipeIngredients.length === 0 || recipeTotals.totalG <= 0) return;
+    const newFood = buildRecipeFood();
     setCustomFoods((prev) => [newFood, ...prev]);
     resetRecipeBuilder();
+  }
+  // Speichert das Rezept als eigenes Lebensmittel UND trägt direkt eine Portion als Eintrag ein —
+  // für den Rezeptbaukasten-Zugriff direkt beim Essen-Eintragen im Heute-Bereich.
+  function saveRecipeAndLog() {
+    if (!recipeName.trim() || recipeIngredients.length === 0 || recipeTotals.totalG <= 0) return;
+    const newFood = buildRecipeFood();
+    setCustomFoods((prev) => [newFood, ...prev]);
+    const factor = newFood.recipeServingG / 100;
+    const calories = Math.round(newFood.calories * factor);
+    const fat = round1(newFood.fat * factor);
+    const protein = round1(newFood.protein * factor);
+    const fiber = round1(newFood.fiber * factor);
+    const points = calcFoodPoints({ calories, fat, protein, fiber }, matrix);
+    const entryData = { name: newFood.name, calories, carbs: null, fat, protein, fiber, calcBasis: "kalorien", points };
+    if (formTargetDay && formTargetDay !== effectiveTodayKey(profile.dayResetMinutes || 0)) {
+      const entryWithId = { ...entryData, id: Date.now() + 1 };
+      setExpandedDayEntries((prev) => {
+        const updated = [...prev, entryWithId];
+        persistDayEntries(formTargetDay, updated);
+        return updated;
+      });
+    } else {
+      setEntries((prev) => [...prev, { id: Date.now() + 1, ...entryData }]);
+    }
+    closeForm();
   }
 
   const recipeIngredientResults =
@@ -1671,14 +1862,13 @@ function NutritionPointsTracker() {
   function cancelImport() { setPendingImportFile(null); }
 
   const samplePoints = calcFoodPoints(SAMPLE_FOOD, matrix);
-  const flexRemaining = WEEKLY_FLEX_TOTAL - flexUsed;
-  const isCurrentWeek = dateKeyFor(historyWeekMonday) === dateKeyFor(mondayOf(new Date()));
+  const isCurrentWeek = dateKeyFor(historyWeekMonday) === dateKeyFor(currentWeekMonday);
   const historyWeekEnd = new Date(historyWeekMonday);
   historyWeekEnd.setDate(historyWeekMonday.getDate() + 6);
   const displayDays = historyDays.map((d) => (d.isToday ? { ...d, used, target: effectiveTarget } : d));
   const weeklyTotal = displayDays.reduce((sum, d) => sum + (d.used || 0), 0);
   const daysWithData = displayDays.filter((d) => d.used !== null).length;
-  const flexForDisplayedWeek = isCurrentWeek ? flexUsed : historyFlexForWeek;
+  const flexForDisplayedWeek = Math.min(WEEKLY_FLEX_TOTAL, historyFlexForWeek + (isCurrentWeek ? flexConsumedToday : 0));
 
   function avgInRange(log, field, startDate, endDate) {
     const startKey = dateKeyFor(startDate);
@@ -1733,6 +1923,7 @@ function NutritionPointsTracker() {
         .npt-theme-swatch span { display: block; width: 14px; height: 14px; border-radius: 50%; }
         .npt-title { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
         .npt-subtitle { font-size: 12.5px; color: var(--chalk-dim); margin-top: 2px; }
+        .npt-today-date { font-family: ${currentFont.display}; font-size: 22px; font-weight: 700; text-align: center; color: var(--chalk); margin: 4px 0 14px; text-transform: capitalize; }
         .npt-birthday-banner { margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: linear-gradient(135deg, var(--teal), var(--amber)); color: #1a1a1a; font-weight: 700; font-size: 13px; text-align: center; }
         .npt-body { flex: 1; overflow-y: auto; padding: 22px; }
         .npt-gauge-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
@@ -1753,6 +1944,8 @@ function NutritionPointsTracker() {
         .npt-accordion-body { padding: 16px; }
         .npt-flex-label { font-size: 13px; font-weight: 600; }
         .npt-flex-sub { font-size: 11.5px; color: var(--chalk-dim); margin-top: 2px; }
+        .npt-flex-readout { font-family: ${currentFont.display}; font-size: 20px; font-weight: 700; color: var(--teal); flex-shrink: 0; }
+        .npt-flex-readout.over { color: var(--coral); }
         .npt-flex-controls { display: flex; align-items: center; gap: 10px; }
         .npt-flex-controls button { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--chalk); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .npt-flex-controls button:hover { border-color: var(--teal); color: var(--teal); }
@@ -1815,6 +2008,7 @@ function NutritionPointsTracker() {
         .npt-chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--chalk-dim); font-size: 13px; cursor: pointer; }
         .npt-chip.active { background: var(--teal); border-color: var(--teal); color: #12201d; font-weight: 600; }
         .npt-field { margin-bottom: 16px; }
+        .npt-field-hint { font-size: 11px; color: var(--chalk-dim); margin-top: 5px; line-height: 1.5; }
         .npt-field label { display: block; font-size: 12.5px; color: var(--chalk-dim); margin-bottom: 6px; }
         .npt-field input[type="number"], .npt-field input[type="text"] { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; color: var(--chalk); font-size: 15px; }
         .npt-field input[type="range"] { width: 100%; accent-color: var(--teal); }
@@ -1857,7 +2051,7 @@ function NutritionPointsTracker() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
             <div className="npt-title">{profile.name && profile.name.trim() ? `Hallo, ${profile.name.trim()}!` : "Punktetagebuch"}</div>
-            <div className="npt-subtitle">{new Date().toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })}</div>
+            <div className="npt-subtitle">{effectiveNow(profile.dayResetMinutes || 0).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })}</div>
           </div>
           <button className="npt-info-btn" onClick={() => setShowThemePanel((v) => !v)} aria-label="Darstellung anpassen">
             <IconPalette size={16} />
@@ -1891,14 +2085,15 @@ function NutritionPointsTracker() {
       <div className="npt-body">
         {tab === "heute" && (
           <div style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
+            <div className="npt-today-date">{effectiveNow(profile.dayResetMinutes || 0).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })}</div>
             <div className="npt-gauge-wrap">
               <svg width="180" height="180" viewBox="0 0 180 180">
                 <circle cx="90" cy="90" r={r} fill="none" stroke="var(--line)" strokeWidth="12" />
                 <circle cx="90" cy="90" r={r} fill="none" stroke={`var(--${status})`} strokeWidth="12" strokeLinecap="round"
                   strokeDasharray={circumference} strokeDashoffset={dashOffset} transform="rotate(-90 90 90)"
                   style={{ transition: "stroke-dashoffset 0.4s ease, stroke 0.4s ease" }} />
-                <text x="90" y="86" textAnchor="middle" className="npt-font-display" fontSize="34" fontWeight="700" fill="var(--chalk)">{remaining}</text>
-                <text x="90" y="108" textAnchor="middle" fontSize="11" fill="var(--chalk-dim)" fontFamily={currentFont.body}>Punkte übrig</text>
+                <text x="90" y="86" textAnchor="middle" className="npt-font-display" fontSize="34" fontWeight="700" fill={`var(--${status})`}>{remaining}</text>
+                <text x="90" y="108" textAnchor="middle" fontSize="11" fill={`var(--${status})`} fontFamily={currentFont.body}>Punkte verfügbar</text>
               </svg>
               <div className="npt-gauge-sub">
                 {used} von {effectiveTarget} Punkten heute verbraucht
@@ -1907,97 +2102,139 @@ function NutritionPointsTracker() {
             </div>
 
             <div className="npt-adjust-card">
-              <div className="npt-adjust-title">Tagesanpassungen</div>
-              <div className="npt-adjust-row">
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div>
-                    <div className="npt-flex-label">Sport heute</div>
-                    <div className="npt-flex-sub">{sportDone ? `≈ ${caloriesBurned} kcal → +${sportBonus} Bonuspunkte` : "Kein Sport-Bonus"}</div>
-                  </div>
-                  <input type="checkbox" className="npt-checkbox" checked={sportDone} onChange={(ev) => setSportDone(ev.target.checked)} aria-label="Sport heute gemacht" />
-                </div>
-
-                {sportDone && (
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                      <label style={{ fontSize: 12.5, color: "var(--chalk-dim)" }}>
-                        Intensität: <span className="npt-font-display" style={{ color: "var(--teal)" }}>{sportIntensity}</span>/10
-                      </label>
-                      <button className="npt-info-btn" onClick={() => setShowIntensityInfo((v) => !v)} aria-label="Intensitätsstufen erklären">ⓘ</button>
-                    </div>
-                    <input type="range" min="1" max="10" step="1" value={sportIntensity} onChange={(ev) => setSportIntensity(Number(ev.target.value))} style={{ width: "100%", accentColor: "var(--teal)" }} />
-
-                    {showIntensityInfo && (
-                      <div className="npt-sample-box info" style={{ marginTop: 10 }}>
-                        <div style={{ marginBottom: 6, fontWeight: 600, color: "var(--chalk)" }}>Was bedeuten die Stufen?</div>
-                        {INTENSITY_INFO.map((text, idx) => (
-                          <div key={idx} style={{ marginBottom: 3 }}><strong className="npt-font-display">{idx + 1}</strong> – {text}</div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-                      <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 12, color: "var(--chalk-dim)", display: "block", marginBottom: 4 }}>Stunden</label>
-                        <input type="number" inputMode="numeric" min="0" className="npt-mini-input" style={{ width: "100%" }} value={sportHours} onChange={(ev) => setSportHours(ev.target.value)} />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 12, color: "var(--chalk-dim)", display: "block", marginBottom: 4 }}>Minuten</label>
-                        <input type="number" inputMode="numeric" min="0" max="59" className="npt-mini-input" style={{ width: "100%" }} value={sportMinutes} onChange={(ev) => setSportMinutes(ev.target.value)} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="npt-adjust-divider" />
-
               <div className="npt-adjust-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <div className="npt-flex-label">Wochenpuffer</div>
-                  <div className="npt-flex-sub">{flexRemaining} von {WEEKLY_FLEX_TOTAL} Flex-Punkten übrig</div>
+                  <div className="npt-flex-label">Wochenpuffer (Flexpoints)</div>
+                  <div className="npt-flex-sub">
+                    {flexConsumedToday > 0 ? `Heute ${flexConsumedToday} davon in Nutzung` : "Springt automatisch ein, sobald die Tagespunkte aufgebraucht sind"}
+                    {isOverLimit ? " · Wochenlimit erreicht" : ""}
+                  </div>
                 </div>
-                <div className="npt-flex-controls">
-                  <button onClick={() => setFlexUsed(Math.max(0, flexUsed - 1))} aria-label="Flex-Punkt zurückgeben">−</button>
-                  <span>{flexUsed}</span>
-                  <button onClick={() => setFlexUsed(Math.min(WEEKLY_FLEX_TOTAL, flexUsed + 1))} aria-label="Flex-Punkt nutzen">+</button>
-                </div>
+                <div className={`npt-flex-readout ${isOverLimit ? "over" : ""}`}>{flexRemaining} / {WEEKLY_FLEX_TOTAL}</div>
               </div>
             </div>
 
-            <div className="npt-adjust-card">
-              <div className="npt-adjust-title">Heute gegessen</div>
-              <div className="npt-adjust-row">
-                {entries.length === 0 && <div className="npt-empty">Noch nichts eingetragen. Leg mit dem ersten Eintrag los.</div>}
-                {entries.map((e) => (
-                  <div className="npt-entry-row" key={e.id}>
+            <div className="npt-chip-row" style={{ marginBottom: 14 }}>
+              <button className={`npt-chip ${heuteSubTab === "essen" ? "active" : ""}`} onClick={() => setHeuteSubTab("essen")}>Essen heute</button>
+              <button className={`npt-chip ${heuteSubTab === "sport" ? "active" : ""}`} onClick={() => setHeuteSubTab("sport")}>Sport heute</button>
+            </div>
+
+            {heuteSubTab === "sport" && (
+              <div className="npt-adjust-card">
+                <div className="npt-adjust-title">Sport heute</div>
+                <div className="npt-adjust-row">
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div>
-                      <div className="npt-entry-name">{e.name}</div>
-                      <div className="npt-entry-meta">
-                        {e.isDirect
-                          ? "Direkt eingetragen"
-                          : e.calcBasis === "kohlenhydrate"
-                          ? `≈ ${e.calories} kcal (aus ${e.carbs} g Kohlenhydrate) · ${e.fat} g Fett · ${e.protein} g Protein${e.fiber ? ` · ${e.fiber} g Ballaststoffe` : ""}`
-                          : `${e.calories} kcal · ${e.fat} g Fett · ${e.protein} g Protein${e.fiber ? ` · ${e.fiber} g Ballaststoffe` : ""}`}
+                      <div className="npt-flex-label">Sport heute gemacht</div>
+                      <div className="npt-flex-sub">{sportDone ? `≈ ${caloriesBurned} kcal → +${sportBonus} Bonuspunkte` : "Kein Sport-Bonus"}</div>
+                    </div>
+                    <input type="checkbox" className="npt-checkbox" checked={sportDone} onChange={(ev) => setSportDone(ev.target.checked)} aria-label="Sport heute gemacht" />
+                  </div>
+
+                  {sportDone && (
+                    <div style={{ marginTop: 12 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                        <label style={{ fontSize: 12.5, color: "var(--chalk-dim)" }}>
+                          Intensität: <span className="npt-font-display" style={{ color: "var(--teal)" }}>{sportIntensity}</span>/10
+                        </label>
+                        <button className="npt-info-btn" onClick={() => setShowIntensityInfo((v) => !v)} aria-label="Intensitätsstufen erklären">ⓘ</button>
+                      </div>
+                      <input type="range" min="1" max="10" step="1" value={sportIntensity} onChange={(ev) => setSportIntensity(Number(ev.target.value))} style={{ width: "100%", accentColor: "var(--teal)" }} />
+
+                      {showIntensityInfo && (
+                        <div className="npt-sample-box info" style={{ marginTop: 10 }}>
+                          <div style={{ marginBottom: 6, fontWeight: 600, color: "var(--chalk)" }}>Was bedeuten die Stufen?</div>
+                          {INTENSITY_INFO.map((text, idx) => (
+                            <div key={idx} style={{ marginBottom: 3 }}><strong className="npt-font-display">{idx + 1}</strong> – {text}</div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: 12, color: "var(--chalk-dim)", display: "block", marginBottom: 4 }}>Stunden</label>
+                          <input type="number" inputMode="numeric" min="0" className="npt-mini-input" style={{ width: "100%" }} value={sportHours} onChange={(ev) => setSportHours(ev.target.value)} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: 12, color: "var(--chalk-dim)", display: "block", marginBottom: 4 }}>Minuten</label>
+                          <input type="number" inputMode="numeric" min="0" max="59" className="npt-mini-input" style={{ width: "100%" }} value={sportMinutes} onChange={(ev) => setSportMinutes(ev.target.value)} />
+                        </div>
                       </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <div className="npt-entry-points npt-font-display">{e.points}</div>
-                      <button className="npt-del-btn" onClick={() => startEditEntry(e)} aria-label="Eintrag bearbeiten"><IconPencil size={15} /></button>
-                      <button className="npt-del-btn" onClick={() => deleteEntry(e.id)} aria-label="Eintrag löschen"><IconTrash size={16} /></button>
-                    </div>
-                  </div>
-                ))}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 0 8px" }}>
-              {!showForm && (
-                <button className="npt-fab-inline" onClick={() => setShowForm(true)} aria-label="Essen hinzufügen">
-                  <IconPlus size={30} />
-                </button>
-              )}
-            </div>
+            {heuteSubTab === "essen" && (
+              <>
+                {macroKcalTotal > 0 && (
+                  <div className="npt-adjust-card">
+                    <div className="npt-adjust-title">Nährstoffverteilung heute</div>
+                    <div className="npt-adjust-row" style={{ display: "flex", gap: 18, alignItems: "center" }}>
+                      <svg width="112" height="112" viewBox="0 0 120 120" style={{ flexShrink: 0 }}>
+                        <circle cx="60" cy="60" r={DONUT_R} fill="none" stroke="var(--line)" strokeWidth="14" />
+                        {macroSegments.filter((seg) => seg.share > 0).map((seg) => (
+                          <circle key={seg.key} cx="60" cy="60" r={DONUT_R} fill="none" stroke={`var(${seg.colorVar})`} strokeWidth="14"
+                            strokeDasharray={seg.dashArray} strokeDashoffset={seg.dashOffset} transform="rotate(-90 60 60)" />
+                        ))}
+                      </svg>
+                      <div style={{ flex: 1 }}>
+                        {macroSegments.map((seg) => (
+                          <div key={seg.key} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, fontSize: 12.5 }}>
+                            <span style={{ width: 10, height: 10, borderRadius: 3, background: `var(${seg.colorVar})`, display: "inline-block", flexShrink: 0 }}></span>
+                            {seg.label}: <strong className="npt-font-display">{seg.grams} g</strong>&nbsp;({Math.round(seg.share * 100)}%)
+                          </div>
+                        ))}
+                        <div style={{ fontSize: 11.5, color: "var(--chalk-dim)", marginTop: 6 }}>Ballaststoffe: {round1(macroTotals.fiber)} g</div>
+                      </div>
+                    </div>
+                    {directEntriesCount > 0 && (
+                      <div style={{ fontSize: 11, color: "var(--chalk-dim)", padding: "0 16px 12px" }}>
+                        {directEntriesCount} {directEntriesCount === 1 ? "direkt eingetragener Eintrag" : "direkt eingetragene Einträge"} ohne Nährwerte nicht berücksichtigt.
+                      </div>
+                    )}
+                    {coachTips.map((tip, idx) => (
+                      <div key={idx} className="npt-sample-box info" style={{ margin: "0 16px 12px" }}>{tip}</div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="npt-adjust-card">
+                  <div className="npt-adjust-title">Heute gegessen</div>
+                  <div className="npt-adjust-row">
+                    {entries.length === 0 && <div className="npt-empty">Noch nichts eingetragen. Leg mit dem ersten Eintrag los.</div>}
+                    {entries.map((e) => (
+                      <div className="npt-entry-row" key={e.id}>
+                        <div>
+                          <div className="npt-entry-name">{e.name}</div>
+                          <div className="npt-entry-meta">
+                            {e.isDirect
+                              ? "Direkt eingetragen"
+                              : e.calcBasis === "kohlenhydrate"
+                              ? `≈ ${e.calories} kcal (aus ${e.carbs} g Kohlenhydrate) · ${e.fat} g Fett · ${e.protein} g Protein${e.fiber ? ` · ${e.fiber} g Ballaststoffe` : ""}`
+                              : `${e.calories} kcal · ${e.fat} g Fett · ${e.protein} g Protein${e.fiber ? ` · ${e.fiber} g Ballaststoffe` : ""}`}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          <div className="npt-entry-points npt-font-display">{e.points}</div>
+                          <button className="npt-del-btn" onClick={() => startEditEntry(e)} aria-label="Eintrag bearbeiten"><IconPencil size={15} /></button>
+                          <button className="npt-del-btn" onClick={() => deleteEntry(e.id)} aria-label="Eintrag löschen"><IconTrash size={16} /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 0 8px" }}>
+                  {!showForm && (
+                    <button className="npt-fab-inline" onClick={() => setShowForm(true)} aria-label="Essen hinzufügen">
+                      <IconPlus size={30} />
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
 
           </div>
         )}
@@ -2027,7 +2264,7 @@ function NutritionPointsTracker() {
                   const isExpanded = expandedHistoryDay === d.key;
                   return (
                     <div key={d.key}>
-                      <div className={`npt-history-row ${d.isToday ? "today" : ""}`} onClick={() => d.key <= todayKey() && toggleHistoryDay(d.key, d.isToday)} style={{ cursor: d.key <= todayKey() ? "pointer" : "default" }}>
+                      <div className={`npt-history-row ${d.isToday ? "today" : ""}`} onClick={() => d.key <= effectiveTodayKey(profile.dayResetMinutes || 0) && toggleHistoryDay(d.key, d.isToday)} style={{ cursor: d.key <= effectiveTodayKey(profile.dayResetMinutes || 0) ? "pointer" : "default" }}>
                         <div className="npt-history-label">{d.label}</div>
                         <div className="npt-history-bar"><div className="npt-history-bar-inner" style={{ width: `${Math.min(st.ratio, 1) * 100}%`, background: st.color }} /></div>
                         <div className="npt-history-val">{d.used === null ? "keine Daten" : `${d.used}/${d.target || effectiveTarget}`}</div>
@@ -2332,39 +2569,39 @@ function NutritionPointsTracker() {
             )}
 
             {trend && trend.insufficientData && (
-              <div className="npt-empty" style={{ marginBottom: 16 }}>Noch nicht genug Daten für eine verlässliche Prognose (mind. 10 Tage mit Einträgen in den letzten 3 Wochen nötig).</div>
+              <div className="npt-empty" style={{ marginBottom: 16 }}>Noch nicht genug Daten für eine verlässliche Prognose (mind. {MIN_TREND_MEASUREMENTS} Messungen über mind. {MIN_TREND_SPAN_DAYS} Tage nötig).</div>
             )}
             {trend && !trend.insufficientData && (
               <div className={`npt-sample-box ${profile.targetWeightKg && (trend.status === "wrong_direction" || trend.status === "no_trend") ? "warn" : "info"}`} style={{ marginBottom: 16 }}>
-                <div style={{ fontWeight: 700, color: "var(--chalk)", marginBottom: 6 }}>Trend (letzte 3 Wochen, geglättet)</div>
+                <div style={{ fontWeight: 700, color: "var(--chalk)", marginBottom: 6 }}>Trend (letzte 4 Wochen, geglättet)</div>
                 <div>Beobachtet: <strong className="npt-font-display">{trend.slopePerWeek > 0 ? "+" : ""}{trend.slopePerWeek} kg/Woche</strong></div>
                 {profile.targetWeightKg && trend.status === "on_track" && (
-                  <div style={{ marginTop: 4 }}>Bei diesem Tempo: Zielgewicht ca. am <strong>{trend.targetDate.toLocaleDateString("de-DE")}</strong> erreicht (in {trend.daysToTarget} Tagen)</div>
+                  <div style={{ marginTop: 4 }}>Weiter so — bei diesem Tempo erreichst du dein Zielgewicht ca. am <strong>{trend.targetDate.toLocaleDateString("de-DE")}</strong> (in {trend.daysToTarget} Tagen).</div>
                 )}
-                {profile.targetWeightKg && trend.status === "reached" && <div style={{ marginTop: 4 }}>Du bist schon nahe an deinem Zielgewicht!</div>}
-                {profile.targetWeightKg && trend.status === "wrong_direction" && <div style={{ marginTop: 4 }}>Der aktuelle Trend bewegt sich nicht in Richtung deines Zielgewichts.</div>}
-                {profile.targetWeightKg && trend.status === "no_trend" && <div style={{ marginTop: 4 }}>Keine klare Tendenz in den letzten 3 Wochen erkennbar.</div>}
+                {profile.targetWeightKg && trend.status === "reached" && <div style={{ marginTop: 4 }}>Fast geschafft — du bist schon ganz nah an deinem Zielgewicht dran!</div>}
+                {profile.targetWeightKg && trend.status === "wrong_direction" && <div style={{ marginTop: 4 }}>Der Trend zeigt gerade in die andere Richtung als dein Ziel. Kein Grund zur Sorge, aber vielleicht ein guter Moment, mal draufzuschauen, was sich ändern lässt.</div>}
+                {profile.targetWeightKg && trend.status === "no_trend" && <div style={{ marginTop: 4 }}>Dein Gewicht hält sich aktuell stabil — noch keine klare Richtung erkennbar. Bleib dran, in ein paar Tagen zeigt sich mehr.</div>}
                 {theoreticalWeeklyRate !== null && (
                   <div style={{ marginTop: 8, fontSize: 11, opacity: 0.85 }}>
-                    Theoretisch aus Kalorienbilanz (Ø letzte 7 Tage, 7700 kcal ≈ 1 kg): {theoreticalWeeklyRate > 0 ? "+" : ""}{theoreticalWeeklyRate} kg/Woche — kann von der beobachteten Rate abweichen (z. B. Wasser, Muskelaufbau).
+                    Rechnerisch aus deinen Punkten der letzten 7 Tage: {theoreticalWeeklyRate > 0 ? "+" : ""}{theoreticalWeeklyRate} kg/Woche — die Waage zeigt oft etwas anderes, z. B. durch Wasser oder Muskelaufbau.
                   </div>
                 )}
               </div>
             )}
 
             {waistEnabled && showWaistTrendLine && waistTrend && waistTrend.insufficientData && (
-              <div className="npt-empty" style={{ marginBottom: 16 }}>Noch nicht genug Bauchumfang-Daten für eine verlässliche Prognose (mind. 10 Tage mit Einträgen in den letzten 3 Wochen nötig).</div>
+              <div className="npt-empty" style={{ marginBottom: 16 }}>Noch nicht genug Bauchumfang-Daten für eine verlässliche Prognose (mind. {MIN_TREND_MEASUREMENTS} Messungen über mind. {MIN_TREND_SPAN_DAYS} Tage nötig).</div>
             )}
             {waistEnabled && showWaistTrendLine && waistTrend && !waistTrend.insufficientData && (
               <div className={`npt-sample-box ${profile.targetWaistCm && (waistTrend.status === "wrong_direction" || waistTrend.status === "no_trend") ? "warn" : "info"}`} style={{ marginBottom: 16 }}>
-                <div style={{ fontWeight: 700, color: "var(--chalk)", marginBottom: 6 }}>Bauchumfang-Trend (letzte 3 Wochen, geglättet)</div>
+                <div style={{ fontWeight: 700, color: "var(--chalk)", marginBottom: 6 }}>Bauchumfang-Trend (letzte 4 Wochen, geglättet)</div>
                 <div>Beobachtet: <strong className="npt-font-display">{waistTrend.slopePerWeek > 0 ? "+" : ""}{waistTrend.slopePerWeek} cm/Woche</strong></div>
                 {profile.targetWaistCm && waistTrend.status === "on_track" && (
-                  <div style={{ marginTop: 4 }}>Bei diesem Tempo: Ziel-Bauchumfang ca. am <strong>{waistTrend.targetDate.toLocaleDateString("de-DE")}</strong> erreicht (in {waistTrend.daysToTarget} Tagen)</div>
+                  <div style={{ marginTop: 4 }}>Weiter so — bei diesem Tempo erreichst du deinen Ziel-Bauchumfang ca. am <strong>{waistTrend.targetDate.toLocaleDateString("de-DE")}</strong> (in {waistTrend.daysToTarget} Tagen).</div>
                 )}
-                {profile.targetWaistCm && waistTrend.status === "reached" && <div style={{ marginTop: 4 }}>Du bist schon nahe an deinem Ziel-Bauchumfang!</div>}
-                {profile.targetWaistCm && waistTrend.status === "wrong_direction" && <div style={{ marginTop: 4 }}>Der aktuelle Trend bewegt sich nicht in Richtung deines Ziel-Bauchumfangs.</div>}
-                {profile.targetWaistCm && waistTrend.status === "no_trend" && <div style={{ marginTop: 4 }}>Keine klare Tendenz in den letzten 3 Wochen erkennbar.</div>}
+                {profile.targetWaistCm && waistTrend.status === "reached" && <div style={{ marginTop: 4 }}>Fast geschafft — du bist schon ganz nah an deinem Ziel-Bauchumfang dran!</div>}
+                {profile.targetWaistCm && waistTrend.status === "wrong_direction" && <div style={{ marginTop: 4 }}>Der Trend zeigt gerade in die andere Richtung als dein Ziel. Kein Grund zur Sorge, aber vielleicht ein guter Moment, mal draufzuschauen, was sich ändern lässt.</div>}
+                {profile.targetWaistCm && waistTrend.status === "no_trend" && <div style={{ marginTop: 4 }}>Dein Bauchumfang hält sich aktuell stabil — noch keine klare Richtung erkennbar. Bleib dran, in ein paar Tagen zeigt sich mehr.</div>}
               </div>
             )}
           </>
@@ -2428,6 +2665,18 @@ function NutritionPointsTracker() {
                   <div className="npt-field">
                     <label>Kaloriendefizit für Abnehmziel (%) <span className="npt-range-val">{profile.deficitPercent}</span></label>
                     <input type="range" min="0" max="35" step="5" value={profile.deficitPercent} onChange={(ev) => setProfile({ ...profile, deficitPercent: Number(ev.target.value) })} />
+                  </div>
+
+                  <div className="npt-field">
+                    <label>Täglicher Punkte-Reset um</label>
+                    <input type="time" value={`${String(Math.floor((profile.dayResetMinutes || 0) / 60)).padStart(2, "0")}:${String((profile.dayResetMinutes || 0) % 60).padStart(2, "0")}`}
+                      onChange={(ev) => {
+                        const [h, m] = ev.target.value.split(":").map((n) => parseInt(n, 10) || 0);
+                        setProfile({ ...profile, dayResetMinutes: h * 60 + m });
+                      }} />
+                    <div className="npt-field-hint">
+                      Standard 00:00. Eingaben zwischen Mitternacht und dieser Uhrzeit zählen noch zum Vortag — praktisch z. B. bei einem langen Abend, damit ein später Drink nicht schon das neue Tageskontingent anbricht.
+                    </div>
                   </div>
 
                   <div className="npt-target-box">
@@ -2505,7 +2754,7 @@ function NutritionPointsTracker() {
                         <div className="npt-sample-box info" style={{ marginTop: -8, marginBottom: 10 }}>
                           <div style={{ fontWeight: 700, marginBottom: 4 }}>Zutaten</div>
                           {f.recipeIngredients.map((ing, idx) => (
-                            <div key={idx}>• {ing.name} – {ing.amountG} g</div>
+                            <div key={idx}>• {ing.name} – {ing.unit && ing.unit !== "g" ? `${ing.amount} ${ing.unit} (≈ ${ing.amountG} g)` : `${ing.amountG} g`}</div>
                           ))}
                         </div>
                       )}
@@ -2543,10 +2792,22 @@ function NutritionPointsTracker() {
                   {recipeIngredientSelected && (
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 12 }}>
                       <div className="npt-field" style={{ flex: 1, marginBottom: 0 }}>
-                        <label>Menge (g)</label>
-                        <input type="number" inputMode="decimal" value={recipeIngredientAmountG} onChange={(ev) => setRecipeIngredientAmountG(Number(ev.target.value) || 0)} />
+                        <label>Menge</label>
+                        <input type="number" inputMode="decimal" value={recipeIngredientAmount} onChange={(ev) => setRecipeIngredientAmount(Number(ev.target.value) || 0)} />
+                      </div>
+                      <div className="npt-field" style={{ flex: "0 0 96px", marginBottom: 0 }}>
+                        <label>Einheit</label>
+                        <select value={recipeIngredientUnit} onChange={(ev) => setRecipeIngredientUnit(ev.target.value)}>
+                          {RECIPE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                        </select>
                       </div>
                       <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px", height: 42 }} onClick={addRecipeIngredient}>+ Hinzufügen</button>
+                    </div>
+                  )}
+                  {recipeIngredientSelected && recipeIngredientUnit !== "g" && recipeIngredientUnit !== "ml" && (
+                    <div className="npt-field-hint" style={{ marginTop: -8, marginBottom: 12 }}>
+                      ≈ {round1(resolveAmountToGrams(recipeIngredientSelected, recipeIngredientAmount, recipeIngredientUnit))} g
+                      {!(recipeIngredientSelected.units && recipeIngredientSelected.units[recipeIngredientUnit] !== undefined) ? " (allgemeiner Richtwert, nicht speziell für dieses Lebensmittel hinterlegt)" : ""}
                     </div>
                   )}
 
@@ -2557,6 +2818,7 @@ function NutritionPointsTracker() {
                         <div className="npt-entry-row" key={ing.tempId}>
                           <div style={{ flex: 1 }}>
                             <div className="npt-entry-name">{ing.name}</div>
+                            {ing.unit && ing.unit !== "g" && <div className="npt-entry-meta">{ing.amount} {ing.unit}</div>}
                           </div>
                           <input type="number" inputMode="decimal" className="npt-mini-input" style={{ width: 64, marginRight: 8 }} value={ing.amountG} onChange={(ev) => updateRecipeIngredientAmount(ing.tempId, Number(ev.target.value) || 0)} />
                           <span style={{ fontSize: 12, color: "var(--chalk-dim)", marginRight: 6 }}>g</span>
@@ -2669,7 +2931,7 @@ function NutritionPointsTracker() {
             <div className="npt-modal-header">
               <div className="npt-modal-title">
                 {editingEntryId ? "Eintrag bearbeiten" : "Eintrag hinzufügen"}
-                {formTargetDay && formTargetDay !== todayKey() && (
+                {formTargetDay && formTargetDay !== effectiveTodayKey(profile.dayResetMinutes || 0) && (
                   <div style={{ fontSize: 12, fontWeight: 400, color: "var(--chalk-dim)", marginTop: 2 }}>
                     für {new Date(formTargetDay + "T00:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })}
                   </div>
@@ -2681,7 +2943,83 @@ function NutritionPointsTracker() {
             <div className="npt-chip-row">
               <button className={`npt-chip ${formMode === "naehrwerte" ? "active" : ""}`} onClick={() => setFormMode("naehrwerte")}>Nährwerte</button>
               <button className={`npt-chip ${formMode === "punkte" ? "active" : ""}`} onClick={() => setFormMode("punkte")}>Punkte direkt</button>
+              {!editingEntryId && (
+                <button className={`npt-chip ${formMode === "rezept" ? "active" : ""}`} onClick={() => setFormMode("rezept")}>Rezept</button>
+              )}
             </div>
+
+            {formMode === "rezept" && (
+              <>
+                <div className="npt-field-hint" style={{ marginBottom: 12 }}>
+                  Stell ein Gericht aus mehreren Zutaten zusammen — wird als eigenes Lebensmittel gespeichert und direkt für heute eingetragen.
+                </div>
+
+                <div className="npt-field" style={{ position: "relative" }}>
+                  <label>Zutat suchen</label>
+                  <input type="text" placeholder="z. B. Haferflocken, Skyr…" value={recipeIngredientQuery}
+                    onChange={(ev) => { setRecipeIngredientQuery(ev.target.value); setRecipeIngredientSelected(null); setRecipeIngredientDropdownOpen(true); }}
+                    onFocus={() => setRecipeIngredientDropdownOpen(true)} />
+                  {recipeIngredientDropdownOpen && recipeIngredientResults.length > 0 && (
+                    <div className="npt-dropdown">
+                      {recipeIngredientResults.map((food) => (
+                        <div key={food.id} className="npt-dropdown-item" onClick={() => selectRecipeIngredient(food)}>{food.name}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {recipeIngredientSelected && (
+                  <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 12 }}>
+                    <div className="npt-field" style={{ flex: 1, marginBottom: 0 }}>
+                      <label>Menge</label>
+                      <input type="number" inputMode="decimal" value={recipeIngredientAmount} onChange={(ev) => setRecipeIngredientAmount(Number(ev.target.value) || 0)} />
+                    </div>
+                    <div className="npt-field" style={{ flex: "0 0 96px", marginBottom: 0 }}>
+                      <label>Einheit</label>
+                      <select value={recipeIngredientUnit} onChange={(ev) => setRecipeIngredientUnit(ev.target.value)}>
+                        {RECIPE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                    </div>
+                    <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px", height: 42 }} onClick={addRecipeIngredient}>+ Hinzufügen</button>
+                  </div>
+                )}
+
+                {recipeIngredients.length > 0 && (
+                  <>
+                    <div style={{ height: 1, background: "var(--line)", margin: "4px 0 12px" }} />
+                    {recipeIngredients.map((ing) => (
+                      <div className="npt-entry-row" key={ing.tempId}>
+                        <div style={{ flex: 1 }}>
+                          <div className="npt-entry-name">{ing.name}</div>
+                          {ing.unit && ing.unit !== "g" && <div className="npt-entry-meta">{ing.amount} {ing.unit}</div>}
+                        </div>
+                        <input type="number" inputMode="decimal" className="npt-mini-input" style={{ width: 64, marginRight: 8 }} value={ing.amountG} onChange={(ev) => updateRecipeIngredientAmount(ing.tempId, Number(ev.target.value) || 0)} />
+                        <span style={{ fontSize: 12, color: "var(--chalk-dim)", marginRight: 6 }}>g</span>
+                        <button className="npt-del-btn" onClick={() => removeRecipeIngredient(ing.tempId)} aria-label="Zutat entfernen"><IconTrash size={16} /></button>
+                      </div>
+                    ))}
+
+                    <div className="npt-sample-box info" style={{ marginTop: 8, marginBottom: 12 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 4 }}>Gesamt ({round1(recipeTotals.totalG)} g)</div>
+                      <div>{Math.round(recipeTotals.calories)} kcal · {round1(recipeTotals.fat)} g Fett · {round1(recipeTotals.protein)} g Protein · {round1(recipeTotals.fiber)} g Ballaststoffe</div>
+                    </div>
+
+                    <div className="npt-field"><label>Name des Rezepts</label><input type="text" placeholder="z. B. Skyr-Bowl mit Beeren" value={recipeName} onChange={(ev) => setRecipeName(ev.target.value)} /></div>
+                    <div className="npt-field"><label>Ergibt wie viele Portionen?</label><input type="number" inputMode="decimal" min="1" value={recipeServings} onChange={(ev) => setRecipeServings(Number(ev.target.value) || 1)} /></div>
+                    {recipeServings > 0 && recipeTotals.totalG > 0 && (
+                      <div className="npt-field-hint" style={{ marginTop: -8, marginBottom: 12 }}>
+                        → 1 Portion ≈ {round1(recipeTotals.totalG / Math.max(1, Number(recipeServings) || 1))} g, wird jetzt für heute eingetragen
+                      </div>
+                    )}
+
+                    <div className="npt-form-actions">
+                      <button className="npt-btn-secondary" onClick={closeForm}>Abbrechen</button>
+                      <button className="npt-btn-primary" onClick={saveRecipeAndLog} disabled={!recipeName.trim()}>Rezept eintragen</button>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
 
             {formMode === "naehrwerte" && (
               <>
@@ -2706,9 +3044,20 @@ function NutritionPointsTracker() {
 
                 {form.selectedFoodId ? (
                   <>
-                    <div className="npt-form-row">
-                      <label>Menge (g)</label>
-                      <input type="number" inputMode="decimal" value={form.amountG} onChange={(ev) => updateAmount(Number(ev.target.value) || 0)} />
+                    <div className="npt-form-row" style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                      <div style={{ flex: 1 }}>
+                        <label>Menge</label>
+                        <input type="number" inputMode="decimal" value={form.amountUnit === "l" ? round1(form.amountG / 1000) : form.amountG}
+                          onChange={(ev) => updateAmountUnit(Number(ev.target.value) || 0, form.amountUnit)} />
+                      </div>
+                      <div style={{ flex: "0 0 84px" }}>
+                        <label>Einheit</label>
+                        <select value={form.amountUnit} onChange={(ev) => updateAmountUnit(form.amountUnit === "l" ? round1(form.amountG / 1000) : form.amountG, ev.target.value)}>
+                          <option value="g">g</option>
+                          <option value="ml">ml</option>
+                          <option value="l">l</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="npt-form-row">
                       <label>Bezeichnung</label>
