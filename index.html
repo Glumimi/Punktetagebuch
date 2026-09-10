@@ -742,7 +742,16 @@ function NutritionPointsTracker() {
   const [tourSpotlight, setTourSpotlight] = useState(null);
   const [tourSpeaking, setTourSpeaking] = useState(false);
   const tourRefs = useRef({});
-  const setTourRef = (key) => (node) => { tourRefs.current[key] = node; };
+  // Stabile Ref-Callback-Funktionen pro Key (in einem Ref gecacht, nicht bei jedem Render neu
+  // erzeugt) — sonst hängt React die Refs bei jedem Re-Render unnötig ab und wieder an, was zu
+  // ungenauen/verzögerten Positionsmessungen für das Tour-Spotlight führt.
+  const tourRefCallbacks = useRef({});
+  function setTourRef(key) {
+    if (!tourRefCallbacks.current[key]) {
+      tourRefCallbacks.current[key] = (node) => { tourRefs.current[key] = node; };
+    }
+    return tourRefCallbacks.current[key];
+  }
   const [theoreticalWeeklyRate, setTheoreticalWeeklyRate] = useState(null);
   const [showWeightLine, setShowWeightLine] = useState(true);
   const [showTrendLine, setShowTrendLine] = useState(true);
@@ -2021,16 +2030,21 @@ function NutritionPointsTracker() {
   };
 
   // Positioniert die Tour-Erklärkarte unter (oder bei zu wenig Platz über) dem markierten
-  // Element; ohne Spotlight (Intro/Outro/fehlendes Ziel) erscheint sie zentriert.
+  // Element; ohne Spotlight (Intro/Outro/fehlendes Ziel) erscheint sie zentriert. Nutzt bewusst
+  // "bottom" statt "top" + translateY(-100%) für die obere Variante, damit die Karte nie über
+  // den Bildschirmrand hinausragt, egal wie hoch ihr Inhalt tatsächlich wird — zusätzlich per
+  // maxHeight/overflowY abgesichert, falls es trotzdem mal eng wird.
   const tourCardStyle = (() => {
-    if (!tourSpotlight) return { top: "50%", left: 16, right: 16, transform: "translateY(-50%)" };
+    if (!tourSpotlight) return { top: "50%", left: 16, right: 16, transform: "translateY(-50%)", maxHeight: "calc(100vh - 32px)", overflowY: "auto" };
     const winH = window.innerHeight;
     const spaceBelow = winH - (tourSpotlight.top + tourSpotlight.height);
     const spaceAbove = tourSpotlight.top;
     if (spaceBelow >= 200 || spaceBelow >= spaceAbove) {
-      return { top: Math.min(tourSpotlight.top + tourSpotlight.height + 16, winH - 200), left: 16, right: 16 };
+      const top = Math.max(16, Math.min(tourSpotlight.top + tourSpotlight.height + 16, winH - 180));
+      return { top, left: 16, right: 16, maxHeight: Math.max(120, winH - top - 16), overflowY: "auto" };
     }
-    return { top: Math.max(16, tourSpotlight.top - 16), left: 16, right: 16, transform: "translateY(-100%)" };
+    const bottom = Math.max(16, Math.min(winH - tourSpotlight.top + 16, winH - 16));
+    return { bottom, left: 16, right: 16, maxHeight: Math.max(120, winH - bottom - 16), overflowY: "auto" };
   })();
 
   return (
@@ -2400,8 +2414,8 @@ function NutritionPointsTracker() {
               <button className="npt-reset-btn" style={{ marginTop: 10, marginBottom: 6 }} onClick={() => setHistoryWeekMonday(mondayOf(new Date()))}>Zur aktuellen Woche</button>
             )}
 
-            <div className="npt-accordion-section" style={{ marginTop: 14 }} ref={setTourRef("verlauf-summary")}>
-              <button className={`npt-accordion-header ${showWeekSummary ? "open" : ""}`} onClick={() => setShowWeekSummary((v) => !v)}>
+            <div className="npt-accordion-section" style={{ marginTop: 14 }}>
+              <button className={`npt-accordion-header ${showWeekSummary ? "open" : ""}`} ref={setTourRef("verlauf-summary")} onClick={() => setShowWeekSummary((v) => !v)}>
                 <span>Wochenzusammenfassung</span>
                 <IconChevronDown size={18} />
               </button>
@@ -2530,8 +2544,8 @@ function NutritionPointsTracker() {
 
         {tab === "gewicht" && (
           <>
-            <div className="npt-accordion-section" ref={setTourRef("gewicht-eingabe")}>
-              <button className={`npt-accordion-header ${showWeightSettings ? "open" : ""}`} onClick={() => setShowWeightSettings((v) => !v)}>
+            <div className="npt-accordion-section">
+              <button className={`npt-accordion-header ${showWeightSettings ? "open" : ""}`} ref={setTourRef("gewicht-eingabe")} onClick={() => setShowWeightSettings((v) => !v)}>
                 <span>Gewicht &amp; Bauchumfang</span>
                 <IconChevronDown size={18} />
               </button>
@@ -2808,8 +2822,8 @@ function NutritionPointsTracker() {
 
         {tab === "profil" && (
           <>
-            <div className="npt-accordion-section" ref={setTourRef("profil-grund")}>
-              <button className={`npt-accordion-header ${openProfilSection === "profil" ? "open" : ""}`} onClick={() => setOpenProfilSection(openProfilSection === "profil" ? null : "profil")}>
+            <div className="npt-accordion-section">
+              <button className={`npt-accordion-header ${openProfilSection === "profil" ? "open" : ""}`} ref={setTourRef("profil-grund")} onClick={() => setOpenProfilSection(openProfilSection === "profil" ? null : "profil")}>
                 <span>Dein Profil</span>
                 <IconChevronDown size={18} />
               </button>
@@ -2889,8 +2903,8 @@ function NutritionPointsTracker() {
               )}
             </div>
 
-            <div className="npt-accordion-section" ref={setTourRef("profil-matrix")}>
-              <button className={`npt-accordion-header ${openProfilSection === "matrix" ? "open" : ""}`} onClick={() => setOpenProfilSection(openProfilSection === "matrix" ? null : "matrix")}>
+            <div className="npt-accordion-section">
+              <button className={`npt-accordion-header ${openProfilSection === "matrix" ? "open" : ""}`} ref={setTourRef("profil-matrix")} onClick={() => setOpenProfilSection(openProfilSection === "matrix" ? null : "matrix")}>
                 <span>Punkte-Matrix</span>
                 <IconChevronDown size={18} />
               </button>
@@ -2963,8 +2977,8 @@ function NutritionPointsTracker() {
               )}
             </div>
 
-            <div className="npt-accordion-section" ref={setTourRef("profil-rezept")}>
-              <button className={`npt-accordion-header ${openProfilSection === "recipeBuilder" ? "open" : ""}`} onClick={() => setOpenProfilSection(openProfilSection === "recipeBuilder" ? null : "recipeBuilder")}>
+            <div className="npt-accordion-section">
+              <button className={`npt-accordion-header ${openProfilSection === "recipeBuilder" ? "open" : ""}`} ref={setTourRef("profil-rezept")} onClick={() => setOpenProfilSection(openProfilSection === "recipeBuilder" ? null : "recipeBuilder")}>
                 <span>Rezept-Baukasten</span>
                 <IconChevronDown size={18} />
               </button>
@@ -3048,8 +3062,8 @@ function NutritionPointsTracker() {
               )}
             </div>
 
-            <div className="npt-accordion-section" ref={setTourRef("profil-backup")}>
-              <button className={`npt-accordion-header ${openProfilSection === "backup" ? "open" : ""}`} onClick={() => setOpenProfilSection(openProfilSection === "backup" ? null : "backup")}>
+            <div className="npt-accordion-section">
+              <button className={`npt-accordion-header ${openProfilSection === "backup" ? "open" : ""}`} ref={setTourRef("profil-backup")} onClick={() => setOpenProfilSection(openProfilSection === "backup" ? null : "backup")}>
                 <span>Datensicherung</span>
                 <IconChevronDown size={18} />
               </button>
@@ -3389,7 +3403,7 @@ function NutritionPointsTracker() {
         <button className={`npt-tab ${tab === "profil" ? "active" : ""}`} onClick={() => setTab("profil")}><IconSliders size={18} />Profil</button>
       </div>
 
-      {tourActive && (
+      {tourActive && TOUR_STEPS[tourStep] && (
         <div className="npt-tour-overlay">
           {tourSpotlight ? (
             <div className="npt-tour-hole" style={{
