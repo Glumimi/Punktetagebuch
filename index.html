@@ -240,6 +240,89 @@ const FOOD_DATABASE = [
   { id: 128, name: "Energy Drink", calories: 45, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
   { id: 129, name: "Buttermilch", calories: 35, fat: 1, protein: 3.5, fiber: 0 , category: "Milchprodukt" },
   { id: 130, name: "Kakao (Fertiggetränk, gesüßt)", calories: 75, fat: 3, protein: 3.4, fiber: 0 , category: "Getränk" },
+  { id: 131, name: "Heidelbeeren", calories: 57, fat: 0.3, protein: 0.7, fiber: 2.4, category: "Obst" },
+  { id: 132, name: "Himbeeren", calories: 52, fat: 0.7, protein: 1.2, fiber: 6.5, category: "Obst" },
+  { id: 133, name: "Pfirsich", calories: 39, fat: 0.3, protein: 0.9, fiber: 1.5, category: "Obst" },
+  { id: 134, name: "Aprikose", calories: 48, fat: 0.4, protein: 1.4, fiber: 2.0, category: "Obst" },
+  { id: 135, name: "Pflaume", calories: 46, fat: 0.3, protein: 0.7, fiber: 1.4, category: "Obst" },
+  { id: 136, name: "Kirschen", calories: 63, fat: 0.2, protein: 1.1, fiber: 2.1, category: "Obst" },
+  { id: 137, name: "Grapefruit", calories: 42, fat: 0.1, protein: 0.8, fiber: 1.6, category: "Obst" },
+  { id: 138, name: "Mandarine", calories: 53, fat: 0.3, protein: 0.8, fiber: 1.8, category: "Obst" },
+  { id: 139, name: "Papaya", calories: 43, fat: 0.3, protein: 0.5, fiber: 1.7, category: "Obst" },
+  { id: 140, name: "Feigen (frisch)", calories: 74, fat: 0.3, protein: 0.8, fiber: 2.9, category: "Obst" },
+  { id: 141, name: "Granatapfelkerne", calories: 83, fat: 1.2, protein: 1.7, fiber: 4.0, category: "Obst" },
+  { id: 142, name: "Nektarine", calories: 44, fat: 0.3, protein: 1.1, fiber: 1.7, category: "Obst" },
+  { id: 143, name: "Sellerie (Stangen)", calories: 16, fat: 0.2, protein: 0.7, fiber: 1.6, category: "Gemüse" },
+  { id: 144, name: "Lauch/Porree", calories: 61, fat: 0.3, protein: 1.5, fiber: 2.3, category: "Gemüse" },
+  { id: 145, name: "Kohlrabi", calories: 27, fat: 0.1, protein: 1.7, fiber: 3.6, category: "Gemüse" },
+  { id: 146, name: "Radieschen", calories: 16, fat: 0.1, protein: 0.7, fiber: 1.6, category: "Gemüse" },
+  { id: 147, name: "Fenchel", calories: 31, fat: 0.2, protein: 1.2, fiber: 3.1, category: "Gemüse" },
+  { id: 148, name: "Rucola", calories: 25, fat: 0.7, protein: 2.6, fiber: 1.6, category: "Gemüse" },
+  { id: 149, name: "Feldsalat", calories: 21, fat: 0.4, protein: 2.0, fiber: 1.7, category: "Gemüse" },
+  { id: 150, name: "Kürbis (Hokkaido)", calories: 26, fat: 0.1, protein: 1.0, fiber: 1.5, category: "Gemüse" },
+  { id: 151, name: "Chinakohl", calories: 13, fat: 0.2, protein: 1.2, fiber: 1.2, category: "Gemüse" },
+  { id: 152, name: "Weißkohl", calories: 25, fat: 0.1, protein: 1.3, fiber: 2.5, category: "Gemüse" },
+  { id: 153, name: "Spargel, grün (gekocht)", calories: 20, fat: 0.2, protein: 2.2, fiber: 2.1, category: "Gemüse" },
+  { id: 154, name: "Essiggurken", calories: 11, fat: 0.2, protein: 0.5, fiber: 1.2, category: "Gemüse" },
+  { id: 155, name: "Fischstäbchen (TK, gebacken)", calories: 200, fat: 10, protein: 12, fiber: 1.0, category: "Fisch" },
+  { id: 156, name: "Tomatensauce (fertig)", calories: 55, fat: 2.0, protein: 1.5, fiber: 1.8, category: "Sonstiges" },
+  { id: 157, name: "Bolognese-Sauce (fertig)", calories: 95, fat: 5.0, protein: 6.0, fiber: 1.2, category: "Fleisch" },
+  { id: 158, name: "Pesto (Basilikum, Glas)", calories: 450, fat: 43, protein: 4.0, fiber: 2.0, category: "Fett/Öl" },
+  { id: 159, name: "Fertig-Lasagne (TK)", calories: 140, fat: 6.0, protein: 7.0, fiber: 1.0, category: "Sonstiges" },
+  { id: 160, name: "Ravioli (Dose, Tomatensauce)", calories: 90, fat: 2.5, protein: 3.0, fiber: 1.5, category: "Sonstiges" },
+  { id: 161, name: "Instant-Nudeln, zubereitet", calories: 130, fat: 5.0, protein: 3.0, fiber: 1.0, category: "Sonstiges" },
+  { id: 162, name: "Ketchup", calories: 100, fat: 0.2, protein: 1.2, fiber: 0.9, category: "Süßes/Snack" },
+  { id: 163, name: "Mayonnaise", calories: 680, fat: 75, protein: 1.0, fiber: 0.0, category: "Fett/Öl" },
+  { id: 164, name: "Senf", calories: 66, fat: 3.4, protein: 4.4, fiber: 3.3, category: "Sonstiges" },
+  { id: 165, name: "Sojasauce", calories: 53, fat: 0.1, protein: 8.0, fiber: 0.8, category: "Sonstiges" },
+  { id: 166, name: "Cornflakes", calories: 378, fat: 0.9, protein: 7.0, fiber: 3.0, category: "Sonstiges" },
+  { id: 167, name: "Chicken Nuggets (TK, gebacken)", calories: 260, fat: 15, protein: 14, fiber: 1.5, category: "Fleisch" },
+  { id: 168, name: "Frikadelle/Bulette", calories: 220, fat: 15, protein: 15, fiber: 0.5, category: "Fleisch" },
+  { id: 169, name: "Gyrosfleisch (gebraten)", calories: 220, fat: 15, protein: 20, fiber: 0.0, category: "Fleisch" },
+  { id: 170, name: "Falafel (gebacken)", calories: 333, fat: 18, protein: 13, fiber: 5.0, category: "Sonstiges" },
+  { id: 171, name: "Hummus", calories: 166, fat: 9.6, protein: 7.9, fiber: 6.0, category: "Sonstiges" },
+  { id: 172, name: "Tsatsiki", calories: 65, fat: 4.5, protein: 3.5, fiber: 0.5, category: "Milchprodukt" },
+  { id: 173, name: "Balsamico-Essig", calories: 88, fat: 0.0, protein: 0.5, fiber: 0.0, category: "Sonstiges" },
+  { id: 174, name: "Oliven, grün (in Öl)", calories: 145, fat: 15, protein: 1.0, fiber: 3.3, category: "Fett/Öl" },
+  { id: 175, name: "Kichererbsen, geröstet (Snack)", calories: 400, fat: 14, protein: 20, fiber: 15, category: "Süßes/Snack" },
+  { id: 176, name: "Reiswaffeln", calories: 387, fat: 2.8, protein: 8.0, fiber: 3.0, category: "Süßes/Snack" },
+  { id: 177, name: "Paprikapulver", calories: 282, fat: 13, protein: 14, fiber: 35 },
+  { id: 178, name: "Pfeffer, schwarz (gemahlen)", calories: 251, fat: 3.3, protein: 10, fiber: 25 },
+  { id: 179, name: "Currypulver", calories: 325, fat: 14, protein: 14, fiber: 33 },
+  { id: 180, name: "Zimt (gemahlen)", calories: 247, fat: 1.2, protein: 4.0, fiber: 53 },
+  { id: 181, name: "Ingwer (frisch)", calories: 80, fat: 0.8, protein: 1.8, fiber: 2.0, category: "Gemüse" },
+  { id: 182, name: "Oregano (getrocknet)", calories: 265, fat: 4.3, protein: 9.0, fiber: 42.5 },
+  { id: 183, name: "Basilikum (frisch)", calories: 23, fat: 0.6, protein: 3.2, fiber: 1.6, category: "Gemüse" },
+  { id: 184, name: "Kreuzkümmel (gemahlen)", calories: 375, fat: 22, protein: 18, fiber: 11 },
+  { id: 186, name: "Alpro Sojamilch (Original)", calories: 39, fat: 1.8, protein: 3.0, fiber: 0.2, category: "Milchprodukt" },
+  { id: 187, name: "Alpro Sojamilch (ungesüßt)", calories: 33, fat: 1.8, protein: 3.0, fiber: 0.2, category: "Milchprodukt" },
+  { id: 188, name: "Alpro Hafermilch", calories: 44, fat: 1.5, protein: 0.3, fiber: 1.4, category: "Milchprodukt" },
+  { id: 189, name: "Vegetarischer Schinken Spicker, Mortadella-Art (Rügenwalder Mühle)", calories: 177, fat: 14, protein: 7.7, fiber: 1.0, category: "Sonstiges" },
+  { id: 190, name: "Veganer Schinken Spicker (Rügenwalder Mühle)", calories: 122, fat: 9.2, protein: 2.2, fiber: 7.3, category: "Sonstiges" },
+  { id: 191, name: "Vegetarisches Hack (Rügenwalder Mühle)", calories: 105, fat: 6.0, protein: 11, fiber: 3.0, category: "Sonstiges" },
+  { id: 192, name: "Veganes Mühlen Hack, Soja-Basis (Rügenwalder Mühle)", calories: 192, fat: 9.5, protein: 14, fiber: 3.0, category: "Sonstiges" },
+  { id: 193, name: "Vegetarische Mühlen Würstchen (Rügenwalder Mühle)", calories: 232, fat: 18, protein: 12, fiber: 2.0, category: "Sonstiges" },
+  { id: 194, name: "Weiße Bohnen (gekocht)", calories: 127, fat: 0.5, protein: 8.2, fiber: 6.3, category: "Sonstiges" },
+  { id: 195, name: "Buchweizen (gekocht)", calories: 92, fat: 0.6, protein: 3.4, fiber: 2.7, category: "Kohlenhydrat" },
+  { id: 196, name: "Hirse (gekocht)", calories: 119, fat: 1.0, protein: 3.5, fiber: 1.3, category: "Kohlenhydrat" },
+  { id: 197, name: "Pak Choi", calories: 13, fat: 0.2, protein: 1.5, fiber: 1.0, category: "Gemüse" },
+  { id: 198, name: "Artischocke (gekocht)", calories: 47, fat: 0.2, protein: 3.3, fiber: 5.4, category: "Gemüse" },
+  { id: 199, name: "Okra", calories: 33, fat: 0.2, protein: 1.9, fiber: 3.2, category: "Gemüse" },
+  { id: 200, name: "Litschi", calories: 66, fat: 0.4, protein: 0.8, fiber: 1.3, category: "Obst" },
+  { id: 201, name: "Physalis", calories: 53, fat: 0.7, protein: 1.9, fiber: 3.0, category: "Obst" },
+  { id: 202, name: "Kombucha", calories: 25, fat: 0.0, protein: 0.0, fiber: 0.0, category: "Getränk" },
+  { id: 203, name: "Mate-Tee", calories: 2, fat: 0.0, protein: 0.0, fiber: 0.0, category: "Getränk" },
+  { id: 204, name: "Gemüsebrühe (fertig)", calories: 5, fat: 0.2, protein: 0.3, fiber: 0.0, category: "Sonstiges" },
+  { id: 205, name: "Weingummi", calories: 343, fat: 0.1, protein: 5.0, fiber: 0.0, category: "Süßes/Snack" },
+  { id: 206, name: "Marmorkuchen", calories: 382, fat: 18, protein: 8.0, fiber: 1.5, category: "Süßes/Snack" },
+  { id: 207, name: "Butterkekse", calories: 470, fat: 19, protein: 6.5, fiber: 2.0, category: "Süßes/Snack" },
+  { id: 208, name: "Marshmallows", calories: 318, fat: 0.2, protein: 1.8, fiber: 0.0, category: "Süßes/Snack" },
+  { id: 209, name: "Lakritz", calories: 342, fat: 0.6, protein: 3.3, fiber: 2.3, category: "Süßes/Snack" },
+  { id: 210, name: "Studentenfutter (Nuss-Rosinen-Mix)", calories: 480, fat: 32, protein: 13, fiber: 7.0, category: "Fett/Öl" },
+  { id: 211, name: "Erdnussflips", calories: 535, fat: 32, protein: 9.0, fiber: 2.0, category: "Süßes/Snack" },
+  { id: 212, name: "Vegan Grill-Mix, Seitan (Wheaty)", calories: 249, fat: 12.3, protein: 27.5, fiber: 2.0, category: "Sonstiges" },
+  { id: 213, name: "Schinkenbratwurst, vegan (LikeMeat)", calories: 160, fat: 9.5, protein: 16, fiber: 2.0, category: "Sonstiges" },
+  { id: 214, name: "Burger Patty, pflanzlich (Beyond Meat)", calories: 250, fat: 18, protein: 20, fiber: 3.0, category: "Sonstiges" },
 ];
 
 // ---------- Hilfsfunktionen ----------
@@ -477,6 +560,20 @@ function calcRecipePoints(recipeFood, consumedAmountG, matrix, sattmacherMode) {
     );
   }
   return Math.max(0, Math.round(rawTotal));
+}
+
+// Berechnet die Punktzahl eines bereits gespeicherten Eintrags neu — z.B. wenn der Sattmacher-Modus
+// umgeschaltet wird. Direkt eingetragene Punkte ("Punkte direkt") bleiben unverändert, da dort keine
+// Nährwert-/Kategorie-Basis existiert.
+function recalcEntryPoints(entry, matrix, sattmacherMode) {
+  if (entry.isDirect) return entry.points;
+  if (entry.recipeSnapshot) {
+    return calcRecipePoints(entry.recipeSnapshot, entry.recipeSnapshot.recipeTotalG, matrix, sattmacherMode);
+  }
+  return calcFoodPointsWithMode(
+    { calories: entry.calories, fat: entry.fat, protein: entry.protein, fiber: entry.fiber },
+    matrix, sattmacherMode, entry.category, entry.sattmacherExempt
+  );
 }
 
 // Berechnet die Nährstoffverteilung (für Donut-Chart + Kennzahlen) aus einer Liste von Einträgen.
@@ -721,7 +818,7 @@ const FONTS = [
   { id: "fredoka", name: "Fredoka & Mulish", display: "'Fredoka', sans-serif", body: "'Mulish', sans-serif" },
 ];
 
-const DEFAULT_PROFILE = { name: "", gender: "neutral", weightKg: 86, heightCm: 186, age: 42, birthDate: "", birthDateConfirmed: false, activity: "sitzend", deficitPercent: 20, targetWeightKg: "", targetWaistCm: "", dayResetMinutes: 0, sattmacherMode: false };
+const DEFAULT_PROFILE = { name: "", gender: "neutral", weightKg: 86, heightCm: 186, age: 42, birthDate: "", birthDateConfirmed: false, activity: "sitzend", deficitPercent: 20, targetWeightKg: "", targetWaistCm: "", dayResetMinutes: 0, sattmacherMode: false, waistCm: "" };
 // Kategorien für Lebensmittel — "Obst"/"Gemüse" und "Kohlenhydrat" (klassische Sattmacher-Beilagen
 // wie Reis, Nudeln, Kartoffeln) steuern das Verhalten im Sattmacher-Modus, die übrigen sind reine
 // Zusatzinfo für die Datenbank.
@@ -1058,6 +1155,8 @@ function NutritionPointsTracker() {
   const [recipeIngredientAmount, setRecipeIngredientAmount] = useState(100);
   const [recipeIngredientUnit, setRecipeIngredientUnit] = useState("g");
   const [recipeIngredientSelected, setRecipeIngredientSelected] = useState(null);
+  const [showInlineNewFood, setShowInlineNewFood] = useState(false);
+  const [inlineNewFood, setInlineNewFood] = useState({ name: "", calories: "", fat: "", protein: "", fiber: "", category: "" });
   const [expandedRecipeId, setExpandedRecipeId] = useState(null);
   const [saveError, setSaveError] = useState(false);
   const [backupMessage, setBackupMessage] = useState("");
@@ -1130,6 +1229,15 @@ function NutritionPointsTracker() {
     if (!loaded) return;
     setDailyFact(getDailyFact(profile.dayResetMinutes || 0));
   }, [loaded, profile.dayResetMinutes]);
+
+  // Beim Umschalten des Sattmacher-Modus (an oder aus) werden die HEUTIGEN Einträge einmalig mit
+  // der jeweils neu geltenden Logik neu berechnet — vergangene Tage bleiben unangetastet, da deren
+  // Punktzahl (wie überall sonst in der App) zum Zeitpunkt des Eintragens endgültig feststeht.
+  useEffect(() => {
+    if (!loaded) return;
+    setEntries((prev) => prev.map((e) => ({ ...e, points: recalcEntryPoints(e, matrix, profile.sattmacherMode) })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.sattmacherMode]);
 
   useEffect(() => {
     if (loaded) setTargetWeightInput(profile.targetWeightKg ? String(profile.targetWeightKg) : "");
@@ -1843,12 +1951,28 @@ function NutritionPointsTracker() {
     const selectedFoodForPoints = form.selectedFoodId ? combinedFoods.find((f) => f.id === form.selectedFoodId) : null;
     const entryCategory = selectedFoodForPoints ? selectedFoodForPoints.category : form.category;
     const entryExempt = selectedFoodForPoints ? !!selectedFoodForPoints.sattmacherExempt : false;
-    const points = selectedFoodForPoints && selectedFoodForPoints.isRecipe
+    const isRecipeEntry = !!(selectedFoodForPoints && selectedFoodForPoints.isRecipe);
+    // Für Rezepte wird ein bereits auf die verzehrte Menge skalierter Zutaten-Snapshot mitgespeichert
+    // (nicht nur Name/Kategorie des Gesamt-"Lebensmittels") — nur so lässt sich die Punktzahl später
+    // beim Umschalten des Sattmacher-Modus zutatengenau neu berechnen, statt verloren zu gehen.
+    let recipeSnapshot = null;
+    if (isRecipeEntry && selectedFoodForPoints.recipeIngredients && selectedFoodForPoints.recipeTotalG) {
+      const consumedG = Number(form.amountG) || 0;
+      const fraction = consumedG / selectedFoodForPoints.recipeTotalG;
+      recipeSnapshot = {
+        recipeTotalG: consumedG,
+        recipeIngredients: selectedFoodForPoints.recipeIngredients.map((ing) => ({ ...ing, amountG: (ing.amountG || 0) * fraction })),
+      };
+    }
+    const points = isRecipeEntry
       ? calcRecipePoints(selectedFoodForPoints, Number(form.amountG) || 0, matrix, profile.sattmacherMode)
       : calcFoodPointsWithMode({ calories, fat, protein, fiber }, matrix, profile.sattmacherMode, entryCategory, entryExempt);
     const entryData = {
       name: form.name.trim(), calories, carbs: carbsForEntry, fat, protein, fiber,
       calcBasis: form.selectedFoodId ? "kalorien" : nutrientBasis, points,
+      category: isRecipeEntry ? undefined : entryCategory,
+      sattmacherExempt: isRecipeEntry ? undefined : entryExempt,
+      recipeSnapshot,
     };
     if (formTargetDay && formTargetDay !== effectiveTodayKey(profile.dayResetMinutes || 0)) {
       const entryWithId = editingEntryId ? { ...entryData, id: editingEntryId } : { ...entryData, id: Date.now() };
@@ -2073,6 +2197,30 @@ function NutritionPointsTracker() {
     setRecipeIngredientQuery(food.name);
     setRecipeIngredientDropdownOpen(false);
   }
+  // Erlaubt, eine im Rezeptbaukasten nicht gefundene Zutat direkt an Ort und Stelle anzulegen,
+  // statt den Baukasten verlassen zu müssen. Landet dauerhaft in "Eigene Lebensmittel".
+  function openInlineNewIngredient() {
+    setInlineNewFood({ name: recipeIngredientQuery.trim(), calories: "", fat: "", protein: "", fiber: "", category: "" });
+    setShowInlineNewFood(true);
+  }
+  function cancelInlineNewIngredient() {
+    setShowInlineNewFood(false);
+  }
+  function saveInlineNewIngredient() {
+    if (!inlineNewFood.name.trim()) return;
+    const newFood = {
+      id: Date.now(),
+      name: inlineNewFood.name.trim(),
+      calories: Number(inlineNewFood.calories) || 0,
+      fat: Number(inlineNewFood.fat) || 0,
+      protein: Number(inlineNewFood.protein) || 0,
+      fiber: Number(inlineNewFood.fiber) || 0,
+      category: inlineNewFood.category || undefined,
+    };
+    setCustomFoods((prev) => [newFood, ...prev]);
+    selectRecipeIngredient(newFood);
+    setShowInlineNewFood(false);
+  }
   function addRecipeIngredient() {
     if (!recipeIngredientSelected || !recipeIngredientAmount || recipeIngredientAmount <= 0) return;
     const amountG = resolveAmountToGrams(recipeIngredientSelected, recipeIngredientAmount, recipeIngredientUnit);
@@ -2158,7 +2306,11 @@ function NutritionPointsTracker() {
     const protein = round1(newFood.protein * factor);
     const fiber = round1(newFood.fiber * factor);
     const points = calcRecipePoints(newFood, newFood.recipeServingG, matrix, profile.sattmacherMode);
-    const entryData = { name: newFood.name, calories, carbs: null, fat, protein, fiber, calcBasis: "kalorien", points };
+    const recipeSnapshot = {
+      recipeTotalG: newFood.recipeServingG,
+      recipeIngredients: newFood.recipeIngredients.map((ing) => ({ ...ing, amountG: (ing.amountG || 0) * (newFood.recipeServingG / newFood.recipeTotalG) })),
+    };
+    const entryData = { name: newFood.name, calories, carbs: null, fat, protein, fiber, calcBasis: "kalorien", points, recipeSnapshot };
     if (formTargetDay && formTargetDay !== effectiveTodayKey(profile.dayResetMinutes || 0)) {
       const entryWithId = { ...entryData, id: Date.now() + 1 };
       setExpandedDayEntries((prev) => {
@@ -2212,6 +2364,7 @@ function NutritionPointsTracker() {
     if (!val || val <= 0) return;
     const entry = { id: Date.now(), timestamp: new Date().toISOString(), waistCm: val };
     setWaistLog((prev) => [...prev, entry]);
+    setProfile((prev) => ({ ...prev, waistCm: val }));
     setWaistInput("");
   }
   function deleteWaistEntry(id) {
@@ -2241,6 +2394,7 @@ function NutritionPointsTracker() {
     if (val > 0) {
       const entry = { id: Date.now(), timestamp: `${dayKey}T12:00:00`, waistCm: val };
       setWaistLog((prev) => [...prev, entry]);
+      if (dayKey === todayKey()) setProfile((prev) => ({ ...prev, waistCm: val }));
     }
     setAddingWaistDayKey(null);
   }
@@ -3201,6 +3355,11 @@ function NutritionPointsTracker() {
 
                   <div className="npt-field"><label>Gewicht (kg)</label><input type="number" value={profile.weightKg} onChange={(ev) => setProfile({ ...profile, weightKg: ev.target.value === "" ? "" : Number(ev.target.value) || 0 })} /></div>
                   <div className="npt-field"><label>Größe (cm)</label><input type="number" value={profile.heightCm} onChange={(ev) => setProfile({ ...profile, heightCm: ev.target.value === "" ? "" : Number(ev.target.value) || 0 })} /></div>
+                  <div className="npt-field">
+                    <label>Bauchumfang (cm, optional)</label>
+                    <input type="number" value={profile.waistCm} onChange={(ev) => setProfile({ ...profile, waistCm: ev.target.value === "" ? "" : Number(ev.target.value) || 0 })} />
+                    <div className="npt-field-hint">Wird automatisch aktualisiert, sobald du im Gewicht-Tab einen neuen Wert für heute einträgst. Eine Änderung hier wirkt nur als Korrektur des aktuellen Werts und legt keinen neuen Verlaufseintrag an — dafür bitte den Gewicht-Tab nutzen.</div>
+                  </div>
 
                   <div className="npt-field">
                     <label>Grundaktivität im Alltag (nicht das Training selbst)</label>
@@ -3402,6 +3561,33 @@ function NutritionPointsTracker() {
                     )}
                   </div>
 
+                  {recipeIngredientQuery.trim().length > 0 && !recipeIngredientSelected && recipeIngredientResults.length === 0 && !showInlineNewFood && (
+                    <button className="npt-btn-secondary" style={{ width: "100%", marginBottom: 12 }} onClick={openInlineNewIngredient}>+ "{recipeIngredientQuery.trim()}" neu anlegen</button>
+                  )}
+                  {showInlineNewFood && (
+                    <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>Neues Lebensmittel (je 100g)</div>
+                      <div className="npt-field"><label>Name</label><input type="text" value={inlineNewFood.name} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, name: ev.target.value })} /></div>
+                      <div className="npt-field"><label>Kalorien (kcal)</label><input type="number" inputMode="decimal" value={inlineNewFood.calories} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, calories: ev.target.value })} /></div>
+                      <div className="npt-form-grid">
+                        <div className="npt-field"><label>Fett (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.fat} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, fat: ev.target.value })} /></div>
+                        <div className="npt-field"><label>Protein (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.protein} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, protein: ev.target.value })} /></div>
+                        <div className="npt-field"><label>Ballaststoffe (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.fiber} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, fiber: ev.target.value })} /></div>
+                      </div>
+                      <div className="npt-field">
+                        <label>Kategorie (optional)</label>
+                        <select value={inlineNewFood.category} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, category: ev.target.value })}>
+                          <option value="">– keine –</option>
+                          {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelInlineNewIngredient}>Abbrechen</button>
+                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveInlineNewIngredient} disabled={!inlineNewFood.name.trim()}>Anlegen &amp; auswählen</button>
+                      </div>
+                    </div>
+                  )}
+
                   {recipeIngredientSelected && (
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 12 }}>
                       <div className="npt-field" style={{ flex: 1, marginBottom: 0 }}>
@@ -3581,6 +3767,33 @@ function NutritionPointsTracker() {
                     </div>
                   )}
                 </div>
+
+                {recipeIngredientQuery.trim().length > 0 && !recipeIngredientSelected && recipeIngredientResults.length === 0 && !showInlineNewFood && (
+                  <button className="npt-btn-secondary" style={{ width: "100%", marginBottom: 12 }} onClick={openInlineNewIngredient}>+ "{recipeIngredientQuery.trim()}" neu anlegen</button>
+                )}
+                {showInlineNewFood && (
+                  <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 8 }}>Neues Lebensmittel (je 100g)</div>
+                    <div className="npt-field"><label>Name</label><input type="text" value={inlineNewFood.name} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, name: ev.target.value })} /></div>
+                    <div className="npt-field"><label>Kalorien (kcal)</label><input type="number" inputMode="decimal" value={inlineNewFood.calories} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, calories: ev.target.value })} /></div>
+                    <div className="npt-form-grid">
+                      <div className="npt-field"><label>Fett (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.fat} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, fat: ev.target.value })} /></div>
+                      <div className="npt-field"><label>Protein (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.protein} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, protein: ev.target.value })} /></div>
+                      <div className="npt-field"><label>Ballaststoffe (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.fiber} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, fiber: ev.target.value })} /></div>
+                    </div>
+                    <div className="npt-field">
+                      <label>Kategorie (optional)</label>
+                      <select value={inlineNewFood.category} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, category: ev.target.value })}>
+                        <option value="">– keine –</option>
+                        {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelInlineNewIngredient}>Abbrechen</button>
+                      <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveInlineNewIngredient} disabled={!inlineNewFood.name.trim()}>Anlegen &amp; auswählen</button>
+                    </div>
+                  </div>
+                )}
 
                 {recipeIngredientSelected && (
                   <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 12 }}>
