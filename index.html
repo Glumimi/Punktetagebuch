@@ -110,14 +110,14 @@ function IconScan({ size = 16 }) {
 const FOOD_DATABASE = [
   { id: 1, name: "Haferflocken (trocken)", calories: 372, fat: 7, protein: 13, fiber: 10, units: { EL: 7, TL: 2 } },
   { id: 2, name: "Vollkornbrot", calories: 215, fat: 3, protein: 8, fiber: 7, units: { Scheibe: 40 } },
-  { id: 3, name: "Reis, weiß (gekocht)", calories: 130, fat: 0.3, protein: 2.7, fiber: 0.4 },
-  { id: 4, name: "Reis, Vollkorn (gekocht)", calories: 111, fat: 0.9, protein: 2.6, fiber: 1.8 },
-  { id: 5, name: "Nudeln (gekocht)", calories: 131, fat: 1.1, protein: 5, fiber: 1.8 },
-  { id: 6, name: "Vollkornnudeln (gekocht)", calories: 124, fat: 1.4, protein: 5.3, fiber: 3.9 },
-  { id: 7, name: "Quinoa (gekocht)", calories: 120, fat: 1.9, protein: 4.4, fiber: 2.8 },
-  { id: 8, name: "Kartoffeln (gekocht)", calories: 87, fat: 0.1, protein: 1.9, fiber: 1.8 },
-  { id: 9, name: "Süßkartoffel (gekocht)", calories: 90, fat: 0.1, protein: 2, fiber: 3 },
-  { id: 10, name: "Couscous (gekocht)", calories: 112, fat: 0.2, protein: 3.8, fiber: 1.4 },
+  { id: 3, name: "Reis, weiß (gekocht)", calories: 130, fat: 0.3, protein: 2.7, fiber: 0.4 , category: "Kohlenhydrat" },
+  { id: 4, name: "Reis, Vollkorn (gekocht)", calories: 111, fat: 0.9, protein: 2.6, fiber: 1.8 , category: "Kohlenhydrat" },
+  { id: 5, name: "Nudeln (gekocht)", calories: 131, fat: 1.1, protein: 5, fiber: 1.8 , category: "Kohlenhydrat" },
+  { id: 6, name: "Vollkornnudeln (gekocht)", calories: 124, fat: 1.4, protein: 5.3, fiber: 3.9 , category: "Kohlenhydrat" },
+  { id: 7, name: "Quinoa (gekocht)", calories: 120, fat: 1.9, protein: 4.4, fiber: 2.8 , category: "Kohlenhydrat" },
+  { id: 8, name: "Kartoffeln (gekocht)", calories: 87, fat: 0.1, protein: 1.9, fiber: 1.8 , category: "Kohlenhydrat" },
+  { id: 9, name: "Süßkartoffel (gekocht)", calories: 90, fat: 0.1, protein: 2, fiber: 3 , category: "Kohlenhydrat" },
+  { id: 10, name: "Couscous (gekocht)", calories: 112, fat: 0.2, protein: 3.8, fiber: 1.4 , category: "Kohlenhydrat" },
   { id: 11, name: "Tofu (natur)", calories: 76, fat: 4.8, protein: 8, fiber: 0.3 },
   { id: 12, name: "Tofu, geräuchert", calories: 150, fat: 8, protein: 16, fiber: 0.5 },
   { id: 13, name: "Linsen (gekocht)", calories: 116, fat: 0.4, protein: 9, fiber: 7.9 },
@@ -125,58 +125,58 @@ const FOOD_DATABASE = [
   { id: 15, name: "Kidneybohnen (gekocht)", calories: 127, fat: 0.5, protein: 8.7, fiber: 6.4 },
   { id: 16, name: "Edamame", calories: 122, fat: 5.2, protein: 11, fiber: 5.2 },
   { id: 17, name: "Seitan", calories: 370, fat: 1.9, protein: 75, fiber: 6 },
-  { id: 18, name: "Lachs (gegart)", calories: 208, fat: 13, protein: 22, fiber: 0 },
-  { id: 19, name: "Thunfisch (in Wasser, abgetropft)", calories: 116, fat: 1, protein: 26, fiber: 0 },
-  { id: 20, name: "Forelle (gegart)", calories: 148, fat: 5, protein: 21, fiber: 0 },
-  { id: 21, name: "Kabeljau (gegart)", calories: 105, fat: 0.9, protein: 23, fiber: 0 },
-  { id: 22, name: "Garnelen (gegart)", calories: 99, fat: 0.3, protein: 24, fiber: 0 },
-  { id: 23, name: "Räucherlachs", calories: 117, fat: 4.3, protein: 18.3, fiber: 0 },
-  { id: 24, name: "Sojamilch (ungesüßt)", calories: 33, fat: 1.8, protein: 3.3, fiber: 0.6 },
-  { id: 25, name: "Hafermilch", calories: 47, fat: 1.5, protein: 1, fiber: 0.8 },
-  { id: 26, name: "Mandelmilch (ungesüßt)", calories: 13, fat: 1.1, protein: 0.4, fiber: 0.2 },
-  { id: 27, name: "Naturjoghurt (3,5%)", calories: 61, fat: 3.3, protein: 3.5, fiber: 0, units: { EL: 10, TL: 3 } },
-  { id: 28, name: "Sojajoghurt (natur)", calories: 55, fat: 2.7, protein: 3.5, fiber: 0.8 },
-  { id: 29, name: "Skyr (natur)", calories: 63, fat: 0.2, protein: 11, fiber: 0 },
-  { id: 30, name: "Hüttenkäse", calories: 98, fat: 4.3, protein: 11, fiber: 0 },
-  { id: 31, name: "Gouda", calories: 356, fat: 27, protein: 25, fiber: 0, units: { Scheibe: 20 } },
-  { id: 32, name: "Feta", calories: 264, fat: 21, protein: 14, fiber: 0 },
-  { id: 33, name: "Mozzarella", calories: 280, fat: 22, protein: 18, fiber: 0 },
-  { id: 34, name: "Parmesan", calories: 392, fat: 26, protein: 36, fiber: 0 },
-  { id: 35, name: "Frischkäse (Doppelrahmstufe)", calories: 250, fat: 24, protein: 6, fiber: 0, units: { EL: 15, TL: 5 } },
-  { id: 36, name: "Butter", calories: 717, fat: 81, protein: 0.9, fiber: 0, units: { EL: 10, TL: 3 } },
+  { id: 18, name: "Lachs (gegart)", calories: 208, fat: 13, protein: 22, fiber: 0 , category: "Fisch" },
+  { id: 19, name: "Thunfisch (in Wasser, abgetropft)", calories: 116, fat: 1, protein: 26, fiber: 0 , category: "Fisch" },
+  { id: 20, name: "Forelle (gegart)", calories: 148, fat: 5, protein: 21, fiber: 0 , category: "Fisch" },
+  { id: 21, name: "Kabeljau (gegart)", calories: 105, fat: 0.9, protein: 23, fiber: 0 , category: "Fisch" },
+  { id: 22, name: "Garnelen (gegart)", calories: 99, fat: 0.3, protein: 24, fiber: 0 , category: "Fisch" },
+  { id: 23, name: "Räucherlachs", calories: 117, fat: 4.3, protein: 18.3, fiber: 0 , category: "Fisch" },
+  { id: 24, name: "Sojamilch (ungesüßt)", calories: 33, fat: 1.8, protein: 3.3, fiber: 0.6 , category: "Milchprodukt" },
+  { id: 25, name: "Hafermilch", calories: 47, fat: 1.5, protein: 1, fiber: 0.8 , category: "Milchprodukt" },
+  { id: 26, name: "Mandelmilch (ungesüßt)", calories: 13, fat: 1.1, protein: 0.4, fiber: 0.2 , category: "Milchprodukt" },
+  { id: 27, name: "Naturjoghurt (3,5%)", calories: 61, fat: 3.3, protein: 3.5, fiber: 0, units: { EL: 10, TL: 3 } , category: "Milchprodukt" },
+  { id: 28, name: "Sojajoghurt (natur)", calories: 55, fat: 2.7, protein: 3.5, fiber: 0.8 , category: "Milchprodukt" },
+  { id: 29, name: "Skyr (natur)", calories: 63, fat: 0.2, protein: 11, fiber: 0 , category: "Milchprodukt" },
+  { id: 30, name: "Hüttenkäse", calories: 98, fat: 4.3, protein: 11, fiber: 0 , category: "Milchprodukt" },
+  { id: 31, name: "Gouda", calories: 356, fat: 27, protein: 25, fiber: 0, units: { Scheibe: 20 } , category: "Milchprodukt" },
+  { id: 32, name: "Feta", calories: 264, fat: 21, protein: 14, fiber: 0 , category: "Milchprodukt" },
+  { id: 33, name: "Mozzarella", calories: 280, fat: 22, protein: 18, fiber: 0 , category: "Milchprodukt" },
+  { id: 34, name: "Parmesan", calories: 392, fat: 26, protein: 36, fiber: 0 , category: "Milchprodukt" },
+  { id: 35, name: "Frischkäse (Doppelrahmstufe)", calories: 250, fat: 24, protein: 6, fiber: 0, units: { EL: 15, TL: 5 } , category: "Milchprodukt" },
+  { id: 36, name: "Butter", calories: 717, fat: 81, protein: 0.9, fiber: 0, units: { EL: 10, TL: 3 } , category: "Fett/Öl" },
   { id: 37, name: "Hühnerei (gekocht)", calories: 155, fat: 11, protein: 13, fiber: 0 },
-  { id: 38, name: "Brokkoli (gedämpft)", calories: 35, fat: 0.4, protein: 2.4, fiber: 3.3 },
-  { id: 39, name: "Spinat (roh)", calories: 23, fat: 0.4, protein: 2.9, fiber: 2.2 },
-  { id: 40, name: "Tomate", calories: 18, fat: 0.2, protein: 0.9, fiber: 1.2 },
-  { id: 41, name: "Gurke", calories: 15, fat: 0.1, protein: 0.7, fiber: 0.5 },
-  { id: 42, name: "Paprika, rot", calories: 31, fat: 0.3, protein: 1, fiber: 2.1 },
-  { id: 43, name: "Karotte", calories: 41, fat: 0.2, protein: 0.9, fiber: 2.8 },
-  { id: 44, name: "Zucchini", calories: 17, fat: 0.3, protein: 1.2, fiber: 1 },
-  { id: 45, name: "Champignons", calories: 22, fat: 0.3, protein: 3.1, fiber: 1 },
-  { id: 46, name: "Avocado", calories: 160, fat: 15, protein: 2, fiber: 6.7 },
-  { id: 47, name: "Blattsalat", calories: 15, fat: 0.2, protein: 1.4, fiber: 1.3 },
-  { id: 48, name: "Rotkohl", calories: 25, fat: 0.2, protein: 1.4, fiber: 2.1 },
-  { id: 49, name: "Apfel", calories: 52, fat: 0.2, protein: 0.3, fiber: 2.4, units: { Stück: 180 } },
-  { id: 50, name: "Banane", calories: 89, fat: 0.3, protein: 1.1, fiber: 2.6, units: { Stück: 120 } },
-  { id: 51, name: "Beerenmischung (TK)", calories: 43, fat: 0.4, protein: 0.8, fiber: 4 },
-  { id: 52, name: "Orange", calories: 47, fat: 0.1, protein: 0.9, fiber: 2.4 },
-  { id: 53, name: "Birne", calories: 57, fat: 0.1, protein: 0.4, fiber: 3.1 },
-  { id: 54, name: "Trauben", calories: 69, fat: 0.2, protein: 0.7, fiber: 0.9 },
-  { id: 55, name: "Walnüsse", calories: 654, fat: 65, protein: 15, fiber: 6.7 },
-  { id: 56, name: "Mandeln", calories: 579, fat: 50, protein: 21, fiber: 12.5 },
-  { id: 57, name: "Erdnussbutter", calories: 588, fat: 50, protein: 25, fiber: 6, units: { EL: 16, TL: 5 } },
-  { id: 58, name: "Chiasamen", calories: 486, fat: 31, protein: 17, fiber: 34 },
-  { id: 59, name: "Leinsamen", calories: 534, fat: 42, protein: 18, fiber: 27 },
-  { id: 60, name: "Rapsöl", calories: 884, fat: 100, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } },
-  { id: 61, name: "Olivenöl", calories: 884, fat: 100, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } },
-  { id: 62, name: "Honig", calories: 304, fat: 0, protein: 0.3, fiber: 0.2, units: { EL: 15, TL: 5 } },
+  { id: 38, name: "Brokkoli (gedämpft)", calories: 35, fat: 0.4, protein: 2.4, fiber: 3.3 , category: "Gemüse" },
+  { id: 39, name: "Spinat (roh)", calories: 23, fat: 0.4, protein: 2.9, fiber: 2.2 , category: "Gemüse" },
+  { id: 40, name: "Tomate", calories: 18, fat: 0.2, protein: 0.9, fiber: 1.2 , category: "Gemüse" },
+  { id: 41, name: "Gurke", calories: 15, fat: 0.1, protein: 0.7, fiber: 0.5 , category: "Gemüse" },
+  { id: 42, name: "Paprika, rot", calories: 31, fat: 0.3, protein: 1, fiber: 2.1 , category: "Gemüse" },
+  { id: 43, name: "Karotte", calories: 41, fat: 0.2, protein: 0.9, fiber: 2.8 , category: "Gemüse" },
+  { id: 44, name: "Zucchini", calories: 17, fat: 0.3, protein: 1.2, fiber: 1 , category: "Gemüse" },
+  { id: 45, name: "Champignons", calories: 22, fat: 0.3, protein: 3.1, fiber: 1 , category: "Gemüse" },
+  { id: 46, name: "Avocado", calories: 160, fat: 15, protein: 2, fiber: 6.7 , category: "Obst", sattmacherExempt: true },
+  { id: 47, name: "Blattsalat", calories: 15, fat: 0.2, protein: 1.4, fiber: 1.3 , category: "Gemüse" },
+  { id: 48, name: "Rotkohl", calories: 25, fat: 0.2, protein: 1.4, fiber: 2.1 , category: "Gemüse" },
+  { id: 49, name: "Apfel", calories: 52, fat: 0.2, protein: 0.3, fiber: 2.4, units: { Stück: 180 } , category: "Obst" },
+  { id: 50, name: "Banane", calories: 89, fat: 0.3, protein: 1.1, fiber: 2.6, units: { Stück: 120 } , category: "Obst" },
+  { id: 51, name: "Beerenmischung (TK)", calories: 43, fat: 0.4, protein: 0.8, fiber: 4 , category: "Obst" },
+  { id: 52, name: "Orange", calories: 47, fat: 0.1, protein: 0.9, fiber: 2.4 , category: "Obst" },
+  { id: 53, name: "Birne", calories: 57, fat: 0.1, protein: 0.4, fiber: 3.1 , category: "Obst" },
+  { id: 54, name: "Trauben", calories: 69, fat: 0.2, protein: 0.7, fiber: 0.9 , category: "Obst" },
+  { id: 55, name: "Walnüsse", calories: 654, fat: 65, protein: 15, fiber: 6.7 , category: "Fett/Öl" },
+  { id: 56, name: "Mandeln", calories: 579, fat: 50, protein: 21, fiber: 12.5 , category: "Fett/Öl" },
+  { id: 57, name: "Erdnussbutter", calories: 588, fat: 50, protein: 25, fiber: 6, units: { EL: 16, TL: 5 } , category: "Fett/Öl" },
+  { id: 58, name: "Chiasamen", calories: 486, fat: 31, protein: 17, fiber: 34 , category: "Fett/Öl" },
+  { id: 59, name: "Leinsamen", calories: 534, fat: 42, protein: 18, fiber: 27 , category: "Fett/Öl" },
+  { id: 60, name: "Rapsöl", calories: 884, fat: 100, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } , category: "Fett/Öl" },
+  { id: 61, name: "Olivenöl", calories: 884, fat: 100, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } , category: "Fett/Öl" },
+  { id: 62, name: "Honig", calories: 304, fat: 0, protein: 0.3, fiber: 0.2, units: { EL: 15, TL: 5 } , category: "Süßes/Snack" },
   { id: 63, name: "Haferkleie", calories: 246, fat: 7, protein: 17, fiber: 15 },
-  { id: 64, name: "Dunkle Schokolade (70%)", calories: 546, fat: 31, protein: 7.8, fiber: 11 },
-  { id: 65, name: "Vollkornkekse", calories: 471, fat: 20, protein: 7, fiber: 6 },
-  { id: 66, name: "Rotwein", calories: 85, fat: 0, protein: 0.1, fiber: 0 },
-  { id: 67, name: "Weißwein", calories: 82, fat: 0, protein: 0.1, fiber: 0 },
-  { id: 68, name: "Hähnchenbrust (gegart)", calories: 165, fat: 3.6, protein: 31, fiber: 0 },
-  { id: 69, name: "Rinderhack, mager (gebraten)", calories: 217, fat: 12, protein: 26, fiber: 0 },
+  { id: 64, name: "Dunkle Schokolade (70%)", calories: 546, fat: 31, protein: 7.8, fiber: 11 , category: "Süßes/Snack" },
+  { id: 65, name: "Vollkornkekse", calories: 471, fat: 20, protein: 7, fiber: 6 , category: "Süßes/Snack" },
+  { id: 66, name: "Rotwein", calories: 85, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
+  { id: 67, name: "Weißwein", calories: 82, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
+  { id: 68, name: "Hähnchenbrust (gegart)", calories: 165, fat: 3.6, protein: 31, fiber: 0 , category: "Fleisch" },
+  { id: 69, name: "Rinderhack, mager (gebraten)", calories: 217, fat: 12, protein: 26, fiber: 0 , category: "Fleisch" },
   { id: 70, name: "Toastbrot", calories: 250, fat: 3.5, protein: 8, fiber: 3, units: { Scheibe: 25 } },
   { id: 71, name: "Roggenbrot", calories: 197, fat: 1, protein: 6, fiber: 6, units: { Scheibe: 45 } },
   { id: 72, name: "Knäckebrot", calories: 366, fat: 1.5, protein: 10, fiber: 15 },
@@ -184,42 +184,42 @@ const FOOD_DATABASE = [
   { id: 74, name: "Müsli, fertig (mit Trockenfrüchten)", calories: 370, fat: 6, protein: 8, fiber: 8 },
   { id: 75, name: "Cornflakes", calories: 378, fat: 0.9, protein: 7, fiber: 3 },
   { id: 76, name: "Kartoffelpüree", calories: 113, fat: 4.6, protein: 2, fiber: 1.6 },
-  { id: 77, name: "Pommes frites (Ofen)", calories: 165, fat: 5, protein: 3, fiber: 2.6 },
-  { id: 78, name: "Milch, Vollmilch (3,5%)", calories: 64, fat: 3.6, protein: 3.3, fiber: 0 },
-  { id: 79, name: "Milch, fettarm (1,5%)", calories: 47, fat: 1.5, protein: 3.4, fiber: 0 },
-  { id: 80, name: "Kaffee (schwarz)", calories: 1, fat: 0, protein: 0.1, fiber: 0 },
-  { id: 81, name: "Apfelsaft", calories: 46, fat: 0.1, protein: 0.1, fiber: 0.2 },
-  { id: 82, name: "Orangensaft", calories: 45, fat: 0.2, protein: 0.7, fiber: 0.2 },
-  { id: 83, name: "Cola", calories: 42, fat: 0, protein: 0, fiber: 0 },
-  { id: 84, name: "Bier (Pils)", calories: 43, fat: 0, protein: 0.5, fiber: 0 },
-  { id: 85, name: "Zucker, weiß", calories: 400, fat: 0, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } },
-  { id: 86, name: "Marmelade", calories: 250, fat: 0.1, protein: 0.3, fiber: 0.8 },
-  { id: 87, name: "Nuss-Nougat-Creme", calories: 539, fat: 31, protein: 6, fiber: 3.4 },
-  { id: 88, name: "Kartoffelchips", calories: 536, fat: 34, protein: 6.6, fiber: 4.4 },
-  { id: 89, name: "Salzstangen", calories: 380, fat: 1, protein: 10, fiber: 3 },
-  { id: 90, name: "Popcorn (ungesüßt, Luft)", calories: 387, fat: 4.5, protein: 12.9, fiber: 14.5 },
-  { id: 91, name: "Vollmilchschokolade", calories: 534, fat: 30, protein: 7.6, fiber: 2.5 },
-  { id: 92, name: "Gummibärchen", calories: 343, fat: 0.5, protein: 6.9, fiber: 0 },
-  { id: 93, name: "Zwiebel", calories: 40, fat: 0.1, protein: 1.1, fiber: 1.7 },
-  { id: 94, name: "Knoblauch", calories: 149, fat: 0.5, protein: 6.4, fiber: 2.1 },
-  { id: 95, name: "Blumenkohl", calories: 25, fat: 0.3, protein: 1.9, fiber: 2 },
-  { id: 96, name: "Aubergine", calories: 25, fat: 0.2, protein: 1, fiber: 3 },
-  { id: 97, name: "Erbsen (TK, gegart)", calories: 81, fat: 0.4, protein: 5.4, fiber: 5.1 },
-  { id: 98, name: "Mais (Dose, abgetropft)", calories: 96, fat: 1.2, protein: 3.2, fiber: 2.4 },
-  { id: 99, name: "Rosenkohl (gegart)", calories: 43, fat: 0.3, protein: 3.4, fiber: 3.8 },
-  { id: 100, name: "Rote Bete (gekocht)", calories: 44, fat: 0.2, protein: 1.7, fiber: 2.8 },
-  { id: 101, name: "Ananas", calories: 50, fat: 0.1, protein: 0.5, fiber: 1.4 },
-  { id: 102, name: "Kiwi", calories: 61, fat: 0.5, protein: 1.1, fiber: 3 },
-  { id: 103, name: "Mango", calories: 60, fat: 0.4, protein: 0.8, fiber: 1.6 },
-  { id: 104, name: "Wassermelone", calories: 30, fat: 0.2, protein: 0.6, fiber: 0.4 },
-  { id: 105, name: "Zitrone", calories: 29, fat: 0.3, protein: 1.1, fiber: 2.8 },
-  { id: 106, name: "Erdbeeren", calories: 32, fat: 0.3, protein: 0.7, fiber: 2 },
-  { id: 107, name: "Schinken, gekocht", calories: 107, fat: 3, protein: 18, fiber: 0, units: { Scheibe: 15 } },
-  { id: 108, name: "Salami", calories: 407, fat: 34, protein: 22, fiber: 0, units: { Scheibe: 8 } },
-  { id: 109, name: "Bratwurst (gebraten)", calories: 300, fat: 26, protein: 13, fiber: 0 },
-  { id: 110, name: "Speck", calories: 541, fat: 42, protein: 37, fiber: 0 },
-  { id: 111, name: "Pute, Brustfilet (gegart)", calories: 135, fat: 1.7, protein: 29, fiber: 0 },
-  { id: 112, name: "Schweineschnitzel (gebraten)", calories: 226, fat: 11, protein: 31, fiber: 0 },
+  { id: 77, name: "Pommes frites (Ofen)", calories: 165, fat: 5, protein: 3, fiber: 2.6 , category: "Süßes/Snack" },
+  { id: 78, name: "Milch, Vollmilch (3,5%)", calories: 64, fat: 3.6, protein: 3.3, fiber: 0 , category: "Milchprodukt" },
+  { id: 79, name: "Milch, fettarm (1,5%)", calories: 47, fat: 1.5, protein: 3.4, fiber: 0 , category: "Milchprodukt" },
+  { id: 80, name: "Kaffee (schwarz)", calories: 1, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
+  { id: 81, name: "Apfelsaft", calories: 46, fat: 0.1, protein: 0.1, fiber: 0.2 , category: "Getränk" },
+  { id: 82, name: "Orangensaft", calories: 45, fat: 0.2, protein: 0.7, fiber: 0.2 , category: "Getränk" },
+  { id: 83, name: "Cola", calories: 42, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
+  { id: 84, name: "Bier (Pils)", calories: 43, fat: 0, protein: 0.5, fiber: 0 , category: "Getränk" },
+  { id: 85, name: "Zucker, weiß", calories: 400, fat: 0, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } , category: "Süßes/Snack" },
+  { id: 86, name: "Marmelade", calories: 250, fat: 0.1, protein: 0.3, fiber: 0.8 , category: "Süßes/Snack" },
+  { id: 87, name: "Nuss-Nougat-Creme", calories: 539, fat: 31, protein: 6, fiber: 3.4 , category: "Süßes/Snack" },
+  { id: 88, name: "Kartoffelchips", calories: 536, fat: 34, protein: 6.6, fiber: 4.4 , category: "Süßes/Snack" },
+  { id: 89, name: "Salzstangen", calories: 380, fat: 1, protein: 10, fiber: 3 , category: "Süßes/Snack" },
+  { id: 90, name: "Popcorn (ungesüßt, Luft)", calories: 387, fat: 4.5, protein: 12.9, fiber: 14.5 , category: "Süßes/Snack" },
+  { id: 91, name: "Vollmilchschokolade", calories: 534, fat: 30, protein: 7.6, fiber: 2.5 , category: "Süßes/Snack" },
+  { id: 92, name: "Gummibärchen", calories: 343, fat: 0.5, protein: 6.9, fiber: 0 , category: "Süßes/Snack" },
+  { id: 93, name: "Zwiebel", calories: 40, fat: 0.1, protein: 1.1, fiber: 1.7 , category: "Gemüse" },
+  { id: 94, name: "Knoblauch", calories: 149, fat: 0.5, protein: 6.4, fiber: 2.1 , category: "Gemüse" },
+  { id: 95, name: "Blumenkohl", calories: 25, fat: 0.3, protein: 1.9, fiber: 2 , category: "Gemüse" },
+  { id: 96, name: "Aubergine", calories: 25, fat: 0.2, protein: 1, fiber: 3 , category: "Gemüse" },
+  { id: 97, name: "Erbsen (TK, gegart)", calories: 81, fat: 0.4, protein: 5.4, fiber: 5.1 , category: "Gemüse" },
+  { id: 98, name: "Mais (Dose, abgetropft)", calories: 96, fat: 1.2, protein: 3.2, fiber: 2.4 , category: "Gemüse" },
+  { id: 99, name: "Rosenkohl (gegart)", calories: 43, fat: 0.3, protein: 3.4, fiber: 3.8 , category: "Gemüse" },
+  { id: 100, name: "Rote Bete (gekocht)", calories: 44, fat: 0.2, protein: 1.7, fiber: 2.8 , category: "Gemüse" },
+  { id: 101, name: "Ananas", calories: 50, fat: 0.1, protein: 0.5, fiber: 1.4 , category: "Obst" },
+  { id: 102, name: "Kiwi", calories: 61, fat: 0.5, protein: 1.1, fiber: 3 , category: "Obst" },
+  { id: 103, name: "Mango", calories: 60, fat: 0.4, protein: 0.8, fiber: 1.6 , category: "Obst" },
+  { id: 104, name: "Wassermelone", calories: 30, fat: 0.2, protein: 0.6, fiber: 0.4 , category: "Obst" },
+  { id: 105, name: "Zitrone", calories: 29, fat: 0.3, protein: 1.1, fiber: 2.8 , category: "Obst" },
+  { id: 106, name: "Erdbeeren", calories: 32, fat: 0.3, protein: 0.7, fiber: 2 , category: "Obst" },
+  { id: 107, name: "Schinken, gekocht", calories: 107, fat: 3, protein: 18, fiber: 0, units: { Scheibe: 15 } , category: "Fleisch" },
+  { id: 108, name: "Salami", calories: 407, fat: 34, protein: 22, fiber: 0, units: { Scheibe: 8 } , category: "Fleisch" },
+  { id: 109, name: "Bratwurst (gebraten)", calories: 300, fat: 26, protein: 13, fiber: 0 , category: "Fleisch" },
+  { id: 110, name: "Speck", calories: 541, fat: 42, protein: 37, fiber: 0 , category: "Fleisch" },
+  { id: 111, name: "Pute, Brustfilet (gegart)", calories: 135, fat: 1.7, protein: 29, fiber: 0 , category: "Fleisch" },
+  { id: 112, name: "Schweineschnitzel (gebraten)", calories: 226, fat: 11, protein: 31, fiber: 0 , category: "Fleisch" },
   { id: 113, name: "Pizza Margherita", calories: 266, fat: 10, protein: 11, fiber: 2 },
   // Grundzutaten für den Rezeptbaukasten (fehlten bisher komplett)
   { id: 114, name: "Mehl (Weizen, Type 405)", calories: 348, fat: 1, protein: 10, fiber: 2.7, units: { EL: 7, TL: 2 } },
@@ -227,19 +227,19 @@ const FOOD_DATABASE = [
   { id: 116, name: "Ei (Huhn, ganz)", calories: 155, fat: 11, protein: 13, fiber: 0, units: { Stück: 58 } },
   { id: 117, name: "Sahne (Schlagsahne, 30%)", calories: 292, fat: 30, protein: 2.2, fiber: 0, units: { EL: 10, TL: 3 } },
   { id: 118, name: "Speisestärke", calories: 343, fat: 0.1, protein: 0.6, fiber: 0.5, units: { EL: 7, TL: 2 } },
-  { id: 119, name: "Puderzucker", calories: 387, fat: 0, protein: 0, fiber: 0, units: { EL: 4, TL: 1 } },
+  { id: 119, name: "Puderzucker", calories: 387, fat: 0, protein: 0, fiber: 0, units: { EL: 4, TL: 1 } , category: "Süßes/Snack" },
   // Getränke-Erweiterung
-  { id: 120, name: "Wasser (still/mit Kohlensäure)", calories: 0, fat: 0, protein: 0, fiber: 0 },
-  { id: 121, name: "Tee, ungesüßt (schwarz/grün)", calories: 1, fat: 0, protein: 0.1, fiber: 0 },
-  { id: 122, name: "Cola Zero / Light", calories: 0.3, fat: 0, protein: 0, fiber: 0 },
-  { id: 123, name: "Apfelschorle", calories: 23, fat: 0, protein: 0.1, fiber: 0.1 },
-  { id: 124, name: "Sekt / Prosecco", calories: 78, fat: 0, protein: 0.1, fiber: 0 },
-  { id: 125, name: "Spirituosen, klar (Wodka/Korn, 40% vol)", calories: 231, fat: 0, protein: 0, fiber: 0 },
-  { id: 126, name: "Whisky (40% vol)", calories: 250, fat: 0, protein: 0, fiber: 0 },
-  { id: 127, name: "Tonic Water", calories: 34, fat: 0, protein: 0, fiber: 0 },
-  { id: 128, name: "Energy Drink", calories: 45, fat: 0, protein: 0, fiber: 0 },
-  { id: 129, name: "Buttermilch", calories: 35, fat: 1, protein: 3.5, fiber: 0 },
-  { id: 130, name: "Kakao (Fertiggetränk, gesüßt)", calories: 75, fat: 3, protein: 3.4, fiber: 0 },
+  { id: 120, name: "Wasser (still/mit Kohlensäure)", calories: 0, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
+  { id: 121, name: "Tee, ungesüßt (schwarz/grün)", calories: 1, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
+  { id: 122, name: "Cola Zero / Light", calories: 0.3, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
+  { id: 123, name: "Apfelschorle", calories: 23, fat: 0, protein: 0.1, fiber: 0.1 , category: "Getränk" },
+  { id: 124, name: "Sekt / Prosecco", calories: 78, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
+  { id: 125, name: "Spirituosen, klar (Wodka/Korn, 40% vol)", calories: 231, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
+  { id: 126, name: "Whisky (40% vol)", calories: 250, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
+  { id: 127, name: "Tonic Water", calories: 34, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
+  { id: 128, name: "Energy Drink", calories: 45, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
+  { id: 129, name: "Buttermilch", calories: 35, fat: 1, protein: 3.5, fiber: 0 , category: "Milchprodukt" },
+  { id: 130, name: "Kakao (Fertiggetränk, gesüßt)", calories: 75, fat: 3, protein: 3.4, fiber: 0 , category: "Getränk" },
 ];
 
 // ---------- Hilfsfunktionen ----------
@@ -423,14 +423,60 @@ function calcDailyTarget(p, matrix) {
   return { total, bmr: Math.round(bmr), tdee: Math.round(tdee), calorieTarget: Math.round(calorieTarget), floorApplied };
 }
 
-function calcFoodPoints(food, matrix) {
+function calcFoodPointsRaw(food, matrix) {
   const fiberUsed = Math.min(Number(food.fiber) || 0, matrix.fiberCap);
-  const raw =
+  return (
     (Number(food.calories) || 0) / matrix.calDiv +
     (Number(food.fat) || 0) / matrix.fatDiv -
     fiberUsed / matrix.fiberDiv -
-    (Number(food.protein) || 0) / matrix.proteinDiv;
-  return Math.max(0, Math.round(raw));
+    (Number(food.protein) || 0) / matrix.proteinDiv
+  );
+}
+function calcFoodPoints(food, matrix) {
+  return Math.max(0, Math.round(calcFoodPointsRaw(food, matrix)));
+}
+
+// Sattmacher-Modus: Obst & Gemüse zählen unabhängig von der Menge 0 Punkte (Ausnahme: Lebensmittel
+// mit sattmacherExempt, z.B. Avocado wegen des hohen Fettgehalts). Klassische Sattmacher-Beilagen
+// (Kategorie "Kohlenhydrat": Reis, Nudeln, Kartoffeln u.ä.) sind auf max. 7 Punkte gedeckelt.
+// category/sattmacherExempt kommen vom Lebensmittel-Datenbankeintrag (bei Suche) oder aus dem
+// Formular (bei manueller Eingabe eines neuen Lebensmittels). Die "Raw"-Variante (ungerundet) wird
+// für die zutatenweise Summierung bei Rezepten gebraucht, damit nicht mehrfach gerundet wird.
+function calcFoodPointsWithModeRaw(food, matrix, sattmacherMode, category, sattmacherExempt) {
+  const raw = calcFoodPointsRaw(food, matrix);
+  if (!sattmacherMode) return raw;
+  if ((category === "Obst" || category === "Gemüse") && !sattmacherExempt) return 0;
+  if (category === "Kohlenhydrat") return Math.min(raw, 7);
+  return raw;
+}
+function calcFoodPointsWithMode(food, matrix, sattmacherMode, category, sattmacherExempt) {
+  return Math.max(0, Math.round(calcFoodPointsWithModeRaw(food, matrix, sattmacherMode, category, sattmacherExempt)));
+}
+
+// Rezept-Punkte: Statt die Punktzahl aus den zusammengerechneten Gesamtnährwerten zu berechnen,
+// wird jede Zutat einzeln (mit ihrer eigenen Kategorie/Sattmacher-Regel) bepunktet und erst danach
+// summiert und einmalig gerundet — nur so wirkt der Sattmacher-Modus z.B. auf die Trauben im
+// Haferflocken-Rezept, ohne dass Hafer & Trauben zu einem einzigen "Mischwert" verschmelzen.
+// consumedAmountG ist die tatsächlich verzehrte Menge (z.B. eine Portion), skaliert proportional.
+function calcRecipePoints(recipeFood, consumedAmountG, matrix, sattmacherMode) {
+  if (!recipeFood.recipeIngredients || !recipeFood.recipeTotalG) {
+    const factor = consumedAmountG / 100;
+    return calcFoodPointsWithMode(
+      { calories: recipeFood.calories * factor, fat: recipeFood.fat * factor, protein: recipeFood.protein * factor, fiber: recipeFood.fiber * factor },
+      matrix, sattmacherMode, recipeFood.category, recipeFood.sattmacherExempt
+    );
+  }
+  const fraction = consumedAmountG / recipeFood.recipeTotalG;
+  let rawTotal = 0;
+  for (const ing of recipeFood.recipeIngredients) {
+    const ingG = (ing.amountG || 0) * fraction;
+    const f = ingG / 100;
+    rawTotal += calcFoodPointsWithModeRaw(
+      { calories: (ing.calories100 || 0) * f, fat: (ing.fat100 || 0) * f, protein: (ing.protein100 || 0) * f, fiber: (ing.fiber100 || 0) * f },
+      matrix, sattmacherMode, ing.category, ing.sattmacherExempt
+    );
+  }
+  return Math.max(0, Math.round(rawTotal));
 }
 
 // Berechnet die Nährstoffverteilung (für Donut-Chart + Kennzahlen) aus einer Liste von Einträgen.
@@ -675,7 +721,11 @@ const FONTS = [
   { id: "fredoka", name: "Fredoka & Mulish", display: "'Fredoka', sans-serif", body: "'Mulish', sans-serif" },
 ];
 
-const DEFAULT_PROFILE = { name: "", gender: "neutral", weightKg: 86, heightCm: 186, age: 42, birthDate: "", birthDateConfirmed: false, activity: "sitzend", deficitPercent: 20, targetWeightKg: "", targetWaistCm: "", dayResetMinutes: 0 };
+const DEFAULT_PROFILE = { name: "", gender: "neutral", weightKg: 86, heightCm: 186, age: 42, birthDate: "", birthDateConfirmed: false, activity: "sitzend", deficitPercent: 20, targetWeightKg: "", targetWaistCm: "", dayResetMinutes: 0, sattmacherMode: false };
+// Kategorien für Lebensmittel — "Obst"/"Gemüse" und "Kohlenhydrat" (klassische Sattmacher-Beilagen
+// wie Reis, Nudeln, Kartoffeln) steuern das Verhalten im Sattmacher-Modus, die übrigen sind reine
+// Zusatzinfo für die Datenbank.
+const FOOD_CATEGORIES = ["Obst", "Gemüse", "Kohlenhydrat", "Fleisch", "Fisch", "Milchprodukt", "Fett/Öl", "Süßes/Snack", "Getränk", "Sonstiges"];
 
 // Feste, themenunabhängige Diagrammfarben, damit sich Kurven auch im
 // Pastellrosa-Thema klar voneinander unterscheiden.
@@ -877,7 +927,8 @@ const TOUR_STEPS = [
   { id: "verlauf-days", tab: "verlauf", ref: "verlauf-days", title: "Tage antippen", text: "Ein Tag lässt sich antippen, um die Einträge einzusehen, nachträglich zu bearbeiten oder — falls du mal etwas vergessen hast — nachzutragen." },
   { id: "gewicht-eingabe", tab: "gewicht", ref: "gewicht-eingabe", title: "Gewicht & Bauchumfang", text: "Hier trägst du deine Werte ein und kannst optional Zielwerte hinterlegen. Der Bauchumfang lässt sich bei Bedarf ganz ausblenden." },
   { id: "gewicht-verlauf", tab: "gewicht", ref: "gewicht-verlauf", title: "Trend & Prognose", text: "Sobald genug Messungen vorliegen (mind. 6 über mind. 2 Wochen), zeigt dir die App einen geglätteten Trend inklusive Prognose, wann du dein Ziel erreichst." },
-  { id: "profil-grund", tab: "profil", ref: "profil-grund", title: "Grundlagen", text: "Größe, Gewicht, Alter und Aktivitätslevel fließen in deine tägliche Punktezahl ein. Hier stellst du auch die individuelle Reset-Uhrzeit ein, falls dein Tag nicht um Mitternacht endet." },
+  { id: "profil-grund", tab: "profil", ref: "profil-grund", forceOpenProfilSection: "profil", title: "Grundlagen", text: "Größe, Gewicht, Alter und Aktivitätslevel fließen in deine tägliche Punktezahl ein. Hier stellst du auch die individuelle Reset-Uhrzeit ein, falls dein Tag nicht um Mitternacht endet." },
+  { id: "profil-sattmacher", tab: "profil", ref: "profil-sattmacher", forceOpenProfilSection: "profil", title: "Sattmacher-Modus", text: "Schaltest du diesen Modus ein, zählen Obst und Gemüse unabhängig von der Menge 0 Punkte, und klassische Beilagen wie Reis, Nudeln oder Kartoffeln sind auf maximal 7 Punkte gedeckelt. Die Nährwerte bleiben dabei immer ehrlich sichtbar — nur die Punktzahl ändert sich. Mehr Details dazu findest du über das ⓘ direkt neben dem Schalter." },
   { id: "profil-matrix", tab: "profil", ref: "profil-matrix", title: "Punkte-Matrix", text: "In der Standardeinstellung berechnet die App deine Punkte aus einer ausgewogenen Mischung von Kalorien, Fett, Protein und Ballaststoffen. Wer möchte, kann hier jeden dieser Faktoren einzeln gewichten — z. B. Protein stärker belohnen oder Fett strenger bewerten. Für den Einstieg ist die Standardeinstellung aber völlig ausreichend." },
   { id: "profil-rezept", tab: "profil", ref: "profil-rezept", title: "Rezeptbaukasten", text: "Bau dir komplexe Gerichte aus mehreren Zutaten zusammen, inklusive Alltagseinheiten wie Esslöffel oder Scheibe. Das Ergebnis landet als eigenes Lebensmittel in deiner Datenbank." },
   { id: "profil-backup", tab: "profil", ref: "profil-backup", title: "Datensicherung", text: "Alle deine Daten liegen nur auf diesem Gerät. Exportiere regelmäßig ein Backup, damit bei einem Gerätewechsel nichts verloren geht." },
@@ -896,7 +947,7 @@ const INTENSITY_INFO = [
   "Hart – sehr schnelles Laufen, HIIT-Intervalle",
   "Maximal – Wettkampftempo, Sprints, extremes Kraftausdauertraining an der Belastungsgrenze",
 ];
-const EMPTY_FORM = { name: "", calories: "", carbs: "", fat: "", protein: "", fiber: "", amountG: 100, amountUnit: "g", selectedFoodId: null };
+const EMPTY_FORM = { name: "", calories: "", carbs: "", fat: "", protein: "", fiber: "", amountG: 100, amountUnit: "g", selectedFoodId: null, category: "" };
 const EMPTY_POINT_FORM = { name: "", points: "", selectedDishId: null };
 
 // ---------- Komponente ----------
@@ -912,6 +963,7 @@ function NutritionPointsTracker() {
   const [sportHours, setSportHours] = useState("");
   const [sportMinutes, setSportMinutes] = useState("");
   const [showIntensityInfo, setShowIntensityInfo] = useState(false);
+  const [showSattmacherInfo, setShowSattmacherInfo] = useState(false);
   const [openMatrixInfo, setOpenMatrixInfo] = useState(null);
   const [historyDays, setHistoryDays] = useState([]);
   const [historyWeekMonday, setHistoryWeekMonday] = useState(() => mondayOf(new Date()));
@@ -1644,7 +1696,7 @@ function NutritionPointsTracker() {
     // wenn die Berührung auf einem Regler/Eingabefeld beginnt (die brauchen horizontales Ziehen).
     if (tourActive || showForm || showScanner || chartZoomed) { touchStartRef.current = null; return; }
     const target = ev.target;
-    if (target.closest && target.closest("input, select, textarea, .npt-tour-overlay")) { touchStartRef.current = null; return; }
+    if (target.closest && target.closest("input, select, textarea, .npt-tour-overlay, .npt-chip-row")) { touchStartRef.current = null; return; }
     const t = ev.touches[0];
     touchStartRef.current = { x: t.clientX, y: t.clientY };
   }
@@ -1709,6 +1761,7 @@ function NutritionPointsTracker() {
     const step = TOUR_STEPS[tourStep];
     if (step.tab) setTab(step.tab);
     if (step.forceHeuteSubTab) setHeuteSubTab(step.forceHeuteSubTab);
+    if (step.forceOpenProfilSection) setOpenProfilSection(step.forceOpenProfilSection);
     stopTourSpeech();
     let cancelled = false;
     const timers = [];
@@ -1781,13 +1834,18 @@ function NutritionPointsTracker() {
 
       setCustomFoods((prev) => {
         const idx = prev.findIndex((f) => f.name.toLowerCase() === form.name.trim().toLowerCase());
-        const newFood = { id: idx >= 0 ? prev[idx].id : Date.now() + 2, name: form.name.trim(), calories: calories100, fat: fat100, protein: protein100, fiber: fiber100 };
+        const newFood = { id: idx >= 0 ? prev[idx].id : Date.now() + 2, name: form.name.trim(), calories: calories100, fat: fat100, protein: protein100, fiber: fiber100, category: form.category || undefined };
         if (idx >= 0) { const copy = [...prev]; copy[idx] = newFood; return copy; }
         return [...prev, newFood];
       });
     }
 
-    const points = calcFoodPoints({ calories, fat, protein, fiber }, matrix);
+    const selectedFoodForPoints = form.selectedFoodId ? combinedFoods.find((f) => f.id === form.selectedFoodId) : null;
+    const entryCategory = selectedFoodForPoints ? selectedFoodForPoints.category : form.category;
+    const entryExempt = selectedFoodForPoints ? !!selectedFoodForPoints.sattmacherExempt : false;
+    const points = selectedFoodForPoints && selectedFoodForPoints.isRecipe
+      ? calcRecipePoints(selectedFoodForPoints, Number(form.amountG) || 0, matrix, profile.sattmacherMode)
+      : calcFoodPointsWithMode({ calories, fat, protein, fiber }, matrix, profile.sattmacherMode, entryCategory, entryExempt);
     const entryData = {
       name: form.name.trim(), calories, carbs: carbsForEntry, fat, protein, fiber,
       calcBasis: form.selectedFoodId ? "kalorien" : nutrientBasis, points,
@@ -2025,6 +2083,7 @@ function NutritionPointsTracker() {
         tempId: Date.now(), foodId: recipeIngredientSelected.id, name: recipeIngredientSelected.name,
         amount: recipeIngredientAmount, unit: recipeIngredientUnit, amountG: round1(amountG),
         calories100: recipeIngredientSelected.calories, fat100: recipeIngredientSelected.fat, protein100: recipeIngredientSelected.protein, fiber100: recipeIngredientSelected.fiber,
+        category: recipeIngredientSelected.category, sattmacherExempt: !!recipeIngredientSelected.sattmacherExempt,
       },
     ]);
     setRecipeIngredientSelected(null);
@@ -2071,7 +2130,11 @@ function NutritionPointsTracker() {
       protein: round1(recipeTotals.protein * factor100),
       fiber: round1(recipeTotals.fiber * factor100),
       isRecipe: true,
-      recipeIngredients: recipeIngredients.map((i) => ({ name: i.name, amountG: i.amountG, amount: i.amount, unit: i.unit })),
+      recipeIngredients: recipeIngredients.map((i) => ({
+        name: i.name, amountG: i.amountG, amount: i.amount, unit: i.unit,
+        calories100: i.calories100, fat100: i.fat100, protein100: i.protein100, fiber100: i.fiber100,
+        category: i.category, sattmacherExempt: !!i.sattmacherExempt,
+      })),
       recipeTotalG: round1(recipeTotals.totalG),
       recipeServings: servings,
       recipeServingG: round1(recipeTotals.totalG / servings),
@@ -2094,7 +2157,7 @@ function NutritionPointsTracker() {
     const fat = round1(newFood.fat * factor);
     const protein = round1(newFood.protein * factor);
     const fiber = round1(newFood.fiber * factor);
-    const points = calcFoodPoints({ calories, fat, protein, fiber }, matrix);
+    const points = calcRecipePoints(newFood, newFood.recipeServingG, matrix, profile.sattmacherMode);
     const entryData = { name: newFood.name, calories, carbs: null, fat, protein, fiber, calcBasis: "kalorien", points };
     if (formTargetDay && formTargetDay !== effectiveTodayKey(profile.dayResetMinutes || 0)) {
       const entryWithId = { ...entryData, id: Date.now() + 1 };
@@ -2320,6 +2383,7 @@ function NutritionPointsTracker() {
         .npt-title { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
         .npt-subtitle { font-size: 12.5px; color: var(--chalk-dim); margin-top: 2px; }
         .npt-today-date { font-family: ${currentFont.display}; font-size: 22px; font-weight: 700; text-align: center; color: var(--chalk); margin: 4px 0 14px; text-transform: capitalize; }
+        .npt-sattmacher-badge { text-align: center; font-size: 11.5px; font-weight: 600; color: var(--good); background: ${hexToRgba(currentTheme.vars.good, 0.14)}; border-radius: 999px; padding: 5px 12px; margin: -6px auto 14px; display: table; }
         .npt-birthday-banner { margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: linear-gradient(135deg, var(--teal), var(--amber)); color: #1a1a1a; font-weight: 700; font-size: 13px; text-align: center; }
         .npt-body { flex: 1; overflow-y: auto; padding: 22px; }
         .npt-tab-panel { animation: npt-tab-slide-in 0.22s ease-out; }
@@ -2410,8 +2474,9 @@ function NutritionPointsTracker() {
         .npt-dropdown-item:hover { background: var(--surface); }
         .npt-dropdown-kcal { font-family: ${currentFont.display}; font-size: 11px; color: var(--chalk-dim); flex-shrink: 0; }
         .npt-recipe-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 10px; font-weight: 700; border-radius: 20px; background: var(--teal); color: var(--bg); vertical-align: middle; }
-        .npt-chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-        .npt-chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--chalk-dim); font-size: 13px; cursor: pointer; }
+        .npt-chip-row { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 16px; scrollbar-width: none; }
+        .npt-chip-row::-webkit-scrollbar { display: none; }
+        .npt-chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--chalk-dim); font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
         .npt-chip.active { background: var(--teal); border-color: var(--teal); color: #12201d; font-weight: 600; }
         .npt-field { margin-bottom: 16px; }
         .npt-field-hint { font-size: 11px; color: var(--chalk-dim); margin-top: 5px; line-height: 1.5; }
@@ -2512,6 +2577,9 @@ function NutritionPointsTracker() {
         {tab === "heute" && (
           <div style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
             <div className="npt-today-date">{effectiveNow(profile.dayResetMinutes || 0).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })}</div>
+            {profile.sattmacherMode && (
+              <div className="npt-sattmacher-badge">Sattmacher-Modus aktiv · Obst &amp; Gemüse frei, Beilagen max. 7 Punkte</div>
+            )}
             <div className="npt-gauge-wrap" ref={setTourRef("heute-ring")}>
               <svg width="180" height="180" viewBox="0 0 180 180">
                 <circle cx="90" cy="90" r={r} fill="none" stroke="var(--line)" strokeWidth="12" />
@@ -3160,6 +3228,28 @@ function NutritionPointsTracker() {
                     </div>
                   </div>
 
+                  <div className="npt-field" ref={setTourRef("profil-sattmacher")}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <label style={{ marginBottom: 0 }}>Sattmacher-Modus</label>
+                        <button className="npt-info-btn" style={{ width: 22, height: 22 }} onClick={() => setShowSattmacherInfo((v) => !v)} aria-label="Sattmacher-Modus erklären">ⓘ</button>
+                      </div>
+                      <input type="checkbox" className="npt-checkbox" checked={profile.sattmacherMode} onChange={(ev) => setProfile({ ...profile, sattmacherMode: ev.target.checked })} aria-label="Sattmacher-Modus" />
+                    </div>
+                    <div className="npt-field-hint" style={{ marginTop: 6 }}>
+                      Obst &amp; Gemüse zählen 0 Punkte (unabhängig von der Menge), klassische Beilagen wie Reis, Nudeln oder Kartoffeln sind auf max. 7 Punkte gedeckelt.
+                    </div>
+                    {showSattmacherInfo && (
+                      <div className="npt-sample-box info" style={{ marginTop: 10 }}>
+                        <div style={{ fontWeight: 700, marginBottom: 6 }}>Normal-Modus vs. Sattmacher-Modus</div>
+                        <div style={{ marginBottom: 6 }}><strong>Normal-Modus:</strong> Jedes Lebensmittel wird ganz normal nach Kalorien, Fett, Protein und Ballaststoffen bepunktet — unabhängig davon, ob es Obst, Fleisch oder eine Beilage ist.</div>
+                        <div style={{ marginBottom: 6 }}><strong>Sattmacher-Modus:</strong> Lebensmittel der Kategorie "Obst" oder "Gemüse" zählen 0 Punkte, egal wie viel du davon isst (Ausnahmen wie Avocado bleiben normal bepunktet, da sie sehr fettreich ist). Lebensmittel der Kategorie "Kohlenhydrat" (Reis, Nudeln, Kartoffeln u. ä.) sind auf maximal 7 Punkte pro Eintrag gedeckelt, egal wie groß die Portion ist. Alle anderen Kategorien (Fleisch, Fisch, Milchprodukte, Fett/Öl, Süßes, Getränke) werden unverändert normal bepunktet.</div>
+                        <div style={{ marginBottom: 6 }}>Die angezeigten Nährwerte (Kalorien, Makros, Diagramme) bleiben in beiden Modi immer ehrlich und unverändert — nur die Punktzahl wird angepasst.</div>
+                        <div>Das gilt auch für Rezepte aus dem Rezeptbaukasten: Jede Zutat wird einzeln nach ihrer Kategorie bepunktet, bevor die Punkte zusammengezählt werden. Dein tägliches Punktebudget selbst wird durch den Modus nicht automatisch verändert — falls gewünscht, kannst du das manuell über den Kaloriendefizit-Regler oder die Punkte-Matrix anpassen.</div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="npt-target-box">
                     <div className="npt-target-num">{target.total} Punkte / Tag</div>
                     <div className="npt-target-breakdown">
@@ -3636,6 +3726,15 @@ function NutritionPointsTracker() {
                         ≈ berechnete Kalorien je 100g: <strong>{Math.round((Number(form.carbs) || 0) * 4 + (Number(form.protein) || 0) * 4 + (Number(form.fat) || 0) * 9)} kcal</strong> (4 kcal/g Kohlenhydrate + 4 kcal/g Protein + 9 kcal/g Fett)
                       </div>
                     )}
+
+                    <div className="npt-form-row">
+                      <label>Kategorie (optional)</label>
+                      <select value={form.category} onChange={(ev) => setForm({ ...form, category: ev.target.value })}>
+                        <option value="">– keine –</option>
+                        {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <div className="npt-field-hint">Wird für den Sattmacher-Modus gebraucht: "Obst"/"Gemüse" zählen dort 0 Punkte, "Kohlenhydrat" ist auf max. 7 Punkte gedeckelt.</div>
+                    </div>
 
                     <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
                       Wird automatisch als eigenes Lebensmittel gespeichert, damit du "{form.name.trim() || "es"}" beim nächsten Mal direkt in der Suche findest.
