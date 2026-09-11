@@ -1185,6 +1185,9 @@ function NutritionPointsTracker() {
   const [recipeIngredientSelected, setRecipeIngredientSelected] = useState(null);
   const [showInlineNewFood, setShowInlineNewFood] = useState(false);
   const [inlineNewFood, setInlineNewFood] = useState({ name: "", calories: "", fat: "", protein: "", fiber: "", category: "" });
+  const [showFoodForm, setShowFoodForm] = useState(false);
+  const [editingFoodId, setEditingFoodId] = useState(null);
+  const [foodForm, setFoodForm] = useState({ name: "", calories: "", fat: "", protein: "", fiber: "", category: "" });
   const [expandedRecipeId, setExpandedRecipeId] = useState(null);
   const [saveError, setSaveError] = useState(false);
   const [backupMessage, setBackupMessage] = useState("");
@@ -1491,18 +1494,25 @@ function NutritionPointsTracker() {
         let pointsUsed = null;
         let dayEffectiveTarget = null;
         if (key === effectiveTodayKey(profile.dayResetMinutes || 0)) {
-          pointsUsed = used;
-          dayEffectiveTarget = effectiveTarget;
+          // Ohne echte Einträge zählt der Tag als "keine Daten", nicht als 0 Punkte verbraucht —
+          // sonst würde z.B. testweises Eintragen+Löschen einen echten (Null-)Datenpunkt erzeugen
+          // und die Grafik verzacken, obwohl an diesem Tag eigentlich (noch) nichts passiert ist.
+          if (entries.length > 0) {
+            pointsUsed = used;
+            dayEffectiveTarget = effectiveTarget;
+          }
         } else {
           const res = storageGet(`log:${key}`);
           if (res && res.value) {
             try {
               const parsed = JSON.parse(res.value);
               const list = Array.isArray(parsed) ? parsed : parsed.entries || [];
-              pointsUsed = list.reduce((s, e) => s + e.points, 0);
-              const baseTarget = !Array.isArray(parsed) ? parsed.target : null;
-              const sportBonusDay = !Array.isArray(parsed) && parsed.sport && parsed.sport.done ? Number(parsed.sport.bonusPoints) || 0 : 0;
-              dayEffectiveTarget = baseTarget !== null ? baseTarget + sportBonusDay : null;
+              if (list.length > 0) {
+                pointsUsed = list.reduce((s, e) => s + e.points, 0);
+                const baseTarget = !Array.isArray(parsed) ? parsed.target : null;
+                const sportBonusDay = !Array.isArray(parsed) && parsed.sport && parsed.sport.done ? Number(parsed.sport.bonusPoints) || 0 : 0;
+                dayEffectiveTarget = baseTarget !== null ? baseTarget + sportBonusDay : null;
+              }
             } catch (e) {}
           }
         }
@@ -1555,7 +1565,14 @@ function NutritionPointsTracker() {
           const d = new Date(year, month, day);
           const key = dateKeyFor(d);
           if (key === effectiveTodayKey(profile.dayResetMinutes || 0)) {
-            dailyValues.push({ pointsUsed: used, deficitPercent: effectiveTarget ? ((effectiveTarget - used) / effectiveTarget) * 100 : null });
+            // Ohne echte Einträge zählt der Tag als "keine Daten", nicht als 0 Punkte verbraucht —
+            // sonst würde z.B. testweises Eintragen+Löschen einen echten (Null-)Datenpunkt erzeugen
+            // und den Monatsdurchschnitt verfälschen, obwohl an diesem Tag nichts passiert ist.
+            if (entries.length > 0) {
+              dailyValues.push({ pointsUsed: used, deficitPercent: effectiveTarget ? ((effectiveTarget - used) / effectiveTarget) * 100 : null });
+            } else {
+              dailyValues.push({ pointsUsed: null, deficitPercent: null });
+            }
             continue;
           }
           const res = storageGet(`log:${key}`);
@@ -1563,12 +1580,16 @@ function NutritionPointsTracker() {
             try {
               const parsed = JSON.parse(res.value);
               const list = Array.isArray(parsed) ? parsed : parsed.entries || [];
-              const dayPointsUsed = list.reduce((s, e) => s + e.points, 0);
-              const baseTarget = !Array.isArray(parsed) ? parsed.target : null;
-              const sportBonusDay = !Array.isArray(parsed) && parsed.sport && parsed.sport.done ? Number(parsed.sport.bonusPoints) || 0 : 0;
-              const dayEffectiveTarget = baseTarget !== null ? baseTarget + sportBonusDay : null;
-              const dayDeficit = dayEffectiveTarget ? ((dayEffectiveTarget - dayPointsUsed) / dayEffectiveTarget) * 100 : null;
-              dailyValues.push({ pointsUsed: dayPointsUsed, deficitPercent: dayDeficit });
+              if (list.length > 0) {
+                const dayPointsUsed = list.reduce((s, e) => s + e.points, 0);
+                const baseTarget = !Array.isArray(parsed) ? parsed.target : null;
+                const sportBonusDay = !Array.isArray(parsed) && parsed.sport && parsed.sport.done ? Number(parsed.sport.bonusPoints) || 0 : 0;
+                const dayEffectiveTarget = baseTarget !== null ? baseTarget + sportBonusDay : null;
+                const dayDeficit = dayEffectiveTarget ? ((dayEffectiveTarget - dayPointsUsed) / dayEffectiveTarget) * 100 : null;
+                dailyValues.push({ pointsUsed: dayPointsUsed, deficitPercent: dayDeficit });
+              } else {
+                dailyValues.push({ pointsUsed: null, deficitPercent: null });
+              }
             } catch (e) { dailyValues.push({ pointsUsed: null, deficitPercent: null }); }
           } else {
             dailyValues.push({ pointsUsed: null, deficitPercent: null });
@@ -2001,6 +2022,7 @@ function NutritionPointsTracker() {
       category: isRecipeEntry ? undefined : entryCategory,
       sattmacherExempt: isRecipeEntry ? undefined : entryExempt,
       recipeSnapshot,
+      amountG: Number(form.amountG) || 100,
     };
     if (formTargetDay && formTargetDay !== effectiveTodayKey(profile.dayResetMinutes || 0)) {
       const entryWithId = editingEntryId ? { ...entryData, id: editingEntryId } : { ...entryData, id: Date.now() };
@@ -2028,16 +2050,24 @@ function NutritionPointsTracker() {
       setFormMode("naehrwerte");
       const basis = entry.calcBasis === "kohlenhydrate" ? "kohlenhydrate" : "kalorien";
       setNutrientBasis(basis);
+      // Ein Eintrag speichert die GESAMTWERTE für die tatsächlich verzehrte Menge, das Formular
+      // arbeitet aber mit Werten je 100g + separater Menge. Beim erneuten Öffnen müssen die
+      // Gesamtwerte daher auf je 100g zurückgerechnet werden — sonst zeigt das Formular plötzlich
+      // ganz andere Zahlen als ursprünglich eingetragen, und ein Ändern der Menge würde die Werte
+      // zusätzlich falsch (doppelt) skalieren.
+      const amountG = Number(entry.amountG) || 100;
+      const factor = amountG / 100;
       setForm({
         ...EMPTY_FORM,
         name: entry.name,
-        amountG: 100,
+        amountG: amountG,
         selectedFoodId: null,
-        calories: basis === "kalorien" ? String(entry.calories) : "",
-        carbs: basis === "kohlenhydrate" ? String(entry.carbs) : "",
-        fat: String(entry.fat),
-        protein: String(entry.protein),
-        fiber: String(entry.fiber),
+        category: entry.category || "",
+        calories: basis === "kalorien" ? String(round1((Number(entry.calories) || 0) / factor)) : "",
+        carbs: basis === "kohlenhydrate" ? String(round1((Number(entry.carbs) || 0) / factor)) : "",
+        fat: String(round1((Number(entry.fat) || 0) / factor)),
+        protein: String(round1((Number(entry.protein) || 0) / factor)),
+        fiber: String(round1((Number(entry.fiber) || 0) / factor)),
       });
       setSearchQuery("");
     }
@@ -2217,6 +2247,43 @@ function NutritionPointsTracker() {
     const item = customFoods.find((f) => f.id === id);
     setCustomFoods((prev) => prev.filter((f) => f.id !== id));
     if (item) showUndoToast("Lebensmittel gelöscht", () => setCustomFoods((prev) => [...prev, item]));
+  }
+
+  // ---------- Eigenes Lebensmittel anlegen/bearbeiten (nur einfache Lebensmittel, keine Rezepte —
+  // die haben eine Zutatenliste, die dieses einfache Formular nicht abbilden kann). ----------
+  function openNewFood() {
+    setFoodForm({ name: "", calories: "", fat: "", protein: "", fiber: "", category: "" });
+    setEditingFoodId(null);
+    setShowFoodForm(true);
+  }
+  function openEditFood(food) {
+    setFoodForm({
+      name: food.name, calories: String(food.calories), fat: String(food.fat),
+      protein: String(food.protein), fiber: String(food.fiber), category: food.category || "",
+    });
+    setEditingFoodId(food.id);
+    setShowFoodForm(true);
+  }
+  function cancelFoodForm() {
+    setShowFoodForm(false);
+    setEditingFoodId(null);
+  }
+  function saveFoodForm() {
+    if (!foodForm.name.trim()) return;
+    const data = {
+      name: foodForm.name.trim(),
+      calories: Number(foodForm.calories) || 0,
+      fat: Number(foodForm.fat) || 0,
+      protein: Number(foodForm.protein) || 0,
+      fiber: Number(foodForm.fiber) || 0,
+      category: foodForm.category || undefined,
+    };
+    setCustomFoods((prev) => {
+      if (editingFoodId) return prev.map((f) => (f.id === editingFoodId ? { ...f, ...data } : f));
+      return [{ id: Date.now(), ...data }, ...prev];
+    });
+    setShowFoodForm(false);
+    setEditingFoodId(null);
   }
 
   // ---------- Rezept-Baukasten ----------
@@ -3537,7 +3604,34 @@ function NutritionPointsTracker() {
               </button>
               {openProfilSection === "foods" && (
                 <div className="npt-accordion-body">
-                  {customFoods.length === 0 && <div className="npt-empty">Noch keine eigenen Lebensmittel gespeichert. Sie entstehen automatisch, wenn du beim Eintragen "Als eigenes Lebensmittel speichern" ankreuzt, oder über den Rezept-Baukasten unten.</div>}
+                  {!showFoodForm && (
+                    <button className="npt-btn-secondary" style={{ width: "100%", marginBottom: 12 }} onClick={openNewFood}>+ Neues Lebensmittel anlegen</button>
+                  )}
+                  {showFoodForm && (
+                    <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>{editingFoodId ? "Lebensmittel bearbeiten" : "Neues Lebensmittel"} (je 100g)</div>
+                      <div className="npt-field"><label>Name</label><input type="text" value={foodForm.name} onChange={(ev) => setFoodForm({ ...foodForm, name: ev.target.value })} /></div>
+                      <div className="npt-field"><label>Kalorien (kcal)</label><input type="number" inputMode="decimal" value={foodForm.calories} onChange={(ev) => setFoodForm({ ...foodForm, calories: ev.target.value })} /></div>
+                      <div className="npt-form-grid">
+                        <div className="npt-field"><label>Fett (g)</label><input type="number" inputMode="decimal" value={foodForm.fat} onChange={(ev) => setFoodForm({ ...foodForm, fat: ev.target.value })} /></div>
+                        <div className="npt-field"><label>Protein (g)</label><input type="number" inputMode="decimal" value={foodForm.protein} onChange={(ev) => setFoodForm({ ...foodForm, protein: ev.target.value })} /></div>
+                        <div className="npt-field"><label>Ballaststoffe (g)</label><input type="number" inputMode="decimal" value={foodForm.fiber} onChange={(ev) => setFoodForm({ ...foodForm, fiber: ev.target.value })} /></div>
+                      </div>
+                      <div className="npt-field">
+                        <label>Kategorie (optional)</label>
+                        <select value={foodForm.category} onChange={(ev) => setFoodForm({ ...foodForm, category: ev.target.value })}>
+                          <option value="">– keine –</option>
+                          {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelFoodForm}>Abbrechen</button>
+                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveFoodForm} disabled={!foodForm.name.trim()}>Speichern</button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="npt-field-hint" style={{ marginBottom: 12 }}>Für Gerichte aus mehreren Zutaten den Rezept-Baukasten weiter unten nutzen.</div>
+                  {customFoods.length === 0 && <div className="npt-empty">Noch keine eigenen Lebensmittel gespeichert.</div>}
                   {customFoods.map((f) => (
                     <div key={f.id}>
                       <div className="npt-entry-row" onClick={() => f.isRecipe && setExpandedRecipeId(expandedRecipeId === f.id ? null : f.id)} style={{ cursor: f.isRecipe ? "pointer" : "default" }}>
@@ -3548,7 +3642,12 @@ function NutritionPointsTracker() {
                             {f.isRecipe ? ` · ${f.recipeTotalG} g gesamt, ${f.recipeServings} Portion${f.recipeServings > 1 ? "en" : ""} à ${f.recipeServingG} g` : ""}
                           </div>
                         </div>
-                        <button className="npt-del-btn" onClick={(ev) => { ev.stopPropagation(); deleteFood(f.id); }} aria-label="Lebensmittel löschen"><IconTrash size={16} /></button>
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          {!f.isRecipe && (
+                            <button className="npt-del-btn" onClick={(ev) => { ev.stopPropagation(); openEditFood(f); }} aria-label="Lebensmittel bearbeiten"><IconPencil size={15} /></button>
+                          )}
+                          <button className="npt-del-btn" onClick={(ev) => { ev.stopPropagation(); deleteFood(f.id); }} aria-label="Lebensmittel löschen"><IconTrash size={16} /></button>
+                        </div>
                       </div>
                       {f.isRecipe && expandedRecipeId === f.id && (
                         <div className="npt-sample-box info" style={{ marginTop: -8, marginBottom: 10 }}>
@@ -3556,6 +3655,7 @@ function NutritionPointsTracker() {
                           {f.recipeIngredients.map((ing, idx) => (
                             <div key={idx}>• {ing.name} – {ing.unit && ing.unit !== "g" ? `${ing.amount} ${ing.unit} (≈ ${ing.amountG} g)` : `${ing.amountG} g`}</div>
                           ))}
+                          <div className="npt-field-hint" style={{ marginTop: 6 }}>Rezepte lassen sich aktuell nur löschen und im Rezept-Baukasten neu anlegen, nicht direkt bearbeiten.</div>
                         </div>
                       )}
                     </div>
