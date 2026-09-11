@@ -1331,6 +1331,11 @@ function NutritionPointsTracker() {
     5,
     false
   );
+  // Die y-Achse ist umgedreht (0% oben, höheres Defizit unten) — damit "oben" wirklich verlässlich
+  // 0% bedeutet und nicht automatisch auf z.B. 8% hochrutscht, wird die obere Grenze auf maximal 0%
+  // begrenzt. Nur wenn tatsächlich ein Tag mit negativem Defizit (über dem Budget gegessen) vorliegt,
+  // darf sie etwas darüber hinausgehen, damit dieser Tag nicht abgeschnitten wird.
+  if (deficitDomain[0] !== null && deficitDomain[0] > 0) deficitDomain[0] = 0;
   deficitDomain = applyZoomToDomain(deficitDomain, deficitRawValues, deficitZoom);
 
   const sportDurationHours = (Number(sportHours) || 0) + (Number(sportMinutes) || 0) / 60;
