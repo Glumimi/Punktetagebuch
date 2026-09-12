@@ -104,6 +104,9 @@ function IconPalette({ size = 16 }) {
 function IconScan({ size = 16 }) {
   return (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}><path d="M3 7V5a2 2 0 0 1 2-2h2" /><path d="M17 3h2a2 2 0 0 1 2 2v2" /><path d="M21 17v2a2 2 0 0 1-2 2h-2" /><path d="M7 21H5a2 2 0 0 1-2-2v-2" /><line x1="7" y1="12" x2="17" y2="12" /></svg>);
 }
+function IconDroplet({ size = 18 }) {
+  return (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5s7 7.2 7 12a7 7 0 0 1-14 0c0-4.8 7-12 7-12Z" /></svg>);
+}
 
 // ---------- Lebensmittel-Datenbank (Werte je 100 g / 100 ml) ----------
 
@@ -410,6 +413,9 @@ function weekKey() {
   return dateKeyFor(monday);
 }
 function round1(x) { return Math.round(x * 10) / 10; }
+// Punkte werden auf halbe Schritte gerundet (0,5), nicht mehr nur auf ganze Zahlen — reicht für
+// Nährwerte, bei denen ganzzahliges Runden zu ungenau wäre (z.B. 1,5 Punkte statt 1 oder 2).
+function roundToHalf(x) { return Math.round(x * 2) / 2; }
 
 // ---------- Tippfehlertolerante Suche ----------
 // Levenshtein-Distanz zwischen zwei Strings (Anzahl der Einfüge-/Lösch-/Ersetz-Operationen).
@@ -544,7 +550,7 @@ function calcFoodPointsRaw(food, matrix) {
   );
 }
 function calcFoodPoints(food, matrix) {
-  return Math.max(0, Math.round(calcFoodPointsRaw(food, matrix)));
+  return Math.max(0, roundToHalf(calcFoodPointsRaw(food, matrix)));
 }
 
 // Sattmacher-Modus: Obst & Gemüse zählen unabhängig von der Menge 0 Punkte (Ausnahme: Lebensmittel
@@ -561,7 +567,7 @@ function calcFoodPointsWithModeRaw(food, matrix, sattmacherMode, category, sattm
   return raw;
 }
 function calcFoodPointsWithMode(food, matrix, sattmacherMode, category, sattmacherExempt) {
-  return Math.max(0, Math.round(calcFoodPointsWithModeRaw(food, matrix, sattmacherMode, category, sattmacherExempt)));
+  return Math.max(0, roundToHalf(calcFoodPointsWithModeRaw(food, matrix, sattmacherMode, category, sattmacherExempt)));
 }
 
 // Rezept-Punkte: Statt die Punktzahl aus den zusammengerechneten Gesamtnährwerten zu berechnen,
@@ -587,7 +593,7 @@ function calcRecipePoints(recipeFood, consumedAmountG, matrix, sattmacherMode) {
       matrix, sattmacherMode, ing.category, ing.sattmacherExempt
     );
   }
-  return Math.max(0, Math.round(rawTotal));
+  return Math.max(0, roundToHalf(rawTotal));
 }
 
 // Berechnet die Punktzahl eines bereits gespeicherten Eintrags neu — z.B. wenn der Sattmacher-Modus
@@ -650,6 +656,23 @@ function buildWeekSummarySentences(weeklyTotal, daysWithData, flexUsed, weeklyFl
   return sentences;
 }
 
+// Summiert die Gramm-Menge an Obst & Gemüse aus einer Liste von Einträgen — berücksichtigt sowohl
+// normale Einträge (category direkt am Eintrag) als auch Rezepte (category je Zutat im Snapshot).
+function computeFruitVegGrams(entriesList) {
+  let total = 0;
+  for (const e of entriesList) {
+    if (e.isDirect) continue;
+    if (e.recipeSnapshot && e.recipeSnapshot.recipeIngredients) {
+      for (const ing of e.recipeSnapshot.recipeIngredients) {
+        if (ing.category === "Obst" || ing.category === "Gemüse") total += ing.amountG || 0;
+      }
+    } else if (e.category === "Obst" || e.category === "Gemüse") {
+      total += Number(e.amountG) || 0;
+    }
+  }
+  return total;
+}
+
 function computeMacroBreakdown(entriesList) {
   const macroEntries = entriesList.filter((e) => !e.isDirect);
   const totals = macroEntries.reduce(
@@ -698,6 +721,20 @@ function dayStatus(used, target) {
 
 // Berechnet eine Achsen-Domäne, die sich an den tatsächlichen Datenwerten orientiert (nicht an
 // Ziel-/Prognoselinien), mit Puffer nach oben UND unten, damit Schwankungen gut ablesbar sind.
+// Berechnet das tatsächliche Kaloriendefizit eines Tages relativ zum Gesamtumsatz (TDEE) — nicht
+// relativ zum bereits um das eingestellte Defizit reduzierten Punktebudget. 0% bedeutet: exakt so
+// viel gegessen wie der Gesamtumsatz (kein Defizit). Wird das Punktebudget voll ausgeschöpft, landet
+// man exakt beim eingestellten Defizit (z.B. -20%). Bleiben Punkte übrig, wird das Defizit größer
+// (negativer); werden mehr Punkte verbraucht (Flex), wird es kleiner. Rückgabe ist negativ für ein
+// tatsächliches Defizit (Konvention: 0% oben in der Grafik, Defizit geht nach unten ins Negative).
+function computeDayDeficitPercent(pointsUsed, dayEffectiveTarget, configuredDeficitPercent) {
+  if (pointsUsed === null || pointsUsed === undefined || !dayEffectiveTarget) return null;
+  const configuredFraction = (Number(configuredDeficitPercent) || 0) / 100;
+  const fractionUsed = pointsUsed / dayEffectiveTarget;
+  const actualDeficitFraction = 1 - fractionUsed + configuredFraction * fractionUsed;
+  return round1(-actualDeficitFraction * 100);
+}
+
 function computeAxisDomain(values, paddingRatio, minPadding, floorAtZero) {
   const nums = values.filter((v) => v !== null && v !== undefined && !isNaN(v));
   if (nums.length === 0) return [null, null];
@@ -878,10 +915,19 @@ function resolveAmountToGrams(food, amount, unit) {
   const perUnit = (food && food.units && food.units[unit] !== undefined) ? food.units[unit] : UNIT_DEFAULTS_G[unit];
   return amt * (perUnit || 0);
 }
+// Kehrfunktion zu resolveAmountToGrams — rechnet Gramm zurück in die Menge einer Einheit, damit
+// beim Wechsel der Einheit (z.B. von "g" zu "EL") ein sinnvoller, umgerechneter Wert angezeigt wird.
+function resolveGramsToUnitAmount(food, grams, unit) {
+  const g = Number(grams) || 0;
+  if (unit === "g" || unit === "ml") return round1(g);
+  if (unit === "l") return round1(g / 1000);
+  const perUnit = (food && food.units && food.units[unit] !== undefined) ? food.units[unit] : UNIT_DEFAULTS_G[unit];
+  return perUnit ? round1(g / perUnit) : 0;
+}
 
 const WEEKLY_FLEX_TOTAL = 49;
 // Reihenfolge der Tabs für die Swipe-Navigation (links/rechts wischen statt nur unten antippen).
-const TAB_ORDER = ["heute", "verlauf", "gewicht", "profil"];
+const TAB_ORDER = ["heute", "ernaehrung", "verlauf", "gewicht", "profil"];
 // Mindestanforderungen für eine verlässliche Trendprognose (siehe computeLinearTrend):
 // mindestens 6 Messungen, die mindestens 14 Tage (2 Wochen) auseinanderliegen — deckt so einen
 // vollen Wochenzyklus ab (Wochenend-/Wochentags-Schwankungen mitteln sich aus) und verlangt genug
@@ -1072,7 +1118,7 @@ const INTENSITY_INFO = [
   "Hart – sehr schnelles Laufen, HIIT-Intervalle",
   "Maximal – Wettkampftempo, Sprints, extremes Kraftausdauertraining an der Belastungsgrenze",
 ];
-const EMPTY_FORM = { name: "", calories: "", carbs: "", fat: "", protein: "", fiber: "", amountG: 100, amountUnit: "g", selectedFoodId: null, category: "" };
+const EMPTY_FORM = { name: "", calories: "", carbs: "", fat: "", protein: "", fiber: "", amountG: 100, amountUnitValue: 100, amountUnit: "g", selectedFoodId: null, category: "" };
 const EMPTY_POINT_FORM = { name: "", points: "", selectedDishId: null };
 
 // ---------- Komponente ----------
@@ -1104,6 +1150,8 @@ function NutritionPointsTracker() {
   const [weightViewMonth, setWeightViewMonth] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [weightViewYear, setWeightViewYear] = useState(() => new Date().getFullYear());
   const [waistLog, setWaistLog] = useState([]);
+  const [waterLog, setWaterLog] = useState([]);
+  const [waterCustomInput, setWaterCustomInput] = useState("");
   const [waistInput, setWaistInput] = useState("");
   const [showWaistInfo, setShowWaistInfo] = useState(false);
   const [showAllWeightEntries, setShowAllWeightEntries] = useState(false);
@@ -1185,9 +1233,12 @@ function NutritionPointsTracker() {
   const [recipeIngredientSelected, setRecipeIngredientSelected] = useState(null);
   const [showInlineNewFood, setShowInlineNewFood] = useState(false);
   const [inlineNewFood, setInlineNewFood] = useState({ name: "", calories: "", fat: "", protein: "", fiber: "", category: "" });
+  const [inlineFoodAttempted, setInlineFoodAttempted] = useState(false);
   const [showFoodForm, setShowFoodForm] = useState(false);
   const [editingFoodId, setEditingFoodId] = useState(null);
   const [foodForm, setFoodForm] = useState({ name: "", calories: "", fat: "", protein: "", fiber: "", category: "" });
+  const [foodFormAttempted, setFoodFormAttempted] = useState(false);
+  const [entryFormAttempted, setEntryFormAttempted] = useState(false);
   const [expandedRecipeId, setExpandedRecipeId] = useState(null);
   const [saveError, setSaveError] = useState(false);
   const [backupMessage, setBackupMessage] = useState("");
@@ -1251,6 +1302,10 @@ function NutritionPointsTracker() {
     const wal = storageGet("waistLog");
     if (wal && wal.value) {
       try { setWaistLog(JSON.parse(wal.value)); } catch (e) {}
+    }
+    const watl = storageGet("waterLog");
+    if (watl && watl.value) {
+      try { setWaterLog(JSON.parse(watl.value)); } catch (e) {}
     }
 
     setLoaded(true);
@@ -1324,18 +1379,18 @@ function NutritionPointsTracker() {
   waistDomain = applyZoomToDomain(waistDomain, waistRawValues, waistZoom);
   const deficitRawValues = weightChartData.map((d) => d.deficitPercent);
   const deficitValuesForDomain = [...deficitRawValues];
-  if (showDeficitTarget) deficitValuesForDomain.push(profile.deficitPercent);
+  if (showDeficitTarget) deficitValuesForDomain.push(-(Number(profile.deficitPercent) || 0));
   let deficitDomain = computeAxisDomain(
     deficitValuesForDomain,
     0.2,
     5,
     false
   );
-  // Die y-Achse ist umgedreht (0% oben, höheres Defizit unten) — damit "oben" wirklich verlässlich
-  // 0% bedeutet und nicht automatisch auf z.B. 8% hochrutscht, wird die obere Grenze auf maximal 0%
-  // begrenzt. Nur wenn tatsächlich ein Tag mit negativem Defizit (über dem Budget gegessen) vorliegt,
-  // darf sie etwas darüber hinausgehen, damit dieser Tag nicht abgeschnitten wird.
-  if (deficitDomain[0] !== null && deficitDomain[0] > 0) deficitDomain[0] = 0;
+  // Die y-Achse zeigt negative Werte (0% oben = kein Defizit, negativ = im Defizit, je tiefer desto
+  // größer das Defizit). Die obere Grenze wird daher auf mindestens 0% fixiert, damit "oben"
+  // verlässlich 0% bedeutet. Nur an einem Tag mit echtem Kalorienüberschuss (positiver Wert) darf sie
+  // etwas darüber hinausgehen, damit dieser Tag nicht abgeschnitten wird.
+  if (deficitDomain[1] !== null && deficitDomain[1] < 0) deficitDomain[1] = 0;
   deficitDomain = applyZoomToDomain(deficitDomain, deficitRawValues, deficitZoom);
 
   const sportDurationHours = (Number(sportHours) || 0) + (Number(sportMinutes) || 0) / 60;
@@ -1361,6 +1416,40 @@ function NutritionPointsTracker() {
     if (macroShares.fat > 0.4) coachTips.push("Die Fettzufuhr liegt heute schon recht hoch — im Blick behalten.");
     if ((macroTotals.fiber / macroTotals.calories) * 1000 < 10) coachTips.push("Etwas mehr Ballaststoffe (Gemüse, Vollkorn, Hülsenfrüchte) würden guttun.");
     if (coachTips.length === 0) coachTips.push("Sieht ausgewogen aus — weiter so!");
+  }
+
+  // ---------- Ernährungsübersicht: Wasser, Obst/Gemüse, persönliche Makro-Ziele ----------
+  const todayWaterMl = waterLog
+    .filter((w) => dateKeyFor(new Date(w.timestamp)) === effectiveTodayKey(profile.dayResetMinutes || 0))
+    .reduce((s, w) => s + w.ml, 0);
+  const WATER_TARGET_ML = 1500; // DGE-Richtwert: ca. 1,5 l über Getränke pro Tag für Erwachsene
+  const todayFruitVegG = computeFruitVegGrams(entries);
+  const FRUITVEG_TARGET_G = 650; // DGE "5 am Tag": 3 Portionen Gemüse (~400g) + 2 Portionen Obst (~250g)
+  // Persönliche Makro-Ziele nach DACH-Referenzwerten: Protein nach Körpergewicht (0,8 g/kg, ab 65
+  // Jahren 1,0 g/kg), Fett/Kohlenhydrate als Anteil am tatsächlichen Kalorienziel (nicht am
+  // theoretischen Gesamtumsatz, da das für die tägliche Einordnung praxisnäher ist), Ballaststoffe
+  // als fester DACH-Mindestwert.
+  const proteinTargetG = round1((Number(profile.weightKg) || 0) * (effectiveAge(profile) >= 65 ? 1.0 : 0.8));
+  const fatTargetG = round1((target.calorieTarget || 0) * 0.30 / 9);
+  const carbTargetG = round1((target.calorieTarget || 0) * 0.50 / 4);
+  const fiberTargetG = 30;
+  // Rendert eine horizontale, animierte Fortschritts-Kachel (für Wasser/Obst-Gemüse/Makros).
+  function renderNutrientBar(label, current, targetVal, unit, colorVar, key) {
+    const pct = targetVal > 0 ? Math.min(1, current / targetVal) : 0;
+    const reached = targetVal > 0 && current >= targetVal;
+    return (
+      <div key={key} style={{ marginBottom: 18 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 13, marginBottom: 6 }}>
+          <span style={{ fontWeight: 600 }}>{label}</span>
+          <span style={{ color: reached ? "var(--good)" : "var(--chalk-dim)", fontWeight: reached ? 700 : 400 }}>
+            {round1(current)} / {round1(targetVal)} {unit}{reached ? " ✓ Ziel erreicht" : ""}
+          </span>
+        </div>
+        <div style={{ height: 14, borderRadius: 7, background: "var(--line)", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${pct * 100}%`, background: reached ? "var(--good)" : `var(${colorVar})`, borderRadius: 7, transition: "width 0.5s ease" }} />
+        </div>
+      </div>
+    );
   }
 
   useEffect(() => {
@@ -1397,6 +1486,12 @@ function NutritionPointsTracker() {
     const ok = storageSet("waistLog", JSON.stringify(waistLog));
     setSaveError(!ok);
   }, [waistLog, loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    const ok = storageSet("waterLog", JSON.stringify(waterLog));
+    setSaveError(!ok);
+  }, [waterLog, loaded]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -1521,7 +1616,7 @@ function NutritionPointsTracker() {
             } catch (e) {}
           }
         }
-        const deficitPercent = pointsUsed !== null && dayEffectiveTarget ? round1(((dayEffectiveTarget - pointsUsed) / dayEffectiveTarget) * 100) : null;
+        const deficitPercent = computeDayDeficitPercent(pointsUsed, dayEffectiveTarget, profile.deficitPercent);
         points.push({ date: key, label: String(day), weightKg, weightMA, waistCm, waistMA, weightTrendLine, waistTrendLine, pointsUsed, deficitPercent });
       }
     } else {
@@ -1574,7 +1669,7 @@ function NutritionPointsTracker() {
             // sonst würde z.B. testweises Eintragen+Löschen einen echten (Null-)Datenpunkt erzeugen
             // und den Monatsdurchschnitt verfälschen, obwohl an diesem Tag nichts passiert ist.
             if (entries.length > 0) {
-              dailyValues.push({ pointsUsed: used, deficitPercent: effectiveTarget ? ((effectiveTarget - used) / effectiveTarget) * 100 : null });
+              dailyValues.push({ pointsUsed: used, deficitPercent: computeDayDeficitPercent(used, effectiveTarget, profile.deficitPercent) });
             } else {
               dailyValues.push({ pointsUsed: null, deficitPercent: null });
             }
@@ -1590,7 +1685,7 @@ function NutritionPointsTracker() {
                 const baseTarget = !Array.isArray(parsed) ? parsed.target : null;
                 const sportBonusDay = !Array.isArray(parsed) && parsed.sport && parsed.sport.done ? Number(parsed.sport.bonusPoints) || 0 : 0;
                 const dayEffectiveTarget = baseTarget !== null ? baseTarget + sportBonusDay : null;
-                const dayDeficit = dayEffectiveTarget ? ((dayEffectiveTarget - dayPointsUsed) / dayEffectiveTarget) * 100 : null;
+                const dayDeficit = computeDayDeficitPercent(dayPointsUsed, dayEffectiveTarget, profile.deficitPercent);
                 dailyValues.push({ pointsUsed: dayPointsUsed, deficitPercent: dayDeficit });
               } else {
                 dailyValues.push({ pointsUsed: null, deficitPercent: null });
@@ -1672,7 +1767,7 @@ function NutritionPointsTracker() {
       datasets.push({ label: "Prognose Bauchumfang", data: weightChartData.map((d) => d.waistTrendLine), borderColor: COLOR_WAIST, backgroundColor: COLOR_WAIST, borderWidth: 1.5, borderDash: [5, 4], spanGaps: true, pointRadius: 0, yAxisID: "waist", tension: 0.3 });
     }
     if (showDeficitLine && showDeficitTarget) {
-      datasets.push({ label: `Ziel ${profile.deficitPercent}%`, data: weightChartData.map(() => profile.deficitPercent), borderColor: COLOR_DEFICIT_LIGHT, backgroundColor: COLOR_DEFICIT_LIGHT, borderWidth: 2, pointRadius: 0, yAxisID: "deficit", tension: 0 });
+      datasets.push({ label: `Ziel -${profile.deficitPercent}%`, data: weightChartData.map(() => -(Number(profile.deficitPercent) || 0)), borderColor: COLOR_DEFICIT_LIGHT, backgroundColor: COLOR_DEFICIT_LIGHT, borderWidth: 2, pointRadius: 0, yAxisID: "deficit", tension: 0 });
     }
     if (showDeficitLine) {
       datasets.push({ label: "Kalorien-Defizit (%)", data: weightChartData.map((d) => d.deficitPercent), borderColor: COLOR_DEFICIT, backgroundColor: COLOR_DEFICIT, borderWidth: 2, spanGaps: true, yAxisID: "deficit", tension: 0.3, pointRadius: 2 });
@@ -1688,7 +1783,7 @@ function NutritionPointsTracker() {
       scales.waist = { type: "linear", position: "left", min: waistDomain[0] ?? undefined, max: waistDomain[1] ?? undefined, ticks: { color: COLOR_WAIST, font: { size: 9 }, callback: (v) => `${v}cm` }, grid: { display: false } };
     }
     if (showDeficitLine) {
-      scales.deficit = { type: "linear", position: "right", reverse: true, min: deficitDomain[0] ?? undefined, max: deficitDomain[1] ?? undefined, ticks: { color: COLOR_DEFICIT, font: { size: 9 }, callback: (v) => `${v}%` }, grid: { display: false } };
+      scales.deficit = { type: "linear", position: "right", min: deficitDomain[0] ?? undefined, max: deficitDomain[1] ?? undefined, ticks: { color: COLOR_DEFICIT, font: { size: 9 }, callback: (v) => `${v}%` }, grid: { display: false } };
     }
 
     return {
@@ -1786,7 +1881,10 @@ function NutritionPointsTracker() {
   // Rot erst, wenn zusätzlich auch die Flexpoints der Woche komplett aufgebraucht sind.
   // Nutzt eigene, vom Farbschema unabhängige Ampelfarben (--good/--warn/--bad), nicht die
   // dekorativen Theme-Akzentfarben (--teal/--amber/--coral), die je nach Schema z.B. rosa sind.
-  const status = isOverLimit ? "bad" : ratio > 0.8 ? "warn" : "good";
+  // Ampel nach Dritteln des Tagesbudgets (ohne Flex): 1. Drittel grün, 2. Drittel gelb, ab dem
+  // letzten Drittel rot — und bleibt rot, auch wenn per Flexpoints noch Puffer vorhanden ist
+  // (Flex verändert effectiveTarget bewusst nicht, daher bleibt ratio und damit die Farbe stabil).
+  const status = ratio > 2 / 3 ? "bad" : ratio > 1 / 3 ? "warn" : "good";
 
   const r = 74;
   const circumference = 2 * Math.PI * r;
@@ -1808,7 +1906,7 @@ function NutritionPointsTracker() {
     const defaultAmountG = food.isRecipe && food.recipeServingG ? food.recipeServingG : 100;
     const factor = defaultAmountG / 100;
     setForm({
-      ...form, name: food.name, selectedFoodId: food.id, amountG: defaultAmountG, amountUnit: "g", carbs: "",
+      ...form, name: food.name, selectedFoodId: food.id, amountG: defaultAmountG, amountUnitValue: defaultAmountG, amountUnit: "g", carbs: "",
       calories: Math.round(food.calories * factor), fat: round1(food.fat * factor), protein: round1(food.protein * factor), fiber: round1(food.fiber * factor),
     });
     setNutrientBasis("kalorien");
@@ -1816,17 +1914,18 @@ function NutritionPointsTracker() {
     setDropdownOpen(false);
   }
 
-  // Setzt Menge + Einheit (g, ml oder l) und rechnet die Nährwerte proportional um.
+  // Setzt Menge + Einheit (g, ml, l oder Alltagseinheit wie EL/TL/Scheibe/Tasse/Stück) und rechnet
+  // die Nährwerte proportional um.
   function updateAmountUnit(rawAmount, unit) {
+    const food = combinedFoods.find((f) => f.id === form.selectedFoodId);
     if (rawAmount === "") {
-      setForm({ ...form, amountG: "", amountUnit: unit });
+      setForm({ ...form, amountG: "", amountUnitValue: "", amountUnit: unit });
       return;
     }
-    const grams = resolveAmountToGrams(null, rawAmount, unit);
-    const food = combinedFoods.find((f) => f.id === form.selectedFoodId);
+    const grams = resolveAmountToGrams(food, rawAmount, unit);
     const factor = grams / 100;
     setForm({
-      ...form, amountG: round1(grams), amountUnit: unit,
+      ...form, amountG: round1(grams), amountUnitValue: rawAmount, amountUnit: unit,
       calories: food ? Math.round(food.calories * factor) : form.calories,
       fat: food ? round1(food.fat * factor) : form.fat,
       protein: food ? round1(food.protein * factor) : form.protein,
@@ -1834,7 +1933,7 @@ function NutritionPointsTracker() {
     });
   }
 
-  function resetForm() { setForm(EMPTY_FORM); setSearchQuery(""); setDropdownOpen(false); }
+  function resetForm() { setForm(EMPTY_FORM); setSearchQuery(""); setDropdownOpen(false); setEntryFormAttempted(false); }
   function resetPointForm() { setPointForm(EMPTY_POINT_FORM); setDishSearchQuery(""); setDishDropdownOpen(false); }
   function closeForm() { resetForm(); resetPointForm(); resetRecipeBuilder(); setShowForm(false); setEditingEntryId(null); setFormTargetDay(null); setFormMode("naehrwerte"); }
 
@@ -1959,21 +2058,52 @@ function NutritionPointsTracker() {
     setHistoryDays((prev) => prev.map((d) => (d.key === dayKey ? { ...d, used: list.reduce((s, e) => s + e.points, 0) } : d)));
   }
 
+  // Live-Punkte-Vorschau während der Eingabe im Eintrage-Formular — zeigt die Punktzahl für die
+  // aktuell eingegebene Portion (nicht nur je 100g), damit man sofort sieht, wie teuer das wird.
+  function computeFormPreviewPoints() {
+    const amountG = Number(form.amountG) || 0;
+    if (amountG <= 0) return null;
+    const factor = amountG / 100;
+    if (form.selectedFoodId) {
+      if (form.calories === "") return null;
+      const selectedFood = combinedFoods.find((f) => f.id === form.selectedFoodId);
+      if (selectedFood && selectedFood.isRecipe) return calcRecipePoints(selectedFood, amountG, matrix, profile.sattmacherMode);
+      const cat = selectedFood ? selectedFood.category : undefined;
+      const exempt = selectedFood ? !!selectedFood.sattmacherExempt : false;
+      return calcFoodPointsWithMode(
+        { calories: Number(form.calories) || 0, fat: Number(form.fat) || 0, protein: Number(form.protein) || 0, fiber: Number(form.fiber) || 0 },
+        matrix, profile.sattmacherMode, cat, exempt
+      );
+    }
+    let calories;
+    if (nutrientBasis === "kalorien") {
+      if (form.calories === "") return null;
+      calories = (Number(form.calories) || 0) * factor;
+    } else {
+      if (form.carbs === "") return null;
+      calories = ((Number(form.carbs) || 0) * 4 + (Number(form.protein) || 0) * 4 + (Number(form.fat) || 0) * 9) * factor;
+    }
+    return calcFoodPointsWithMode(
+      { calories, fat: (Number(form.fat) || 0) * factor, protein: (Number(form.protein) || 0) * factor, fiber: (Number(form.fiber) || 0) * factor },
+      matrix, profile.sattmacherMode, form.category, false
+    );
+  }
+
   function addEntry() {
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) { setEntryFormAttempted(true); return; }
 
     let calories, carbsForEntry, fat, protein, fiber;
 
     if (form.selectedFoodId) {
-      if (form.calories === "") return;
+      if (form.calories === "") { setEntryFormAttempted(true); return; }
       calories = Number(form.calories) || 0;
       fat = Number(form.fat) || 0;
       protein = Number(form.protein) || 0;
       fiber = Number(form.fiber) || 0;
       carbsForEntry = null;
     } else {
-      if (nutrientBasis === "kalorien" && form.calories === "") return;
-      if (nutrientBasis === "kohlenhydrate" && form.carbs === "") return;
+      if (nutrientBasis === "kalorien" && form.calories === "") { setEntryFormAttempted(true); return; }
+      if (nutrientBasis === "kohlenhydrate" && form.carbs === "") { setEntryFormAttempted(true); return; }
 
       const factor = (Number(form.amountG) || 0) / 100;
       const fat100 = Number(form.fat) || 0;
@@ -2156,7 +2286,7 @@ function NutritionPointsTracker() {
 
   function addDirectEntry() {
     if (!pointForm.name.trim() || pointForm.points === "") return;
-    const pts = Math.round(Number(pointForm.points)) || 0;
+    const pts = roundToHalf(Number(pointForm.points)) || 0;
     const dishName = pointForm.name.trim();
     const entryData = { name: dishName, points: pts, isDirect: true };
     if (formTargetDay && formTargetDay !== effectiveTodayKey(profile.dayResetMinutes || 0)) {
@@ -2259,6 +2389,7 @@ function NutritionPointsTracker() {
   function openNewFood() {
     setFoodForm({ name: "", calories: "", fat: "", protein: "", fiber: "", category: "" });
     setEditingFoodId(null);
+    setFoodFormAttempted(false);
     setShowFoodForm(true);
   }
   function openEditFood(food) {
@@ -2267,14 +2398,22 @@ function NutritionPointsTracker() {
       protein: String(food.protein), fiber: String(food.fiber), category: food.category || "",
     });
     setEditingFoodId(food.id);
+    setFoodFormAttempted(false);
     setShowFoodForm(true);
   }
   function cancelFoodForm() {
     setShowFoodForm(false);
     setEditingFoodId(null);
+    setFoodFormAttempted(false);
   }
   function saveFoodForm() {
-    if (!foodForm.name.trim()) return;
+    // Nur Name + Kalorien sind Pflicht — Fett/Protein/Ballaststoffe dürfen leer bleiben, falls sie
+    // (noch) nicht bekannt sind; sie zählen dann einfach als 0, das Lebensmittel lässt sich später
+    // jederzeit über den Bearbeiten-Button vervollständigen.
+    if (!foodForm.name.trim() || foodForm.calories === "") {
+      setFoodFormAttempted(true);
+      return;
+    }
     const data = {
       name: foodForm.name.trim(),
       calories: Number(foodForm.calories) || 0,
@@ -2289,6 +2428,7 @@ function NutritionPointsTracker() {
     });
     setShowFoodForm(false);
     setEditingFoodId(null);
+    setFoodFormAttempted(false);
   }
 
   // ---------- Rezept-Baukasten ----------
@@ -2301,13 +2441,15 @@ function NutritionPointsTracker() {
   // statt den Baukasten verlassen zu müssen. Landet dauerhaft in "Eigene Lebensmittel".
   function openInlineNewIngredient() {
     setInlineNewFood({ name: recipeIngredientQuery.trim(), calories: "", fat: "", protein: "", fiber: "", category: "" });
+    setInlineFoodAttempted(false);
     setShowInlineNewFood(true);
   }
   function cancelInlineNewIngredient() {
     setShowInlineNewFood(false);
+    setInlineFoodAttempted(false);
   }
   function saveInlineNewIngredient() {
-    if (!inlineNewFood.name.trim()) return;
+    if (!inlineNewFood.name.trim() || inlineNewFood.calories === "") { setInlineFoodAttempted(true); return; }
     const newFood = {
       id: Date.now(),
       name: inlineNewFood.name.trim(),
@@ -2320,6 +2462,7 @@ function NutritionPointsTracker() {
     setCustomFoods((prev) => [newFood, ...prev]);
     selectRecipeIngredient(newFood);
     setShowInlineNewFood(false);
+    setInlineFoodAttempted(false);
   }
   function addRecipeIngredient() {
     if (!recipeIngredientSelected || !recipeIngredientAmount || recipeIngredientAmount <= 0) return;
@@ -2467,6 +2610,16 @@ function NutritionPointsTracker() {
     setProfile((prev) => ({ ...prev, waistCm: val }));
     setWaistInput("");
   }
+
+  // ---------- Wasserzähler ----------
+  function addWater(ml) {
+    if (!ml || ml <= 0) return;
+    setWaterLog((prev) => [...prev, { id: Date.now(), timestamp: new Date().toISOString(), ml }]);
+  }
+  function undoLastWater() {
+    setWaterLog((prev) => prev.slice(0, -1));
+  }
+
   function deleteWaistEntry(id) {
     const item = waistLog.find((w) => w.id === id);
     setWaistLog((prev) => prev.filter((w) => w.id !== id));
@@ -2736,6 +2889,7 @@ function NutritionPointsTracker() {
         .npt-field-hint { font-size: 11px; color: var(--chalk-dim); margin-top: 5px; line-height: 1.5; }
         .npt-field label { display: block; font-size: 12.5px; color: var(--chalk-dim); margin-bottom: 6px; }
         .npt-field input[type="number"], .npt-field input[type="text"] { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; color: var(--chalk); font-size: 15px; }
+        .npt-field input.npt-input-error { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
         .npt-field input[type="range"] { width: 100%; accent-color: var(--teal); }
         .npt-range-val { font-family: ${currentFont.display}; font-size: 13px; color: var(--teal); float: right; }
         .npt-matrix-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -3002,6 +3156,43 @@ function NutritionPointsTracker() {
               </>
             )}
 
+          </div>
+        )}
+
+        {tab === "ernaehrung" && (
+          <div>
+            <div className="npt-today-date">Ernährungsübersicht</div>
+
+            <div className="npt-adjust-card" style={{ padding: 16 }}>
+              <div className="npt-adjust-title" style={{ padding: 0, marginBottom: 14 }}>Wasser</div>
+              {renderNutrientBar("Wasser", todayWaterMl, WATER_TARGET_ML, "ml", "--teal", "water")}
+              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                <input type="number" inputMode="numeric" placeholder="ml" value={waterCustomInput} onChange={(ev) => setWaterCustomInput(ev.target.value)} style={{ flex: 1 }} />
+                <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 16px" }} onClick={() => { addWater(Number(waterCustomInput) || 0); setWaterCustomInput(""); }}>+ Hinzufügen</button>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button className="npt-btn-secondary" onClick={() => addWater(250)}>+ 250 ml (Glas)</button>
+                <button className="npt-btn-secondary" onClick={() => addWater(500)}>+ 500 ml (Flasche)</button>
+                {waterLog.length > 0 && (
+                  <button className="npt-del-btn" onClick={undoLastWater} aria-label="Letzten Wassereintrag rückgängig"><IconReset size={14} /></button>
+                )}
+              </div>
+            </div>
+
+            <div className="npt-adjust-card" style={{ padding: 16 }}>
+              <div className="npt-adjust-title" style={{ padding: 0, marginBottom: 14 }}>Obst &amp; Gemüse</div>
+              {renderNutrientBar("Obst & Gemüse", todayFruitVegG, FRUITVEG_TARGET_G, "g", "--amber", "fruitveg")}
+              <div className="npt-field-hint">Wird automatisch aus deinen heutigen Mahlzeiten berechnet, die als "Obst" oder "Gemüse" kategorisiert sind (auch aus Rezept-Zutaten).</div>
+            </div>
+
+            <div className="npt-adjust-card" style={{ padding: 16 }}>
+              <div className="npt-adjust-title" style={{ padding: 0, marginBottom: 14 }}>Nährstoff-Ziele (persönlich berechnet)</div>
+              {renderNutrientBar("Protein", macroTotals.protein, proteinTargetG, "g", "--teal", "protein")}
+              {renderNutrientBar("Fett", macroTotals.fat, fatTargetG, "g", "--coral", "fat")}
+              {renderNutrientBar("Kohlenhydrate", macroTotals.carbs, carbTargetG, "g", "--amber", "carbs")}
+              {renderNutrientBar("Ballaststoffe", macroTotals.fiber, fiberTargetG, "g", "--good", "fiber")}
+              <div className="npt-field-hint">Protein nach deinem Körpergewicht (0,8 g/kg, ab 65 Jahren 1,0 g/kg). Fett &amp; Kohlenhydrate als Anteil deines aktuellen Kalorienziels (DACH-Richtwerte: 30 % bzw. mind. 50 %). Ballaststoffe: DACH-Mindestwert von 30 g/Tag.</div>
+            </div>
           </div>
         )}
 
@@ -3615,13 +3806,14 @@ function NutritionPointsTracker() {
                   {showFoodForm && (
                     <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
                       <div style={{ fontWeight: 700, marginBottom: 8 }}>{editingFoodId ? "Lebensmittel bearbeiten" : "Neues Lebensmittel"} (je 100g)</div>
-                      <div className="npt-field"><label>Name</label><input type="text" value={foodForm.name} onChange={(ev) => setFoodForm({ ...foodForm, name: ev.target.value })} /></div>
-                      <div className="npt-field"><label>Kalorien (kcal)</label><input type="number" inputMode="decimal" value={foodForm.calories} onChange={(ev) => setFoodForm({ ...foodForm, calories: ev.target.value })} /></div>
+                      <div className="npt-field"><label>Name *</label><input type="text" className={foodFormAttempted && !foodForm.name.trim() ? "npt-input-error" : ""} value={foodForm.name} onChange={(ev) => setFoodForm({ ...foodForm, name: ev.target.value })} /></div>
+                      <div className="npt-field"><label>Kalorien (kcal) *</label><input type="number" inputMode="decimal" className={foodFormAttempted && foodForm.calories === "" ? "npt-input-error" : ""} value={foodForm.calories} onChange={(ev) => setFoodForm({ ...foodForm, calories: ev.target.value })} /></div>
                       <div className="npt-form-grid">
                         <div className="npt-field"><label>Fett (g)</label><input type="number" inputMode="decimal" value={foodForm.fat} onChange={(ev) => setFoodForm({ ...foodForm, fat: ev.target.value })} /></div>
                         <div className="npt-field"><label>Protein (g)</label><input type="number" inputMode="decimal" value={foodForm.protein} onChange={(ev) => setFoodForm({ ...foodForm, protein: ev.target.value })} /></div>
                         <div className="npt-field"><label>Ballaststoffe (g)</label><input type="number" inputMode="decimal" value={foodForm.fiber} onChange={(ev) => setFoodForm({ ...foodForm, fiber: ev.target.value })} /></div>
                       </div>
+                      <div className="npt-field-hint" style={{ marginTop: -10, marginBottom: 12 }}>* Pflichtfelder. Fett/Protein/Ballaststoffe dürfen leer bleiben, falls (noch) unbekannt — zählen dann als 0 und lassen sich später ergänzen.</div>
                       <div className="npt-field">
                         <label>Kategorie (optional)</label>
                         <select value={foodForm.category} onChange={(ev) => setFoodForm({ ...foodForm, category: ev.target.value })}>
@@ -3629,9 +3821,14 @@ function NutritionPointsTracker() {
                           {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                         </select>
                       </div>
+                      {foodForm.calories !== "" && (
+                        <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+                          ≈ <strong className="npt-font-display">{calcFoodPointsWithMode({ calories: Number(foodForm.calories) || 0, fat: Number(foodForm.fat) || 0, protein: Number(foodForm.protein) || 0, fiber: Number(foodForm.fiber) || 0 }, matrix, profile.sattmacherMode, foodForm.category, false)} Punkte</strong> je 100g
+                        </div>
+                      )}
                       <div style={{ display: "flex", gap: 8 }}>
                         <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelFoodForm}>Abbrechen</button>
-                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveFoodForm} disabled={!foodForm.name.trim()}>Speichern</button>
+                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveFoodForm}>Speichern</button>
                       </div>
                     </div>
                   )}
@@ -3700,8 +3897,8 @@ function NutritionPointsTracker() {
                   {showInlineNewFood && (
                     <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
                       <div style={{ fontWeight: 700, marginBottom: 8 }}>Neues Lebensmittel (je 100g)</div>
-                      <div className="npt-field"><label>Name</label><input type="text" value={inlineNewFood.name} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, name: ev.target.value })} /></div>
-                      <div className="npt-field"><label>Kalorien (kcal)</label><input type="number" inputMode="decimal" value={inlineNewFood.calories} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, calories: ev.target.value })} /></div>
+                      <div className="npt-field"><label>Name *</label><input type="text" className={inlineFoodAttempted && !inlineNewFood.name.trim() ? "npt-input-error" : ""} value={inlineNewFood.name} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, name: ev.target.value })} /></div>
+                      <div className="npt-field"><label>Kalorien (kcal) *</label><input type="number" inputMode="decimal" className={inlineFoodAttempted && inlineNewFood.calories === "" ? "npt-input-error" : ""} value={inlineNewFood.calories} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, calories: ev.target.value })} /></div>
                       <div className="npt-form-grid">
                         <div className="npt-field"><label>Fett (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.fat} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, fat: ev.target.value })} /></div>
                         <div className="npt-field"><label>Protein (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.protein} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, protein: ev.target.value })} /></div>
@@ -3714,9 +3911,14 @@ function NutritionPointsTracker() {
                           {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                         </select>
                       </div>
+                      {inlineNewFood.calories !== "" && (
+                        <div className="npt-field-hint" style={{ marginBottom: 10 }}>
+                          ≈ {calcFoodPointsWithMode({ calories: Number(inlineNewFood.calories) || 0, fat: Number(inlineNewFood.fat) || 0, protein: Number(inlineNewFood.protein) || 0, fiber: Number(inlineNewFood.fiber) || 0 }, matrix, profile.sattmacherMode, inlineNewFood.category, false)} Punkte je 100g
+                        </div>
+                      )}
                       <div style={{ display: "flex", gap: 8 }}>
                         <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelInlineNewIngredient}>Abbrechen</button>
-                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveInlineNewIngredient} disabled={!inlineNewFood.name.trim()}>Anlegen &amp; auswählen</button>
+                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveInlineNewIngredient}>Anlegen &amp; auswählen</button>
                       </div>
                     </div>
                   )}
@@ -3907,8 +4109,8 @@ function NutritionPointsTracker() {
                 {showInlineNewFood && (
                   <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
                     <div style={{ fontWeight: 700, marginBottom: 8 }}>Neues Lebensmittel (je 100g)</div>
-                    <div className="npt-field"><label>Name</label><input type="text" value={inlineNewFood.name} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, name: ev.target.value })} /></div>
-                    <div className="npt-field"><label>Kalorien (kcal)</label><input type="number" inputMode="decimal" value={inlineNewFood.calories} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, calories: ev.target.value })} /></div>
+                    <div className="npt-field"><label>Name *</label><input type="text" className={inlineFoodAttempted && !inlineNewFood.name.trim() ? "npt-input-error" : ""} value={inlineNewFood.name} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, name: ev.target.value })} /></div>
+                    <div className="npt-field"><label>Kalorien (kcal) *</label><input type="number" inputMode="decimal" className={inlineFoodAttempted && inlineNewFood.calories === "" ? "npt-input-error" : ""} value={inlineNewFood.calories} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, calories: ev.target.value })} /></div>
                     <div className="npt-form-grid">
                       <div className="npt-field"><label>Fett (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.fat} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, fat: ev.target.value })} /></div>
                       <div className="npt-field"><label>Protein (g)</label><input type="number" inputMode="decimal" value={inlineNewFood.protein} onChange={(ev) => setInlineNewFood({ ...inlineNewFood, protein: ev.target.value })} /></div>
@@ -3921,9 +4123,14 @@ function NutritionPointsTracker() {
                         {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
+                    {inlineNewFood.calories !== "" && (
+                      <div className="npt-field-hint" style={{ marginBottom: 10 }}>
+                        ≈ {calcFoodPointsWithMode({ calories: Number(inlineNewFood.calories) || 0, fat: Number(inlineNewFood.fat) || 0, protein: Number(inlineNewFood.protein) || 0, fiber: Number(inlineNewFood.fiber) || 0 }, matrix, profile.sattmacherMode, inlineNewFood.category, false)} Punkte je 100g
+                      </div>
+                    )}
                     <div style={{ display: "flex", gap: 8 }}>
                       <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelInlineNewIngredient}>Abbrechen</button>
-                      <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveInlineNewIngredient} disabled={!inlineNewFood.name.trim()}>Anlegen &amp; auswählen</button>
+                      <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveInlineNewIngredient}>Anlegen &amp; auswählen</button>
                     </div>
                   </div>
                 )}
@@ -4007,31 +4214,38 @@ function NutritionPointsTracker() {
                     <div className="npt-form-row" style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
                       <div style={{ flex: 1 }}>
                         <label>Menge</label>
-                        <input type="number" inputMode="decimal" value={form.amountG === "" ? "" : (form.amountUnit === "l" ? round1(form.amountG / 1000) : form.amountG)}
+                        <input type="number" inputMode="decimal" value={form.amountUnitValue}
                           onChange={(ev) => updateAmountUnit(ev.target.value === "" ? "" : Number(ev.target.value) || 0, form.amountUnit)} />
                       </div>
                       <div style={{ flex: "0 0 84px" }}>
                         <label>Einheit</label>
-                        <select value={form.amountUnit} onChange={(ev) => updateAmountUnit(form.amountG === "" ? "" : (form.amountUnit === "l" ? round1(form.amountG / 1000) : form.amountG), ev.target.value)}>
-                          <option value="g">g</option>
-                          <option value="ml">ml</option>
-                          <option value="l">l</option>
+                        <select value={form.amountUnit} onChange={(ev) => {
+                          const food = combinedFoods.find((f) => f.id === form.selectedFoodId);
+                          const newUnitValue = resolveGramsToUnitAmount(food, form.amountG, ev.target.value);
+                          updateAmountUnit(newUnitValue, ev.target.value);
+                        }}>
+                          {RECIPE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
                         </select>
                       </div>
                     </div>
                     <div className="npt-form-row">
-                      <label>Bezeichnung</label>
-                      <input type="text" value={form.name} onChange={(ev) => setForm({ ...form, name: ev.target.value })} />
+                      <label>Bezeichnung *</label>
+                      <input type="text" className={entryFormAttempted && !form.name.trim() ? "npt-input-error" : ""} value={form.name} onChange={(ev) => setForm({ ...form, name: ev.target.value })} />
                     </div>
                     <div className="npt-form-row">
-                      <label>Kalorien (kcal)</label>
-                      <input type="number" inputMode="decimal" value={form.calories} onChange={(ev) => setForm({ ...form, calories: ev.target.value })} />
+                      <label>Kalorien (kcal) *</label>
+                      <input type="number" inputMode="decimal" className={entryFormAttempted && form.calories === "" ? "npt-input-error" : ""} value={form.calories} onChange={(ev) => setForm({ ...form, calories: ev.target.value })} />
                     </div>
                     <div className="npt-form-grid">
                       <div className="npt-form-row"><label>Fett (g)</label><input type="number" inputMode="decimal" value={form.fat} onChange={(ev) => setForm({ ...form, fat: ev.target.value })} /></div>
                       <div className="npt-form-row"><label>Protein (g)</label><input type="number" inputMode="decimal" value={form.protein} onChange={(ev) => setForm({ ...form, protein: ev.target.value })} /></div>
                       <div className="npt-form-row"><label>Ballaststoffe (g)</label><input type="number" inputMode="decimal" value={form.fiber} onChange={(ev) => setForm({ ...form, fiber: ev.target.value })} /></div>
                     </div>
+                    {computeFormPreviewPoints() !== null && (
+                      <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+                        ≈ <strong className="npt-font-display">{computeFormPreviewPoints()} Punkte</strong> für {form.amountUnitValue} {form.amountUnit}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>
@@ -4041,23 +4255,40 @@ function NutritionPointsTracker() {
                     </div>
 
                     <div className="npt-form-row">
-                      <label>Bezeichnung</label>
-                      <input type="text" placeholder="z. B. Makrelenhäppchen" value={form.name} onChange={(ev) => setForm({ ...form, name: ev.target.value })} />
+                      <label>Bezeichnung *</label>
+                      <input type="text" placeholder="z. B. Makrelenhäppchen" className={entryFormAttempted && !form.name.trim() ? "npt-input-error" : ""} value={form.name} onChange={(ev) => setForm({ ...form, name: ev.target.value })} />
                     </div>
-                    <div className="npt-form-row">
-                      <label>Menge (g), die du isst</label>
-                      <input type="number" inputMode="decimal" value={form.amountG} onChange={(ev) => setForm({ ...form, amountG: ev.target.value === "" ? "" : Number(ev.target.value) || 0 })} />
+                    <div className="npt-form-row" style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                      <div style={{ flex: 1 }}>
+                        <label>Menge, die du isst</label>
+                        <input type="number" inputMode="decimal" value={form.amountUnitValue}
+                          onChange={(ev) => {
+                            const raw = ev.target.value;
+                            const grams = raw === "" ? "" : resolveAmountToGrams(null, raw, form.amountUnit);
+                            setForm({ ...form, amountUnitValue: raw, amountG: grams === "" ? "" : round1(grams) });
+                          }} />
+                      </div>
+                      <div style={{ flex: "0 0 84px" }}>
+                        <label>Einheit</label>
+                        <select value={form.amountUnit} onChange={(ev) => {
+                          const newUnitValue = resolveGramsToUnitAmount(null, form.amountG, ev.target.value);
+                          const grams = resolveAmountToGrams(null, newUnitValue, ev.target.value);
+                          setForm({ ...form, amountUnit: ev.target.value, amountUnitValue: newUnitValue, amountG: round1(grams) });
+                        }}>
+                          {RECIPE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                        </select>
+                      </div>
                     </div>
 
                     {nutrientBasis === "kalorien" ? (
                       <div className="npt-form-row">
-                        <label>Kalorien je 100g (kcal)</label>
-                        <input type="number" inputMode="decimal" value={form.calories} onChange={(ev) => setForm({ ...form, calories: ev.target.value })} />
+                        <label>Kalorien je 100g (kcal) *</label>
+                        <input type="number" inputMode="decimal" className={entryFormAttempted && form.calories === "" ? "npt-input-error" : ""} value={form.calories} onChange={(ev) => setForm({ ...form, calories: ev.target.value })} />
                       </div>
                     ) : (
                       <div className="npt-form-row">
-                        <label>Kohlenhydrate je 100g (g)</label>
-                        <input type="number" inputMode="decimal" value={form.carbs} onChange={(ev) => setForm({ ...form, carbs: ev.target.value })} />
+                        <label>Kohlenhydrate je 100g (g) *</label>
+                        <input type="number" inputMode="decimal" className={entryFormAttempted && form.carbs === "" ? "npt-input-error" : ""} value={form.carbs} onChange={(ev) => setForm({ ...form, carbs: ev.target.value })} />
                       </div>
                     )}
 
@@ -4070,6 +4301,12 @@ function NutritionPointsTracker() {
                     {nutrientBasis === "kohlenhydrate" && (
                       <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
                         ≈ berechnete Kalorien je 100g: <strong>{Math.round((Number(form.carbs) || 0) * 4 + (Number(form.protein) || 0) * 4 + (Number(form.fat) || 0) * 9)} kcal</strong> (4 kcal/g Kohlenhydrate + 4 kcal/g Protein + 9 kcal/g Fett)
+                      </div>
+                    )}
+
+                    {computeFormPreviewPoints() !== null && (
+                      <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+                        ≈ <strong className="npt-font-display">{computeFormPreviewPoints()} Punkte</strong> für {form.amountUnitValue} {form.amountUnit}
                       </div>
                     )}
 
@@ -4118,7 +4355,7 @@ function NutritionPointsTracker() {
                 </div>
                 <div className="npt-form-row">
                   <label>Punkte</label>
-                  <input type="number" inputMode="decimal" value={pointForm.points} onChange={(ev) => setPointForm({ ...pointForm, points: ev.target.value })} />
+                  <input type="number" inputMode="decimal" step="0.5" value={pointForm.points} onChange={(ev) => setPointForm({ ...pointForm, points: ev.target.value })} />
                 </div>
                 <div className="npt-form-actions">
                   <button className="npt-btn-secondary" onClick={closeForm}>Abbrechen</button>
@@ -4154,6 +4391,7 @@ function NutritionPointsTracker() {
 
       <div className="npt-tabbar">
         <button className={`npt-tab ${tab === "heute" ? "active" : ""}`} onClick={() => setTab("heute")}><IconUtensils size={18} />Heute</button>
+        <button className={`npt-tab ${tab === "ernaehrung" ? "active" : ""}`} onClick={() => setTab("ernaehrung")}><IconDroplet size={18} />Ernährung</button>
         <button className={`npt-tab ${tab === "verlauf" ? "active" : ""}`} onClick={() => setTab("verlauf")}><IconHistory size={18} />Verlauf</button>
         <button className={`npt-tab ${tab === "gewicht" ? "active" : ""}`} onClick={() => setTab("gewicht")}><IconLineChart size={18} />Gewicht</button>
         <button className={`npt-tab ${tab === "profil" ? "active" : ""}`} onClick={() => setTab("profil")}><IconSliders size={18} />Profil</button>
