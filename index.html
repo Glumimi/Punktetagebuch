@@ -1996,7 +1996,11 @@ function NutritionPointsTracker() {
     const ctx = weightChartCanvasRef.current.getContext("2d");
     weightChartInstanceRef.current = new Chart(ctx, buildWeightChartConfig());
     return () => { if (weightChartInstanceRef.current) { weightChartInstanceRef.current.destroy(); weightChartInstanceRef.current = null; } };
-  }, [weightChartData, weightViewMode, profile.targetWeightKg, profile.targetWaistCm, profile.deficitPercent, trend, waistTrend, showWeightLine, showTrendLine, showWeightTarget, waistEnabled, showWaistLine, showWaistTarget, showWaistTrendLine, showDeficitLine, showDeficitTarget, currentTheme, weightDomain, waistDomain, deficitDomain]);
+    // "tab" steht bewusst mit in den Abhängigkeiten: Der Gewicht-Tab wird bedingt ein-/ausgehängt,
+    // das Canvas existiert also erst NACH dem Wechsel auf diesen Tab. Ohne "tab" hier würde der
+    // Effekt beim Wechsel nicht erneut laufen und das frisch gemountete (leere) Canvas nie befüllt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, weightChartData, weightViewMode, profile.targetWeightKg, profile.targetWaistCm, profile.deficitPercent, trend, waistTrend, showWeightLine, showTrendLine, showWeightTarget, waistEnabled, showWaistLine, showWaistTarget, showWaistTrendLine, showDeficitLine, showDeficitTarget, currentTheme, weightDomain, waistDomain, deficitDomain]);
 
   useEffect(() => {
     if (!chartZoomed) return;
