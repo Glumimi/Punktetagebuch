@@ -1283,6 +1283,7 @@ function NutritionPointsTracker() {
   const [waistLog, setWaistLog] = useState([]);
   const [waterLog, setWaterLog] = useState([]);
   const [favoriteFoodIds, setFavoriteFoodIds] = useState([]);
+  const [libSearchQuery, setLibSearchQuery] = useState("");
   const [waterCustomInput, setWaterCustomInput] = useState("");
   const [waistInput, setWaistInput] = useState("");
   const [showWaistInfo, setShowWaistInfo] = useState(false);
@@ -2088,6 +2089,8 @@ function NutritionPointsTracker() {
     searchQuery.trim().length > 0 && !form.selectedFoodId
       ? fuzzySearch(searchQuery, combinedFoods, 6)
       : [];
+
+  const libSearchResults = libSearchQuery.trim().length > 0 ? fuzzySearch(libSearchQuery, combinedFoods, 15) : [];
 
   const dishSearchResults =
     dishSearchQuery.trim().length > 0 && !pointForm.selectedDishId
@@ -3478,6 +3481,40 @@ function NutritionPointsTracker() {
         {tab === "lebensmittel" && (
           <>
             <div className="npt-today-date">Lebensmittel &amp; Rezepte</div>
+
+            <div className="npt-accordion-section">
+              <button className={`npt-accordion-header ${openProfilSection === "search" ? "open" : ""}`} ref={setTourRef("lebensmittel-search")} onClick={() => setOpenProfilSection(openProfilSection === "search" ? null : "search")}>
+                <span>Datenbanksuche</span>
+                <IconChevronDown size={18} />
+              </button>
+              {openProfilSection === "search" && (
+                <div className="npt-accordion-body">
+                  <div className="npt-field-hint" style={{ marginBottom: 10 }}>Suche nach Lebensmitteln, um sie direkt als Favorit für die Schnellauswahl beim Eintragen zu markieren.</div>
+                  <div className="npt-field">
+                    <input type="text" placeholder="z. B. Linsen, Lachs, Sojamilch…" value={libSearchQuery} onChange={(ev) => setLibSearchQuery(ev.target.value)} />
+                  </div>
+                  {libSearchQuery.trim().length > 0 && libSearchResults.length === 0 && (
+                    <div className="npt-empty">Nichts gefunden.</div>
+                  )}
+                  {libSearchResults.length > 0 && (
+                    <div className="npt-dropdown" style={{ position: "static", maxHeight: "none", border: "1px solid var(--line)", borderRadius: 10, marginTop: 0 }}>
+                      {libSearchResults.map((f) => (
+                        <div key={f.id} className="npt-dropdown-item">
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}{f.isRecipe ? <span className="npt-recipe-badge">Rezept</span> : ""}</span>
+                          <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                            <span className="npt-dropdown-kcal">{f.calories} kcal/100g</span>
+                            <button className={`npt-fav-btn${favoriteFoodIds.includes(f.id) ? " active" : ""}`} onClick={() => toggleFavorite(f.id)} aria-label={favoriteFoodIds.includes(f.id) ? "Favorit entfernen" : "Als Favorit markieren"}>
+                              <IconHeart size={16} filled={favoriteFoodIds.includes(f.id)} />
+                            </button>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="npt-accordion-section">
               <button className={`npt-accordion-header ${openProfilSection === "foods" ? "open" : ""}`} ref={setTourRef("lebensmittel-foods")} onClick={() => setOpenProfilSection(openProfilSection === "foods" ? null : "foods")}>
                 <span>Eigene Lebensmittel (je 100g){customFoods.length > 0 ? ` · ${customFoods.length}` : ""}</span>
