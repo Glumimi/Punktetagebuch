@@ -174,6 +174,9 @@ function IconPalette({ size = 16 }) {
 function IconScan({ size = 16 }) {
   return (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}><path d="M3 7V5a2 2 0 0 1 2-2h2" /><path d="M17 3h2a2 2 0 0 1 2 2v2" /><path d="M21 17v2a2 2 0 0 1-2 2h-2" /><path d="M7 21H5a2 2 0 0 1-2-2v-2" /><line x1="7" y1="12" x2="17" y2="12" /></svg>);
 }
+function IconCoffee({ size = 18 }) {
+  return (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" y1="2" x2="6" y2="4" /><line x1="10" y1="2" x2="10" y2="4" /><line x1="14" y1="2" x2="14" y2="4" /></svg>);
+}
 function IconDroplet({ size = 18 }) {
   return (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5s7 7.2 7 12a7 7 0 0 1-14 0c0-4.8 7-12 7-12Z" /></svg>);
 }
@@ -1648,6 +1651,9 @@ function NutritionPointsTracker() {
   // Formular erscheint an drei Stellen, soll aber immer nur dort auftauchen, wo es geöffnet wurde.
   const [foodFormContext, setFoodFormContext] = useState("own");
   const [foodFormAttempted, setFoodFormAttempted] = useState(false);
+  // Nachfrage beim Speichern, wenn keine Kategorie gewählt wurde — sie ist optional, aber wichtig
+  // genug, dass ein versehentliches Übergehen auffallen sollte.
+  const [categoryPrompt, setCategoryPrompt] = useState(false);
   const [entryFormAttempted, setEntryFormAttempted] = useState(false);
   const [expandedRecipeId, setExpandedRecipeId] = useState(null);
   const [saveError, setSaveError] = useState(false);
@@ -1890,7 +1896,21 @@ function NutritionPointsTracker() {
   const todayFluidMl = computeFluidMl(entries);
   const todayDrinkEntries = entries.filter((e) => !e.isDirect && e.category === "Getränk");
   // Getränke stehen als eigene Gruppe in derselben Tagesliste (siehe groupEntriesByMeal).
-  const FLUID_TARGET_ML = 1500; // DGE-Richtwert: ca. 1,5 l über Getränke pro Tag für Erwachsene
+  // Flüssigkeit: zwei Marken statt einer.
+  //  • Minimum  = DGE-Richtwert von 1,5 l über Getränke pro Tag für Erwachsene.
+  //  • Optimum  = Faustformel 35 ml je kg Körpergewicht (D-A-CH-Richtwert 30–40 ml/kg, altersabhängig).
+  // Der Wert je Kilogramm lässt sich im Profil ändern; gerundet wird auf volle 100 ml, damit im
+  // Balken keine krummen Zahlen wie 3.010 ml stehen.
+  const FLUID_TARGET_ML = 1500;
+  const fluidMlPerKg = Number(profile.fluidMlPerKg) > 0 ? Number(profile.fluidMlPerKg) : 35;
+  const fluidOptimalMlProfile = Math.max(
+    1500,
+    Math.round((profileWeightKg(profile) * (Number(profile.fluidMlPerKg) > 0 ? Number(profile.fluidMlPerKg) : 35)) / 100) * 100
+  );
+  const fluidOptimalMl = Math.max(
+    FLUID_TARGET_ML,
+    Math.round((profileWeightKg(profile) * fluidMlPerKg) / 100) * 100
+  );
   const todayFruitVegG = computeFruitVegGrams(entries);
   const FRUITVEG_TARGET_G = 650; // DGE "5 am Tag": 3 Portionen Gemüse (~400g) + 2 Portionen Obst (~250g)
   // Persönliche Makro-Ziele nach DACH-Referenzwerten: Protein nach Körpergewicht (0,8 g/kg, ab 65
@@ -1902,6 +1922,41 @@ function NutritionPointsTracker() {
   const carbTargetG = round1((target.calorieTarget || 0) * 0.50 / 4);
   const fiberTargetG = 30;
   // Rendert eine horizontale, animierte Fortschritts-Kachel (für Wasser/Obst-Gemüse/Makros).
+  // Flüssigkeitsbalken mit zwei Zonen: bis zum Minimum, danach bis zum optimalen Tagesbedarf.
+  // Die Trennlinie sitzt an der 1,5-l-Marke, damit auf einen Blick klar ist, welcher Teil des
+  // Balkens schon "genug" bedeutet und was darüber hinaus als optimal gilt.
+  function renderFluidBar() {
+    const scale = fluidOptimalMl;
+    const minPct = Math.min(1, FLUID_TARGET_ML / scale) * 100;
+    const basePct = Math.min(todayFluidMl, FLUID_TARGET_ML) / scale * 100;
+    const extraPct = Math.max(0, Math.min(todayFluidMl, scale) - FLUID_TARGET_ML) / scale * 100;
+    const minReached = todayFluidMl >= FLUID_TARGET_ML;
+    const optReached = todayFluidMl >= scale;
+    const asL = (ml) => (ml / 1000).toFixed(1).replace(".", ",");
+    return (
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 13, marginBottom: 6 }}>
+          <span style={{ fontWeight: 600 }}>Flüssigkeit</span>
+          <span style={{ color: optReached ? "var(--good)" : "var(--chalk-dim)", fontWeight: optReached ? 700 : 400 }}>
+            {asL(todayFluidMl)} / {asL(scale)} l{optReached ? " ✓ optimal" : minReached ? " ✓ Minimum" : ""}
+          </span>
+        </div>
+        <div className="npt-fluid-bar">
+          <div className="npt-fluid-seg" style={{ width: `${basePct}%`, background: minReached ? "var(--good)" : "var(--teal)" }} />
+          <div className="npt-fluid-seg" style={{ width: `${extraPct}%`, background: "var(--teal)", opacity: 0.55 }} />
+          {minPct < 100 && <div className="npt-fluid-mark" style={{ left: `${minPct}%` }} />}
+        </div>
+        <div className="npt-fluid-scale">
+          <span>Minimum {asL(FLUID_TARGET_ML)} l</span>
+          <span>Optimal {asL(scale)} l</span>
+        </div>
+        <div className="npt-field-hint" style={{ marginTop: 6 }}>
+          1,5 l sind der DGE-Richtwert für Getränke. Das Optimum rechnet {fluidMlPerKg} ml je kg Körpergewicht — bei Sport, Hitze oder Fieber liegt der Bedarf höher.
+        </div>
+      </div>
+    );
+  }
+
   function renderNutrientBar(label, current, targetVal, unit, colorVar, key) {
     const pct = targetVal > 0 ? Math.min(1, current / targetVal) : 0;
     const reached = targetVal > 0 && current >= targetVal;
@@ -2560,7 +2615,8 @@ function NutritionPointsTracker() {
     touchStartRef.current = { x: t.clientX, y: t.clientY };
   }
   function handleTabSwipeEnd(ev) {
-    if (!touchStartRef.current || rowSwipeRef.current.el) return;
+    if (rowSwipeGuardRef.current) { touchStartRef.current = null; return; }
+    if (!touchStartRef.current) return;
     const t = ev.changedTouches[0];
     const dx = t.clientX - touchStartRef.current.x;
     const dy = t.clientY - touchStartRef.current.y;
@@ -3112,6 +3168,7 @@ function NutritionPointsTracker() {
     setFoodForm({ name: "", calories: "", fat: "", protein: "", fiber: "", category: "", countsToFluid: false, alcoholic: false });
     setEditingFoodId(null);
     setFoodFormAttempted(false);
+    setCategoryPrompt(false);
     setFoodFormContext(context);
     setShowFoodForm(true);
   }
@@ -3121,6 +3178,7 @@ function NutritionPointsTracker() {
     setFoodForm({ name, calories: "", fat: "", protein: "", fiber: "", category: "", countsToFluid: false, alcoholic: false });
     setEditingFoodId(null);
     setFoodFormAttempted(false);
+    setCategoryPrompt(false);
     setFoodFormContext(context);
     setShowFoodForm(true);
     if (context === "library") setOpenProfilSection("search");
@@ -3142,10 +3200,13 @@ function NutritionPointsTracker() {
         <div className="npt-field-hint" style={{ marginTop: -10, marginBottom: 12 }}>* Pflichtfelder. Fett/Protein/Ballaststoffe dürfen leer bleiben, falls (noch) unbekannt — zählen dann als 0 und lassen sich später ergänzen.</div>
         <div className="npt-field">
           <label>Kategorie (optional)</label>
-          <select value={foodForm.category} onChange={(ev) => setFoodForm({ ...foodForm, category: ev.target.value })}>
-            <option value="">– keine –</option>
-            {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <div className="npt-cat-row">
+            {FOOD_CATEGORIES.map((c) => (
+              <button key={c} className={`npt-cat-chip${foodForm.category === c ? " active" : ""}`}
+                onClick={() => { setFoodForm({ ...foodForm, category: foodForm.category === c ? "" : c }); setCategoryPrompt(false); }}>{c}</button>
+            ))}
+          </div>
+          <div className="npt-field-hint" style={{ marginTop: 6 }}>Bestimmt unter anderem, ob es in die Obst-&amp;-Gemüse-Bilanz zählt und wie der Sattmacher-Modus rechnet.</div>
         </div>
         {foodForm.category === "Getränk" && (
           <div className="npt-field">
@@ -3168,9 +3229,18 @@ function NutritionPointsTracker() {
             ≈ <strong className="npt-font-display">{calcFoodPointsWithMode({ calories: Number(foodForm.calories) || 0, fat: Number(foodForm.fat) || 0, protein: Number(foodForm.protein) || 0, fiber: Number(foodForm.fiber) || 0 }, matrix, profile.sattmacherMode, foodForm.category, false)} Punkte</strong> je 100g
           </div>
         )}
+        {categoryPrompt && (
+          <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: 10 }}>Du hast keine Kategorie gewählt. Sie steuert, ob das Lebensmittel in die Obst-&amp;-Gemüse-Bilanz zählt und wie der Sattmacher-Modus rechnet. Jetzt eine auswählen?</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={() => setCategoryPrompt(false)}>Ja, auswählen</button>
+              <button className="npt-btn-primary" style={{ flex: 1 }} onClick={() => saveFoodForm(true)}>Nein, so speichern</button>
+            </div>
+          </div>
+        )}
         <div style={{ display: "flex", gap: 8 }}>
           <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelFoodForm}>Abbrechen</button>
-          <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveFoodForm} disabled={!foodForm.name.trim() || foodForm.calories === ""}>Speichern</button>
+          <button className="npt-btn-primary" style={{ flex: 1 }} onClick={() => saveFoodForm()} disabled={!foodForm.name.trim() || foodForm.calories === ""}>Speichern</button>
         </div>
       </div>
     );
@@ -3183,6 +3253,7 @@ function NutritionPointsTracker() {
     });
     setEditingFoodId(food.id);
     setFoodFormAttempted(false);
+    setCategoryPrompt(false);
     setFoodFormContext("own");
     setShowFoodForm(true);
   }
@@ -3190,8 +3261,9 @@ function NutritionPointsTracker() {
     setShowFoodForm(false);
     setEditingFoodId(null);
     setFoodFormAttempted(false);
+    setCategoryPrompt(false);
   }
-  function saveFoodForm() {
+  function saveFoodForm(skipCategoryCheck) {
     // Nur Name + Kalorien sind Pflicht — Fett/Protein/Ballaststoffe dürfen leer bleiben, falls sie
     // (noch) nicht bekannt sind; sie zählen dann einfach als 0, das Lebensmittel lässt sich später
     // jederzeit über den Bearbeiten-Button vervollständigen.
@@ -3199,6 +3271,11 @@ function NutritionPointsTracker() {
       setFoodFormAttempted(true);
       return;
     }
+    if (!foodForm.category && skipCategoryCheck !== true) {
+      setCategoryPrompt(true);
+      return;
+    }
+    setCategoryPrompt(false);
     const data = {
       name: foodForm.name.trim(),
       calories: Number(foodForm.calories) || 0,
@@ -3223,6 +3300,7 @@ function NutritionPointsTracker() {
     setShowFoodForm(false);
     setEditingFoodId(null);
     setFoodFormAttempted(false);
+    setCategoryPrompt(false);
   }
 
   // Blendet den Fakt des Tages bis zum nächsten Tag aus (der Tagesschlüssel wird gemerkt).
@@ -3269,9 +3347,13 @@ function NutritionPointsTracker() {
   // Die Zeile wird direkt über den DOM verschoben (kein Re-Render pro Fingerbewegung). Ab 90px
   // nach links gilt es als Löschen — rückgängig machen lässt es sich über den Undo-Hinweis.
   const rowSwipeRef = useRef({ el: null, x: 0, moved: 0, active: false });
+  // Wird beim Wischen einer Zeile gesetzt und erst nach dem Hochblubbern des Ereignisses wieder
+  // gelöscht — sonst würde derselbe Wisch zusätzlich den Tab wechseln.
+  const rowSwipeGuardRef = useRef(false);
   function handleRowSwipeStart(ev) {
     const t = ev.touches[0];
     rowSwipeRef.current = { el: ev.currentTarget, x: t.clientX, moved: 0, active: true };
+    rowSwipeGuardRef.current = true;
   }
   function handleRowSwipeMove(ev) {
     const st = rowSwipeRef.current;
@@ -3293,6 +3375,9 @@ function NutritionPointsTracker() {
       setTimeout(() => { if (el) el.style.transition = ""; }, 220);
     }
     if (moved < -90) { buzz(12); onDelete(); }
+    // Erst nach dem aktuellen Ereignisdurchlauf freigeben, damit der Seitencontainer die Geste
+    // noch als "gehört zur Zeile" erkennt und keinen Tab-Wechsel auslöst.
+    setTimeout(() => { rowSwipeGuardRef.current = false; }, 0);
   }
   // Zeigt kurz die gerade gebuchten Punkte an und gibt eine haptische Rückmeldung.
   function flashPoints(value) {
@@ -3769,6 +3854,23 @@ function NutritionPointsTracker() {
         .npt-meal-body .npt-entry-row:last-child { border-bottom: none; }
         .npt-meal-empty { padding: 0 12px 12px; font-size: 12px; color: var(--chalk-dim); }
         .npt-entry-count { display: inline-block; margin-left: 7px; padding: 1px 7px; border-radius: 999px; background: var(--line); color: var(--chalk-dim); font-size: 11px; font-variant-numeric: tabular-nums; }
+        .npt-quickdrinks { display: flex; gap: 8px; margin-bottom: 14px; }
+        .npt-quickdrink { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; min-height: 92px; padding: 12px 6px 10px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); color: var(--chalk); cursor: pointer; }
+        .npt-quickdrink:active { border-color: var(--teal); }
+        .npt-quickdrink-label { font-size: 12.5px; font-weight: 600; }
+        .npt-quickdrink-amount { font-size: 11px; color: var(--chalk-dim); font-variant-numeric: tabular-nums; }
+        .npt-fluid-bar { position: relative; height: 14px; border-radius: 7px; background: var(--line); overflow: hidden; display: flex; }
+        .npt-fluid-seg { height: 100%; transition: width 0.4s ease; }
+        .npt-fluid-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--bg); opacity: 0.85; }
+        .npt-fluid-scale { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--chalk-dim); margin-top: 4px; font-variant-numeric: tabular-nums; }
+        /* Auswahlfelder: ohne eigene Regel zeichnet der Browser hier weisse Systemkästen, die mit
+           keinem Farbschema harmonieren. Pfeil als eingebettete Grafik, damit kein Icon nötig ist. */
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; width: 100%; background-color: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 11px 36px 11px 12px; color: var(--chalk); font-size: 15px; font-family: inherit; cursor: pointer; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8f98' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; background-size: 16px 16px; }
+        select:focus { outline: none; border-color: var(--teal); }
+        select option { background: var(--surface); color: var(--chalk); }
+        .npt-cat-row { display: flex; flex-wrap: wrap; gap: 7px; }
+        .npt-cat-chip { padding: 9px 13px; min-height: 40px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--chalk-dim); font-size: 12.5px; cursor: pointer; opacity: 0.6; }
+        .npt-cat-chip.active { opacity: 1; background: var(--surface); border-color: var(--teal); color: var(--chalk); font-weight: 600; }
         .npt-toggle-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
         .npt-toggle-tile { display: flex; align-items: center; gap: 7px; padding: 9px 13px; min-height: 40px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--chalk-dim); font-size: 12.5px; cursor: pointer; opacity: 0.5; transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease; }
         .npt-toggle-tile.active { opacity: 1; background: var(--surface); }
@@ -4011,8 +4113,11 @@ function NutritionPointsTracker() {
               <button className="npt-stat-tile" onClick={() => setTab("ernaehrung")}>
                 <span className="npt-stat-label"><IconDroplet size={12} /> Flüssigkeit</span>
                 <span className="npt-stat-value">{(todayFluidMl / 1000).toFixed(1).replace(".", ",")} l</span>
-                <span className="npt-stat-sub">von 1,5 l</span>
-                <span className="npt-stat-track"><span className="npt-stat-fill" style={{ width: `${Math.min(todayFluidMl / FLUID_TARGET_ML, 1) * 100}%`, background: todayFluidMl >= FLUID_TARGET_ML ? "var(--good)" : "var(--teal)" }} /></span>
+                <span className="npt-stat-sub">von {(fluidOptimalMl / 1000).toFixed(1).replace(".", ",")} l</span>
+                <span className="npt-stat-track" style={{ position: "relative" }}>
+                  <span className="npt-stat-fill" style={{ width: `${Math.min(todayFluidMl / fluidOptimalMl, 1) * 100}%`, background: todayFluidMl >= FLUID_TARGET_ML ? "var(--good)" : "var(--teal)" }} />
+                  <span style={{ position: "absolute", top: 0, bottom: 0, left: `${Math.min(1, FLUID_TARGET_ML / fluidOptimalMl) * 100}%`, width: 2, background: "var(--bg)", opacity: 0.85 }} />
+                </span>
               </button>
               <button className="npt-stat-tile" onClick={() => setTab("ernaehrung")}>
                 <span className="npt-stat-label">Obst/Gemüse</span>
@@ -4177,7 +4282,7 @@ function NutritionPointsTracker() {
 
             <div className="npt-adjust-card" style={{ padding: 16 }} ref={setTourRef("ernaehrung-wasser")}>
               <div className="npt-adjust-title" style={{ padding: 0, marginBottom: 14 }}>Tägliche Flüssigkeit</div>
-              {renderNutrientBar("Flüssigkeit", todayFluidMl, FLUID_TARGET_ML, "ml", "--teal", "water")}
+              {renderFluidBar()}
               <div className="npt-field-hint">Getränke trägst du im Heute-Tab unter "Getränke heute" ein — hier siehst du nur die Übersicht.</div>
             </div>
 
@@ -4850,6 +4955,15 @@ function NutritionPointsTracker() {
                     </div>
                   </div>
 
+                  <div className="npt-field">
+                    <label>Optimale Trinkmenge (ml je kg Körpergewicht) <span className="npt-range-val">{Number(profile.fluidMlPerKg) > 0 ? profile.fluidMlPerKg : 35}</span></label>
+                    <input type="range" min="25" max="45" step="1" value={Number(profile.fluidMlPerKg) > 0 ? profile.fluidMlPerKg : 35}
+                      onChange={(ev) => setProfile({ ...profile, fluidMlPerKg: Number(ev.target.value) })} />
+                    <div className="npt-field-hint">
+                      Der D-A-CH-Richtwert liegt bei 30–40 ml je kg Körpergewicht, 35 gilt als üblicher Mittelwert für Erwachsene bis 50 Jahre. Daraus errechnet die App dein Optimum von {(fluidOptimalMlProfile / 1000).toFixed(1).replace(".", ",")} l; die 1,5-l-Marke bleibt als Minimum bestehen. Hinweis: Der Richtwert meint streng genommen die Gesamtwasserzufuhr inklusive fester Nahrung — als reines Trinkziel ist er also sportlich angesetzt.
+                    </div>
+                  </div>
+
                   <div className="npt-field" ref={setTourRef("profil-sattmacher")}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -5193,16 +5307,21 @@ function NutritionPointsTracker() {
                 <div className="npt-field-hint" style={{ marginBottom: 12 }}>
                   Getränke zählen in die Kalorien- und Punktebilanz. Wasser, ungesüßter Tee, Kaffee und Schorlen zählen zusätzlich zur Flüssigkeitsübersicht.
                 </div>
-                <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-                  <button className="npt-btn-secondary" style={{ flex: 1, flexDirection: "column", height: "auto", padding: "12px 8px", gap: 4 }}
-                    onClick={() => { quickAddDirectDrink("Wasser (still/mit Kohlensäure)", 250); closeForm(); }}>
-                    <IconDroplet size={22} />
-                    <span>Kleines Glas<br />(250 ml)</span>
+                <div className="npt-quickdrinks">
+                  <button className="npt-quickdrink" onClick={() => { quickAddDirectDrink("Wasser (still/mit Kohlensäure)", 250); closeForm(); }}>
+                    <IconDroplet size={20} />
+                    <span className="npt-quickdrink-label">Wasser</span>
+                    <span className="npt-quickdrink-amount">250 ml</span>
                   </button>
-                  <button className="npt-btn-secondary" style={{ flex: 1, flexDirection: "column", height: "auto", padding: "12px 8px", gap: 4 }}
-                    onClick={() => { quickAddDirectDrink("Wasser (still/mit Kohlensäure)", 500); closeForm(); }}>
-                    <IconDroplet size={30} />
-                    <span>Großes Glas<br />(500 ml)</span>
+                  <button className="npt-quickdrink" onClick={() => { quickAddDirectDrink("Wasser (still/mit Kohlensäure)", 500); closeForm(); }}>
+                    <IconDroplet size={28} />
+                    <span className="npt-quickdrink-label">Wasser</span>
+                    <span className="npt-quickdrink-amount">500 ml</span>
+                  </button>
+                  <button className="npt-quickdrink" onClick={() => { quickAddDirectDrink("Kaffee (schwarz)", 200); closeForm(); }}>
+                    <IconCoffee size={22} />
+                    <span className="npt-quickdrink-label">Kaffee</span>
+                    <span className="npt-quickdrink-amount">200 ml</span>
                   </button>
                 </div>
                 <div className="npt-field">
