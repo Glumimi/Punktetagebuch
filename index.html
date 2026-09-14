@@ -3390,6 +3390,17 @@ function NutritionPointsTracker() {
   // ---------- Sport-Formular ----------
   // Intensität und Dauer liegen im gemeinsamen Tages-State (sie fließen direkt in die Bonuspunkte).
   // Damit "Abbrechen" trotzdem wirklich abbricht, wird der Stand beim Öffnen gesichert.
+  // Zwei getrennte Zahlenfelder für Stunden und Minuten. Auf dem Handy öffnet sich sonst das
+  // Ziffernfeld ohne Doppelpunkt, und die Eingabe "1:29" ist gar nicht tippbar.
+  function setSportPart(which, raw) {
+    const digits = String(raw).replace(/\D/g, "").slice(-2);
+    const cur = parseSportTime(sportTimeInput);
+    const value = digits === "" ? 0 : Number(digits);
+    const hours = which === "h" ? Math.min(23, value) : cur.hours;
+    const minutes = which === "m" ? Math.min(59, value) : cur.minutes;
+    setSportTimeInput(`${hours}:${String(minutes).padStart(2, "0")}`);
+  }
+
   function openSportForm() {
     setSportFormBackup({ intensity: sportIntensity, time: sportTimeInput });
     setShowSportForm(true);
@@ -3858,6 +3869,11 @@ function NutritionPointsTracker() {
         .npt-quickdrink:active { border-color: var(--teal); }
         .npt-quickdrink-label { font-size: 12.5px; font-weight: 600; }
         .npt-quickdrink-amount { font-size: 11px; color: var(--chalk-dim); font-variant-numeric: tabular-nums; }
+        .npt-time-input { display: flex; align-items: center; gap: 6px; }
+        .npt-time-part { width: 62px; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 6px; color: var(--chalk); font-family: ${currentFont.display}; font-size: 20px; font-variant-numeric: tabular-nums; }
+        .npt-time-part:focus { outline: none; border-color: var(--teal); }
+        .npt-time-colon { font-family: ${currentFont.display}; font-size: 20px; color: var(--chalk-dim); }
+        .npt-time-unit { margin-left: 8px; font-size: 11.5px; color: var(--chalk-dim); }
         .npt-fluid-bar { position: relative; height: 14px; border-radius: 7px; background: var(--line); overflow: hidden; display: flex; }
         .npt-fluid-seg { height: 100%; transition: width 0.4s ease; }
         .npt-fluid-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--bg); opacity: 0.85; }
@@ -4195,13 +4211,34 @@ function NutritionPointsTracker() {
                     )}
 
                     <div style={{ marginTop: 12, marginBottom: 14 }}>
-                      <label style={{ fontSize: 12, color: "var(--chalk-dim)", display: "block", marginBottom: 4 }}>Dauer (Std:Min, z. B. 1:29)</label>
-                      <input type="text" inputMode="numeric" placeholder="0:00" pattern="[0-9]{1,2}:[0-9]{2}" className="npt-mini-input" style={{ width: "100%" }} value={sportTimeInput} onChange={(ev) => setSportTimeInput(ev.target.value)} />
+                      <label style={{ fontSize: 12, color: "var(--chalk-dim)", display: "block", marginBottom: 4 }}>Dauer</label>
+                      <div className="npt-time-input">
+                        <input type="text" inputMode="numeric" className="npt-time-part" aria-label="Stunden"
+                          value={String(sportHoursParsed).padStart(2, "0")}
+                          onFocus={(ev) => ev.target.select()}
+                          onChange={(ev) => setSportPart("h", ev.target.value)} />
+                        <span className="npt-time-colon">:</span>
+                        <input type="text" inputMode="numeric" className="npt-time-part" aria-label="Minuten"
+                          value={String(sportMinutesParsed).padStart(2, "0")}
+                          onFocus={(ev) => ev.target.select()}
+                          onChange={(ev) => setSportPart("m", ev.target.value)} />
+                        <span className="npt-time-unit">Std : Min</span>
+                      </div>
+                      {/* Klartext-Kontrolle: Die Dauer ist die häufigste Fehlerquelle bei der
+                          Bonusberechnung — hier steht schwarz auf weiß, womit gerechnet wird. */}
+                      <div className="npt-field-hint" style={{ marginTop: 6 }}>
+                        {sportDurationHours > 0
+                          ? `Gerechnet wird mit ${sportHoursParsed} Std ${sportMinutesParsed} Min (${sportDurationHours.toFixed(2).replace(".", ",")} Stunden)`
+                          : "Noch keine Dauer eingetragen"}
+                      </div>
                     </div>
 
-                    {caloriesBurnedPreview > 0 && (
-                      <div className="npt-field-hint" style={{ marginBottom: 12 }}>≈ {caloriesBurnedPreview} kcal verbrannt → +{sportBonusPreview} Bonuspunkte</div>
-                    )}
+                    <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+                      ≈ <strong>{caloriesBurnedPreview} kcal</strong> verbrannt → <strong>+{sportBonusPreview} Bonuspunkte</strong>
+                      <div className="npt-field-hint" style={{ marginTop: 4 }}>
+                        MET {sportMet} × {Math.round(profileWeightKg(profile))} kg × {sportDurationHours.toFixed(2).replace(".", ",")} Std, davon {Math.round((matrix.sportFactor ?? 0.5) * 100)} % angerechnet
+                      </div>
+                    </div>
 
                     <div style={{ display: "flex", gap: 8 }}>
                       <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelSportForm}>Abbrechen</button>
