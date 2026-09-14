@@ -751,13 +751,19 @@ function calcDailyTarget(p, matrix) {
 }
 
 function calcFoodPointsRaw(food, matrix) {
-  const fiberUsed = Math.min(Number(food.fiber) || 0, matrix.fiberCap);
-  return (
+  // Grundwert aus Kalorien und Fett.
+  const base =
     (Number(food.calories) || 0) / matrix.calDiv +
-    (Number(food.fat) || 0) / matrix.fatDiv -
-    fiberUsed / matrix.fiberDiv -
-    (Number(food.protein) || 0) / matrix.proteinDiv
-  );
+    (Number(food.fat) || 0) / matrix.fatDiv;
+  // Protein und Ballaststoffe senken die Punktzahl (S\u00e4ttigungsbonus) \u2014 aber gedeckelt: Sie d\u00fcrfen
+  // zusammen h\u00f6chstens einen bestimmten Anteil des Grundwerts abziehen. Ohne diese Grenze landen
+  // sehr proteinreiche Lebensmittel (Garnelen, magerer Fisch, H\u00e4hnchenbrust) fast bei null Punkten,
+  // egal wie viele Kalorien sie mitbringen \u2014 ein Kaloriendefizit w\u00e4re so nicht mehr abbildbar.
+  const fiberUsed = Math.min(Number(food.fiber) || 0, matrix.fiberCap);
+  const bonus = fiberUsed / matrix.fiberDiv + (Number(food.protein) || 0) / matrix.proteinDiv;
+  const capPct = matrix.bonusCapPct === undefined || matrix.bonusCapPct === null ? 50 : matrix.bonusCapPct;
+  const maxBonus = base * (capPct / 100);
+  return base - Math.min(bonus, maxBonus);
 }
 function calcFoodPoints(food, matrix) {
   return Math.max(0, roundToHalf(calcFoodPointsRaw(food, matrix)));
@@ -1134,7 +1140,7 @@ const COLOR_WAIST = "#dba800";
 const COLOR_WAIST_LIGHT = "rgba(219,168,0,0.5)";
 const COLOR_DEFICIT = "#e2534a";
 const COLOR_DEFICIT_LIGHT = "rgba(226,83,74,0.5)";
-const DEFAULT_MATRIX = { calDiv: 40, fatDiv: 12, proteinDiv: 10, fiberDiv: 5, fiberCap: 4, sportFactor: 0.5 };
+const DEFAULT_MATRIX = { calDiv: 40, fatDiv: 12, proteinDiv: 10, fiberDiv: 5, fiberCap: 4, bonusCapPct: 50, sportFactor: 0.5 };
 const SAMPLE_FOOD = { calories: 250, fat: 10, protein: 20, fiber: 3 };
 
 // ---------- Alltagseinheiten (Rezeptbaukasten) & Flüssigkeitseinheiten ----------
@@ -1333,7 +1339,7 @@ const TOUR_STEPS = [
   { id: "heute-fluid", tab: "heute", ref: "heute-fluid", forceHeuteSubTab: "essen", title: "Drei Kennzahlen auf einen Blick", text: "Fl\u00fcssigkeit (Richtwert 1,5 Liter), Obst und Gem\u00fcse (Richtwert 650 g) sowie dein Sport-Bonus. Die ersten beiden f\u00fchren mit einem Tipp zur vollen Ern\u00e4hrungs\u00fcbersicht, die dritte zum Sport-Reiter." },
   { id: "heute-subtabs", tab: "heute", ref: "heute-subtabs", forceHeuteSubTab: "essen", title: "Essen & Trinken / Sport", text: "Zwei Reiter: alles Gegessene und Getrunkene im ersten, dein Sport im zweiten. Beide funktionieren nach demselben Prinzip \u2014 \u00dcbersicht oben, runder Plus-Button unten zum Hinzuf\u00fcgen." },
   { id: "heute-add", tab: "heute", ref: "heute-add", forceHeuteSubTab: "essen", title: "Eintragen", text: "Der Plus-Button \u00f6ffnet alle Wege: zuletzt verwendete Lebensmittel als Chips ganz oben, Favoriten, Datenbanksuche, Getr\u00e4nke, Barcode-Scanner, Rezeptbaukasten und der eigene Eintrag mit N\u00e4hrwerten oder Punkten direkt. Dar\u00fcber w\u00e4hlst du auch die Mahlzeit \u2014 vorausgew\u00e4hlt nach Uhrzeit. Findet die Suche etwas nicht, legst du es direkt dort als neues Lebensmittel an." },
-  { id: "heute-entries", tab: "heute", ref: "heute-entries", forceHeuteSubTab: "essen", title: "Deine Tagesliste", text: "Alles Eingetragene, gruppiert nach Fr\u00fchst\u00fcck, Mittag, Snack, Abend und Getr\u00e4nken \u2014 mit Punktesumme je Abschnitt. Der Stift \u00e4ndert einen Eintrag, der Papierkorb l\u00f6scht ihn, und ein Wisch nach links l\u00f6scht ebenfalls. Versehentlich erwischt? Der Hinweis unten macht es r\u00fcckg\u00e4ngig." },
+  { id: "heute-entries", tab: "heute", ref: "heute-entries", forceHeuteSubTab: "essen", title: "Deine Tagesliste", text: "Hier \u00f6ffnet sich deine Tagesliste in zwei Ebenen: zuerst die farbigen Abschnitte Fr\u00fchst\u00fcck, Mittag, Snack, Abend und Getr\u00e4nke, jeweils mit Anzahl und Punktesumme. Ein Tipp darauf klappt die Eintr\u00e4ge auf. Gleichartiges wird zusammengefasst \u2014 f\u00fcnf Gl\u00e4ser Wasser stehen als eine Zeile mit \"\u00d7 5\". Der Stift \u00e4ndert einen Eintrag, der Papierkorb l\u00f6scht ihn, ein Wisch nach links ebenfalls; beides wirkt auf den zuletzt hinzugef\u00fcgten Eintrag der Zeile. Versehentlich erwischt? Der Hinweis unten macht es r\u00fcckg\u00e4ngig." },
   { id: "ernaehrung-wasser", tab: "ernaehrung", ref: "ernaehrung-wasser", title: "T\u00e4gliche Fl\u00fcssigkeit", text: "Dein heutiger Stand gemessen an der DGE-Empfehlung von 1,5 Litern. Getr\u00e4nke tr\u00e4gst du im Heute-Tab \u00fcber den Plus-Button ein; sie erscheinen dort als eigene Gruppe. Wasser, unges\u00fc\u00dfter Tee, Kaffee und Schorlen z\u00e4hlen hier mit \u2014 Alkohol, S\u00e4fte und Softdrinks nicht, in die Kalorienbilanz gehen sie trotzdem ein." },
   { id: "ernaehrung-obstgemuese", tab: "ernaehrung", ref: "ernaehrung-obstgemuese", title: "Obst & Gem\u00fcse", text: "Dieser Balken bef\u00fcllt sich automatisch aus deinen heutigen Mahlzeiten, sobald ein Lebensmittel als \"Obst\" oder \"Gem\u00fcse\" kategorisiert ist \u2014 kein zus\u00e4tzliches Eintragen n\u00f6tig. Ziel: 650 g pro Tag (DGE \"5 am Tag\")." },
   { id: "ernaehrung-makros", tab: "ernaehrung", ref: "ernaehrung-makros", title: "Pers\u00f6nliche N\u00e4hrstoff-Ziele", text: "Protein, Fett, Kohlenhydrate und Ballaststoffe im Vergleich zu Richtwerten, die auf dein K\u00f6rpergewicht und dein Kalorienziel zugeschnitten sind \u2014 nicht nur ein grober Prozentsatz wie im Tages-Kreis." },
@@ -1348,7 +1354,7 @@ const TOUR_STEPS = [
   { id: "gewicht-eingabe", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-eingabe", title: "Werte eintragen", text: "Derselbe runde Plus-Button wie beim Essen: Er \u00f6ffnet die Eingabe f\u00fcr Gewicht und Bauchumfang samt Zielwerten. Den Bauchumfang kannst du dort auch ganz ausblenden, wenn du ihn nicht mitf\u00fchren willst." },
   { id: "profil-grund", tab: "profil", ref: "profil-grund", forceOpenProfilSection: "profil", title: "Grundlagen", text: "Gr\u00f6\u00dfe, Gewicht, Alter und Aktivit\u00e4tslevel flie\u00dfen in deine t\u00e4gliche Punktezahl ein. Hier stellst du auch die individuelle Reset-Uhrzeit ein, falls dein Tag nicht um Mitternacht endet." },
   { id: "profil-sattmacher", tab: "profil", ref: "profil-sattmacher", forceOpenProfilSection: "profil", title: "Sattmacher-Modus", text: "Schaltest du diesen Modus ein, z\u00e4hlen Obst und Gem\u00fcse unabh\u00e4ngig von der Menge 0 Punkte, und klassische Beilagen wie Reis, Nudeln oder Kartoffeln sind auf maximal 7 Punkte gedeckelt. Die N\u00e4hrwerte bleiben dabei immer ehrlich sichtbar \u2014 nur die Punktzahl \u00e4ndert sich. Mehr Details \u00fcber das \u24d8 neben dem Schalter." },
-  { id: "profil-matrix", tab: "profil", ref: "profil-matrix", forceOpenProfilSection: "matrix", title: "Punkte-Matrix", text: "In der Standardeinstellung berechnet die App deine Punkte aus einer ausgewogenen Mischung von Kalorien, Fett, Protein und Ballaststoffen. Wer m\u00f6chte, kann hier jeden Faktor einzeln gewichten. F\u00fcr den Einstieg ist die Standardeinstellung aber v\u00f6llig ausreichend." },
+  { id: "profil-matrix", tab: "profil", ref: "profil-matrix", forceOpenProfilSection: "matrix", title: "Punkte-Matrix", text: "Kalorien und Fett erh\u00f6hen die Punktzahl eines Lebensmittels, Protein und Ballaststoffe senken sie wieder \u2014 satt machende Lebensmittel kosten so weniger. Damit das nicht kippt, begrenzt der \"Abzug-Deckel\" diesen Bonus: Protein und Ballaststoffe d\u00fcrfen zusammen h\u00f6chstens den eingestellten Anteil des Werts aus Kalorien und Fett abziehen, standardm\u00e4\u00dfig die H\u00e4lfte. Ohne diese Grenze w\u00e4ren sehr proteinreiche Lebensmittel wie Garnelen oder magerer Fisch praktisch punktfrei, egal wie viele Kalorien darin stecken. Jeden Faktor kannst du hier einzeln anpassen \u2014 f\u00fcr den Einstieg reichen die Standardwerte v\u00f6llig." },
   { id: "profil-backup", tab: "profil", ref: "profil-backup", forceOpenProfilSection: "backup", title: "Datensicherung", text: "Alle deine Daten liegen nur auf diesem Ger\u00e4t. Exportiere regelm\u00e4\u00dfig ein Backup, damit bei einem Ger\u00e4tewechsel nichts verloren geht." },
   { id: "darstellung", tab: null, ref: null, title: "Darstellung", text: "\u00dcber das Paletten-Symbol oben rechts w\u00e4hlst du Farbschema und Schriftart. Das erste Feld folgt automatisch der Hell/Dunkel-Einstellung deines Ger\u00e4ts." },
   { id: "outro", tab: null, ref: null, title: "Das war's!", text: "Du findest diese Tour jederzeit wieder \u00fcber das Fragezeichen-Symbol oben im Header." },
@@ -1412,6 +1418,18 @@ function buzz(pattern) {
 // Jeder Eintrag gehört zu einer Mahlzeit. Das strukturiert die Tagesliste (statt einer einzigen
 // langen Aufzählung) und zeigt, wie sich die Punkte über den Tag verteilen. Getränke bilden eine
 // eigene Gruppe — sie ergeben sich aus der Kategorie und brauchen keine Zuordnung.
+// Jede Mahlzeit bekommt eine eigene Farbe. Bewusst feste Farbwerte statt der Theme-Variablen:
+// Sie müssen auf hellen wie dunklen Schemata lesbar bleiben und dürfen nicht mit den Ampelfarben
+// (--good/--warn/--bad) verwechselt werden, die eine Bedeutung tragen.
+const MEAL_COLORS = {
+  fruehstueck: "#e0a458",
+  mittag: "#5fb3a3",
+  snack: "#c98bb9",
+  abend: "#7c9ede",
+  getraenke: "#6bb8d6",
+  weitere: "#9aa0a8",
+};
+
 const MEALS = [
   { id: "fruehstueck", short: "Frühstück", label: "Frühstück" },
   { id: "mittag", short: "Mittag", label: "Mittagessen" },
@@ -1434,14 +1452,33 @@ function groupEntriesByMeal(list) {
   const groups = [];
   for (const meal of MEALS) {
     const items = list.filter((e) => !isDrinkEntry(e) && e.meal === meal.id);
-    if (items.length > 0) groups.push({ id: meal.id, label: meal.label, items });
+    if (items.length > 0) groups.push({ id: meal.id, label: meal.label, items, color: MEAL_COLORS[meal.id] });
   }
   const drinks = list.filter(isDrinkEntry);
-  if (drinks.length > 0) groups.push({ id: "getraenke", label: "Getränke", items: drinks });
+  if (drinks.length > 0) groups.push({ id: "getraenke", label: "Getränke", items: drinks, color: MEAL_COLORS.getraenke });
   const rest = list.filter((e) => !isDrinkEntry(e) && !MEALS.some((m) => m.id === e.meal));
-  if (rest.length > 0) groups.push({ id: "weitere", label: "Weitere", items: rest });
+  if (rest.length > 0) groups.push({ id: "weitere", label: "Weitere", items: rest, color: MEAL_COLORS.weitere });
   return groups;
 }
+// Fasst gleichartige Einträge einer Gruppe zusammen — fünf Gläser Wasser stehen dann als eine
+// Zeile mit "× 5" statt als fünf identische Zeilen. Bearbeiten und Löschen wirken auf den zuletzt
+// hinzugefügten Eintrag der Zeile.
+function mergeSimilarEntries(items) {
+  const out = [];
+  for (const e of items) {
+    const key = `${e.name}|${e.amountG}|${e.points}|${e.isDirect ? 1 : 0}`;
+    const found = out.find((o) => o.key === key);
+    if (found) {
+      found.count += 1;
+      found.points = round1(found.points + e.points);
+      found.entries.push(e);
+    } else {
+      out.push({ key, count: 1, points: e.points, entries: [e], sample: e });
+    }
+  }
+  return out;
+}
+
 // Beschreibungszeile unter dem Namen eines Eintrags. "full" zeigt zusätzlich die Makros.
 function entryMetaText(e, full) {
   if (e.isDirect) return "Direkt eingetragen";
@@ -1502,7 +1539,7 @@ function NutritionPointsTracker() {
   const [showWaistInfo, setShowWaistInfo] = useState(false);
   const [showAllWeightEntries, setShowAllWeightEntries] = useState(false);
   const [showAllWaistEntries, setShowAllWaistEntries] = useState(false);
-  const [openProfilSection, setOpenProfilSection] = useState("profil");
+  const [openProfilSection, setOpenProfilSection] = useState(null);
   const [themeId, setThemeId] = useState("dark");
   const [fontId, setFontId] = useState("scoreboard");
   const [showThemePanel, setShowThemePanel] = useState(false);
@@ -1545,6 +1582,8 @@ function NutritionPointsTracker() {
   const undoTimerRef = useRef(null);
   const [editingEntryId, setEditingEntryId] = useState(null);
   const [formMeal, setFormMeal] = useState("fruehstueck");
+  // Eingeklappte Mahlzeiten-Abschnitte der Tagesliste (je Gruppen-ID).
+  const [collapsedGroups, setCollapsedGroups] = useState({});
   // Verlauf bündelt Wochenübersicht und Gewichtsverlauf — zwei Sichten auf dieselbe Zeitachse.
   const [verlaufSubTab, setVerlaufSubTab] = useState("woche");
   // Tag, an dem der Fakt des Tages weggetippt wurde (damit er erst am nächsten Tag wiederkommt).
@@ -1574,7 +1613,7 @@ function NutritionPointsTracker() {
   const [customFoods, setCustomFoods] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [heuteSubTab, setHeuteSubTab] = useState("essen");
-  const [showTodayEntries, setShowTodayEntries] = useState(true);
+  const [showTodayEntries, setShowTodayEntries] = useState(false);
   const [drinkPickerSelectedId, setDrinkPickerSelectedId] = useState("");
   const [drinkPickerAmount, setDrinkPickerAmount] = useState(200);
   const [showTodaySport, setShowTodaySport] = useState(false);
@@ -2930,28 +2969,47 @@ function NutritionPointsTracker() {
   // Rendert eine Tagesliste gruppiert nach Mahlzeiten, mit Punktesumme je Abschnitt. Wird von der
   // Heute-Ansicht und von der Tagesansicht im Verlauf genutzt, damit beide identisch aussehen.
   function renderEntryGroups(list, onEdit, onDelete, full) {
-    return groupEntriesByMeal(list).map((group) => (
-      <div className="npt-meal-group" key={group.id}>
-        <div className="npt-meal-head">
-          <span className="npt-meal-label">{group.label}</span>
-          <span className="npt-meal-sum"><strong className="npt-font-display">{round1(group.items.reduce((sum, e) => sum + e.points, 0))}</strong> P</span>
+    return groupEntriesByMeal(list).map((group) => {
+      // Zweite Ebene: Die Abschnitte sind standardmäßig zu, damit die Tagesliste auch abends
+      // überschaubar bleibt — erst ein Tipp öffnet die Einträge einer Mahlzeit.
+      const open = collapsedGroups[group.id] === false;
+      const sum = round1(group.items.reduce((total, e) => total + e.points, 0));
+      const rows = mergeSimilarEntries(group.items);
+      return (
+        <div className="npt-meal-card" style={{ borderLeftColor: group.color }} key={group.id}>
+          <button className="npt-meal-head" onClick={() => toggleMealGroup(group.id)} aria-expanded={open}>
+            <span className="npt-meal-dot" style={{ background: group.color }} />
+            <span className="npt-meal-label" style={{ color: group.color }}>{group.label}</span>
+            <span className="npt-meal-meta">{group.items.length} · {sum} P</span>
+            <IconChevronDown size={16} style={{ transform: open ? "none" : "rotate(-90deg)", transition: "transform 0.2s ease", opacity: 0.6 }} />
+          </button>
+          {open && (
+            <div className="npt-meal-body">
+              {rows.map((row) => {
+                const last = row.entries[row.entries.length - 1];
+                return (
+                  <div className="npt-entry-row" key={row.key}
+                    onTouchStart={handleRowSwipeStart} onTouchMove={handleRowSwipeMove} onTouchEnd={() => handleRowSwipeEnd(() => onDelete(last))}>
+                    <div>
+                      <div className="npt-entry-name">
+                        {row.sample.name}
+                        {row.count > 1 && <span className="npt-entry-count">× {row.count}</span>}
+                      </div>
+                      <div className="npt-entry-meta">{entryMetaText(row.sample, full)}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <div className="npt-entry-points npt-font-display">{row.points}</div>
+                      <button className="npt-del-btn" onClick={() => onEdit(last)} aria-label="Eintrag bearbeiten"><IconPencil size={15} /></button>
+                      <button className="npt-del-btn danger" onClick={() => onDelete(last)} aria-label="Eintrag löschen"><IconTrash size={16} /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-        {group.items.map((e) => (
-          <div className="npt-entry-row" key={e.id}
-            onTouchStart={handleRowSwipeStart} onTouchMove={handleRowSwipeMove} onTouchEnd={() => handleRowSwipeEnd(() => onDelete(e))}>
-            <div>
-              <div className="npt-entry-name">{e.name}</div>
-              <div className="npt-entry-meta">{entryMetaText(e, full)}</div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <div className="npt-entry-points npt-font-display">{e.points}</div>
-              <button className="npt-del-btn" onClick={() => onEdit(e)} aria-label="Eintrag bearbeiten"><IconPencil size={15} /></button>
-              <button className="npt-del-btn danger" onClick={() => onDelete(e)} aria-label="Eintrag löschen"><IconTrash size={16} /></button>
-            </div>
-          </div>
-        ))}
-      </div>
-    ));
+      );
+    });
   }
 
   function showUndoToast(message, restoreFn) {
@@ -3186,6 +3244,26 @@ function NutritionPointsTracker() {
       else if (mq.removeListener) mq.removeListener(onChange);
     };
   }, []);
+
+  function toggleMealGroup(id) {
+    setCollapsedGroups((prev) => ({ ...prev, [id]: prev[id] === false ? true : false }));
+  }
+
+  // Ein/Aus-Schalter als Kachel statt Häkchenbox: aktiv = farbiger Punkt, kräftiger Rahmen;
+  // inaktiv = blass und ohne Füllung. Ein Fingertipp genügt.
+  function renderToggleTile(label, active, onToggle, color, disabled) {
+    return (
+      <button
+        className={`npt-toggle-tile${active ? " active" : ""}`}
+        style={active ? { borderColor: color, color: "var(--chalk)" } : undefined}
+        disabled={!!disabled}
+        onClick={() => onToggle(!active)}
+      >
+        <span className="npt-toggle-dot" style={{ background: active ? color : "var(--line)" }} />
+        {label}
+      </button>
+    );
+  }
 
   // ---------- Wischen zum Löschen ----------
   // Die Zeile wird direkt über den DOM verschoben (kein Re-Render pro Fingerbewegung). Ab 90px
@@ -3640,10 +3718,18 @@ function NutritionPointsTracker() {
         .npt-gauge-sub { font-size: 12.5px; color: var(--chalk-dim); margin-top: 10px; text-align: center; }
         .npt-flex-box { background: var(--surface); border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .npt-adjust-card { background: var(--surface); border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
-        .npt-adjust-title { font-size: 13.5px; font-weight: 700; color: var(--chalk); padding: 14px 16px 6px; }
-        .npt-adjust-title-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; cursor: pointer; padding: 0 16px 0 0; color: var(--chalk-dim); }
-        .npt-adjust-title-toggle .npt-adjust-title { padding-left: 16px; }
-        .npt-adjust-row { padding: 6px 16px 14px; }
+        .npt-adjust-title { font-size: 14px; font-weight: 700; color: var(--chalk); padding: 15px 16px 7px; letter-spacing: 0.01em; }
+        /* Kopfzeile einer Klappkarte: mittig, kräftig gesetzt und dezent in der Akzentfarbe des
+           gewählten Schemas unterlegt — die Tönung entsteht über eine transparente Ebene, damit sie
+           mit jedem Farbschema funktioniert, ohne pro Thema eine eigene Farbe zu brauchen. */
+        .npt-adjust-title-toggle { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; width: calc(100% - 16px); margin: 8px; border-radius: 12px; background: none; border: none; cursor: pointer; padding: 0 44px; color: var(--chalk); min-height: 54px; box-shadow: inset 0 0 0 1px var(--line); transition: box-shadow 0.15s ease; }
+        .npt-adjust-title-toggle::before { content: ""; position: absolute; inset: 0; background: var(--teal); opacity: 0.14; pointer-events: none; transition: opacity 0.15s ease; }
+        .npt-adjust-title-toggle:active::before { opacity: 0.24; }
+        .npt-adjust-title-toggle > * { position: relative; z-index: 1; }
+        .npt-adjust-title-toggle > svg { position: absolute; right: 16px; top: calc(50% - 9px); opacity: 0.55; }
+        .npt-adjust-title-toggle .npt-adjust-title { padding: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .npt-count-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--teal); color: var(--bg); font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .npt-adjust-row { padding: 2px 14px 14px; }
         .npt-adjust-divider { height: 1px; background: var(--line); margin: 0 16px; }
         .npt-accordion-section { border: 1px solid var(--line); border-radius: 16px; margin-bottom: 12px; overflow: hidden; }
         .npt-accordion-header {
@@ -3673,16 +3759,28 @@ function NutritionPointsTracker() {
         .npt-section-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--chalk); }
         .npt-divider { height: 1px; background: var(--line); margin: 12px 0; }
         .npt-entry-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
-        .npt-meal-group { margin-bottom: 6px; }
-        .npt-meal-group:last-child { margin-bottom: 0; }
-        .npt-meal-head { display: flex; align-items: baseline; justify-content: space-between; padding: 12px 0 2px; }
+        .npt-meal-card { border-radius: 12px; border: 1px solid var(--line); border-left-width: 3px; margin-bottom: 8px; overflow: hidden; }
+        .npt-meal-card:last-child { margin-bottom: 0; }
+        .npt-meal-head { display: flex; align-items: center; gap: 9px; width: 100%; background: none; border: none; padding: 12px 12px; cursor: pointer; color: inherit; text-align: left; min-height: 48px; }
+        .npt-meal-dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+        .npt-meal-label { font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; flex: 1; }
+        .npt-meal-meta { font-size: 11.5px; color: var(--chalk-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .npt-meal-body { padding: 0 12px 4px; }
+        .npt-meal-body .npt-entry-row:last-child { border-bottom: none; }
+        .npt-meal-empty { padding: 0 12px 12px; font-size: 12px; color: var(--chalk-dim); }
+        .npt-entry-count { display: inline-block; margin-left: 7px; padding: 1px 7px; border-radius: 999px; background: var(--line); color: var(--chalk-dim); font-size: 11px; font-variant-numeric: tabular-nums; }
+        .npt-toggle-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .npt-toggle-tile { display: flex; align-items: center; gap: 7px; padding: 9px 13px; min-height: 40px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--chalk-dim); font-size: 12.5px; cursor: pointer; opacity: 0.5; transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease; }
+        .npt-toggle-tile.active { opacity: 1; background: var(--surface); }
+        .npt-toggle-tile:disabled { opacity: 0.25; cursor: default; }
+        .npt-toggle-dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
         .npt-meal-group:first-child .npt-meal-head { padding-top: 2px; }
         .npt-meal-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--chalk-dim); }
         .npt-meal-sum { font-size: 12.5px; color: var(--chalk-dim); }
         .npt-entry-row:last-child { border-bottom: none; }
-        .npt-entry-name { font-size: 14px; font-weight: 500; }
-        .npt-entry-meta { font-size: 11.5px; color: var(--chalk-dim); margin-top: 2px; }
-        .npt-entry-points { font-family: ${currentFont.display}; font-size: 15px; margin-right: 10px; min-width: 26px; text-align: right;  font-variant-numeric: tabular-nums; }
+        .npt-entry-name { font-size: 14px; font-weight: 600; color: var(--chalk); letter-spacing: 0.01em; }
+        .npt-entry-meta { font-size: 11.5px; color: var(--chalk-dim); margin-top: 3px; line-height: 1.45; }
+        .npt-entry-points { font-family: ${currentFont.display}; font-size: 15px; font-weight: 700; color: var(--chalk); margin-right: 10px; min-width: 26px; text-align: right; font-variant-numeric: tabular-nums; }
         .npt-del-btn { background: none; border: none; color: var(--chalk-dim); cursor: pointer; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 999px; }
         .npt-del-btn.danger { color: var(--bad); opacity: 0.75; }
         .npt-del-btn.danger:active { opacity: 1; }
@@ -3940,7 +4038,7 @@ function NutritionPointsTracker() {
               <>
                 <div className="npt-adjust-card">
                   <button className="npt-adjust-title-toggle" onClick={() => setShowTodaySport((v) => !v)} aria-expanded={showTodaySport}>
-                    <div className="npt-adjust-title">Sport heute{sportDone ? " · erfasst" : ""}</div>
+                    <div className="npt-adjust-title">Sport heute{sportDone && <span className="npt-count-badge">✓</span>}</div>
                     <IconChevronDown size={18} style={{ transform: showTodaySport ? "none" : "rotate(-90deg)", transition: "transform 0.2s ease" }} />
                   </button>
                   {showTodaySport && (
@@ -4049,7 +4147,7 @@ function NutritionPointsTracker() {
 
                 <div className="npt-adjust-card" ref={setTourRef("heute-entries")}>
                   <button className="npt-adjust-title-toggle" onClick={() => setShowTodayEntries((v) => !v)} aria-expanded={showTodayEntries}>
-                    <div className="npt-adjust-title">Heute eingetragen{entries.length > 0 ? ` · ${entries.length}` : ""}</div>
+                    <div className="npt-adjust-title">Heute eingetragen{entries.length > 0 && <span className="npt-count-badge">{entries.length}</span>}</div>
                     <IconChevronDown size={18} style={{ transform: showTodayEntries ? "none" : "rotate(-90deg)", transition: "transform 0.2s ease" }} />
                   </button>
                   {showTodayEntries && (
@@ -4641,43 +4739,27 @@ function NutritionPointsTracker() {
                   </div>
 
                   <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WEIGHT, marginBottom: 6 }}>Gewicht</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--chalk-dim)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showWeightLine} onChange={(ev) => setShowWeightLine(ev.target.checked)} /> Kurve
-                    </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWeightLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showWeightTarget && showWeightLine} disabled={!showWeightLine} onChange={(ev) => setShowWeightTarget(ev.target.checked)} /> Ziel
-                    </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWeightLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showTrendLine && showWeightLine} disabled={!showWeightLine} onChange={(ev) => setShowTrendLine(ev.target.checked)} /> Trend
-                    </label>
+                  <div className="npt-toggle-row">
+                    {renderToggleTile("Kurve", showWeightLine, setShowWeightLine, COLOR_WEIGHT)}
+                    {renderToggleTile("Ziel", showWeightTarget && showWeightLine, setShowWeightTarget, COLOR_WEIGHT, !showWeightLine)}
+                    {renderToggleTile("Trend", showTrendLine && showWeightLine, setShowTrendLine, COLOR_WEIGHT, !showWeightLine)}
                   </div>
 
                   {waistEnabled && (
                     <>
                       <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WAIST, marginBottom: 6 }}>Bauchumfang</div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--chalk-dim)" }}>
-                          <input type="checkbox" className="npt-checkbox" checked={showWaistLine} onChange={(ev) => setShowWaistLine(ev.target.checked)} /> Kurve
-                        </label>
-                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWaistLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                          <input type="checkbox" className="npt-checkbox" checked={showWaistTarget && showWaistLine} disabled={!showWaistLine} onChange={(ev) => setShowWaistTarget(ev.target.checked)} /> Ziel
-                        </label>
-                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWaistLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                          <input type="checkbox" className="npt-checkbox" checked={showWaistTrendLine && showWaistLine} disabled={!showWaistLine} onChange={(ev) => setShowWaistTrendLine(ev.target.checked)} /> Trend
-                        </label>
+                      <div className="npt-toggle-row">
+                        {renderToggleTile("Kurve", showWaistLine, setShowWaistLine, COLOR_WAIST)}
+                        {renderToggleTile("Ziel", showWaistTarget && showWaistLine, setShowWaistTarget, COLOR_WAIST, !showWaistLine)}
+                        {renderToggleTile("Trend", showWaistTrendLine && showWaistLine, setShowWaistTrendLine, COLOR_WAIST, !showWaistLine)}
                       </div>
                     </>
                   )}
 
                   <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_DEFICIT, marginBottom: 6 }}>Kalorien-Defizit</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--chalk-dim)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showDeficitLine} onChange={(ev) => setShowDeficitLine(ev.target.checked)} /> Kurve
-                    </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showDeficitLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showDeficitTarget && showDeficitLine} disabled={!showDeficitLine} onChange={(ev) => setShowDeficitTarget(ev.target.checked)} /> Ziel
-                    </label>
+                  <div className="npt-toggle-row" style={{ marginBottom: 0 }}>
+                    {renderToggleTile("Kurve", showDeficitLine, setShowDeficitLine, COLOR_DEFICIT)}
+                    {renderToggleTile("Ziel", showDeficitTarget && showDeficitLine, setShowDeficitTarget, COLOR_DEFICIT, !showDeficitLine)}
                   </div>
                 </div>
               )}
@@ -4852,6 +4934,14 @@ function NutritionPointsTracker() {
                     </div>
                     <input type="range" min="0" max="10" step="1" value={matrix.fiberCap} onChange={(ev) => setMatrix({ ...matrix, fiberCap: Number(ev.target.value) })} />
                     {openMatrixInfo === "fiberCap" && <div className="npt-field-hint">Begrenzt, wie viele Ballaststoffe pro Portion höchstens angerechnet werden — verhindert, dass extrem ballaststoffreiche Lebensmittel unrealistisch viele Punkte abziehen.</div>}
+                  </div>
+                  <div className="npt-field">
+                    <div className="npt-matrix-label-row">
+                      <label>Abzug-Deckel (%) <span className="npt-range-val">{matrix.bonusCapPct === undefined ? 50 : matrix.bonusCapPct}</span></label>
+                      <button className="npt-info-btn npt-matrix-info-btn" onClick={() => setOpenMatrixInfo(openMatrixInfo === "bonusCapPct" ? null : "bonusCapPct")} aria-label="Erkl\u00e4rung zum Abzug-Deckel">\u24d8</button>
+                    </div>
+                    <input type="range" min="0" max="100" step="5" value={matrix.bonusCapPct === undefined ? 50 : matrix.bonusCapPct} onChange={(ev) => setMatrix({ ...matrix, bonusCapPct: Number(ev.target.value) })} style={{ width: "100%", accentColor: "var(--teal)" }} />
+                    {openMatrixInfo === "bonusCapPct" && <div className="npt-field-hint">Begrenzt, wie stark Protein und Ballaststoffe die Punktzahl dr\u00fccken d\u00fcrfen \u2014 h\u00f6chstens um diesen Anteil des Werts aus Kalorien und Fett. Bei 50 % kostet ein Lebensmittel also immer mindestens die H\u00e4lfte. Ohne Deckel (100 %) k\u00f6nnen sehr proteinreiche Lebensmittel praktisch punktfrei werden, was ein Kaloriendefizit unterlaufen kann. 0 % schaltet den S\u00e4ttigungsbonus ganz ab.</div>}
                   </div>
                   <div className="npt-field">
                     <div className="npt-matrix-label-row">
