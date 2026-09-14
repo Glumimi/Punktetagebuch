@@ -1326,27 +1326,32 @@ function getDailyFact(resetMinutes) {
 }
 
 const TOUR_STEPS = [
-  { id: "intro", tab: null, ref: null, title: "Willkommen im Punktetagebuch", text: "Kurzer Rundgang durch die wichtigsten Funktionen — du kannst jederzeit über die Pfeile durchblättern oder über die Punkte unten direkt zu einem Abschnitt springen." },
-  { id: "heute-ring", tab: "heute", ref: "heute-ring", title: "Deine Tagespunkte", text: "Der Kreis zeigt, wie viele Punkte dir heute noch zur Verfügung stehen. Grün im ersten Drittel deines Budgets, Gelb im zweiten, Rot ab dem letzten Drittel — und bleibt rot, auch wenn du danach noch auf den Flexpuffer zurückgreifst." },
-  { id: "heute-flex", tab: "heute", ref: "heute-flex", title: "Flexpoints", text: "Ein wöchentlicher Puffer von 49 Punkten. Sobald dein Tagesbudget aufgebraucht ist, greift die App automatisch darauf zurück — du musst nichts manuell umbuchen." },
-  { id: "heute-subtabs", tab: "heute", ref: "heute-subtabs", forceHeuteSubTab: "essen", title: "Essen / Getränke / Sport", text: "Diese drei Reiter trennen Nahrung, Getränke und Sport, damit der Bildschirm übersichtlich bleibt — alle drei funktionieren nach demselben Prinzip: Übersicht oben, runder Plus-Button unten zum Hinzufügen." },
-  { id: "heute-add", tab: "heute", ref: "heute-add", forceHeuteSubTab: "essen", title: "Essen eintragen", text: "Über den Plus-Button öffnet sich ein Menü mit fünf Wegen: deine Favoriten als Schnellauswahl, Datenbanksuche, Barcode-Scanner, der Rezeptbaukasten für Gerichte aus mehreren Zutaten, oder ein eigener Eintrag mit Nährwerten oder Punkten direkt. Ein Herz-Symbol bei jedem Lebensmittel markiert es als Favorit für die Schnellauswahl." },
-  { id: "heute-fluid", tab: "heute", ref: "heute-fluid", forceHeuteSubTab: "essen", title: "Drei Kennzahlen auf einen Blick", text: "Flüssigkeit (Richtwert 1,5 Liter), Obst &amp; Gemüse (Richtwert 650 g) und dein Sport-Bonus. Die ersten beiden führen zur vollen Ernährungsübersicht, die dritte zum Sport-Reiter. Getränke trägst du über denselben Plus-Button ein wie Essen — sie erscheinen in der Tagesliste als eigene Gruppe und zählen automatisch mit." },
-  { id: "ernaehrung-fakt", tab: "ernaehrung", ref: "ernaehrung-fakt", title: "Fakt des Tages", text: "Ein kleiner, täglich wechselnder Ernährungsfakt — früher im Heute-Tab, jetzt hier bei der Ernährungsübersicht." },
-  { id: "ernaehrung-wasser", tab: "ernaehrung", ref: "ernaehrung-wasser", title: "Tägliche Flüssigkeit", text: "Übersicht deiner heutigen Flüssigkeitsaufnahme, gemessen an der DGE-Empfehlung von 1,5 Litern. Eingetragen werden Getränke im Heute-Tab unter \"Getränke heute\" — hier siehst du nur den Stand." },
-  { id: "ernaehrung-obstgemuese", tab: "ernaehrung", ref: "ernaehrung-obstgemuese", title: "Obst & Gemüse", text: "Dieser Balken befüllt sich automatisch aus deinen heutigen Mahlzeiten, sobald ein Lebensmittel als \"Obst\" oder \"Gemüse\" kategorisiert ist — kein zusätzliches Eintragen nötig. Ziel: 650 g pro Tag (DGE \"5 am Tag\")." },
-  { id: "ernaehrung-makros", tab: "ernaehrung", ref: "ernaehrung-makros", title: "Persönliche Nährstoff-Ziele", text: "Protein, Fett, Kohlenhydrate und Ballaststoffe im Vergleich zu Richtwerten, die auf dein Körpergewicht und dein Kalorienziel zugeschnitten sind — nicht nur ein grober Prozentsatz wie im Tages-Kreis." },
-  { id: "lebensmittel-foods", tab: "lebensmittel", ref: "lebensmittel-foods", title: "Eigene Lebensmittel", text: "Alle selbst angelegten Lebensmittel landen hier — bearbeitbar über den Stift, löschbar über den Papierkorb. Über das Herz-Symbol markierst du Favoriten für die Schnellauswahl beim Eintragen." },
-  { id: "profil-rezept", tab: "lebensmittel", ref: "profil-rezept", title: "Rezeptbaukasten", text: "Bau dir komplexe Gerichte aus mehreren Zutaten zusammen, inklusive Alltagseinheiten wie Esslöffel oder Scheibe. Das Ergebnis landet als eigenes Lebensmittel in deiner Datenbank." },
-  { id: "verlauf-summary", tab: "verlauf", forceVerlaufSubTab: "woche", ref: "verlauf-summary", title: "Wochenzusammenfassung", text: "Standardmäßig eingeklappt — bei Bedarf antippen für die Wochensumme, den Flexpoint-Verbrauch und, falls erfasst, deine Gewichts- und Bauchumfang-Durchschnitte im Vergleich zur Vorwoche." },
-  { id: "verlauf-days", tab: "verlauf", forceVerlaufSubTab: "woche", ref: "verlauf-days", title: "Tage antippen", text: "Ein Tag lässt sich antippen, um die Einträge einzusehen, nachträglich zu bearbeiten oder — falls du mal etwas vergessen hast — nachzutragen. \"Kein Eintrag\" bedeutet: an diesem Tag wurde nichts gespeichert, im Unterschied zu einem Tag mit tatsächlich 0 Punkten." },
-  { id: "gewicht-eingabe", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-eingabe", title: "Gewicht & Bauchumfang", text: "Hier trägst du deine Werte ein und kannst optional Zielwerte hinterlegen. Der Bauchumfang lässt sich bei Bedarf ganz ausblenden." },
-  { id: "gewicht-verlauf", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-verlauf", title: "Trend, Prognose & Kaloriendefizit", text: "Sobald genug Messungen vorliegen (mind. 6 über mind. 2 Wochen), zeigt dir die App einen geglätteten Trend inklusive Prognose. Die Defizit-Kurve im Diagramm zeigt dein tatsächliches Kaloriendefizit relativ zu deinem Gesamtumsatz — 0 % oben, dein eingestelltes Ziel als Linie darunter. Der heutige Tag erscheint dabei erst ab morgen, wenn er vollständig abgeschlossen ist." },
-  { id: "profil-grund", tab: "profil", ref: "profil-grund", forceOpenProfilSection: "profil", title: "Grundlagen", text: "Größe, Gewicht, Alter und Aktivitätslevel fließen in deine tägliche Punktezahl ein. Hier stellst du auch die individuelle Reset-Uhrzeit ein, falls dein Tag nicht um Mitternacht endet." },
-  { id: "profil-sattmacher", tab: "profil", ref: "profil-sattmacher", forceOpenProfilSection: "profil", title: "Sattmacher-Modus", text: "Schaltest du diesen Modus ein, zählen Obst und Gemüse unabhängig von der Menge 0 Punkte, und klassische Beilagen wie Reis, Nudeln oder Kartoffeln sind auf maximal 7 Punkte gedeckelt. Die Nährwerte bleiben dabei immer ehrlich sichtbar — nur die Punktzahl ändert sich. Mehr Details dazu findest du über das ⓘ direkt neben dem Schalter." },
-  { id: "profil-matrix", tab: "profil", ref: "profil-matrix", title: "Punkte-Matrix", text: "In der Standardeinstellung berechnet die App deine Punkte aus einer ausgewogenen Mischung von Kalorien, Fett, Protein und Ballaststoffen — jetzt auch in halben Schritten möglich, nicht mehr nur ganzzahlig. Wer möchte, kann hier jeden Faktor einzeln gewichten. Für den Einstieg ist die Standardeinstellung aber völlig ausreichend." },
-  { id: "profil-backup", tab: "profil", ref: "profil-backup", title: "Datensicherung", text: "Alle deine Daten liegen nur auf diesem Gerät. Exportiere regelmäßig ein Backup, damit bei einem Gerätewechsel nichts verloren geht." },
-  { id: "outro", tab: null, ref: null, title: "Das war's!", text: "Du findest diese Tour jederzeit wieder über das Fragezeichen-Symbol oben im Header." },
+  { id: "intro", tab: null, ref: null, title: "Willkommen im Punktetagebuch", text: "Kurzer Rundgang durch die wichtigsten Funktionen \u2014 du kannst jederzeit \u00fcber die Pfeile durchbl\u00e4ttern oder \u00fcber die Punkte unten direkt zu einem Abschnitt springen." },
+  { id: "heute-fakt", tab: "heute", ref: "heute-fakt", title: "Fakt des Tages", text: "Oben begr\u00fc\u00dft dich ein t\u00e4glich wechselnder Ern\u00e4hrungsfakt. Mit dem Kreuz blendest du ihn f\u00fcr heute aus \u2014 zur\u00fcck holst du ihn \u00fcber die Gl\u00fchbirne oben rechts, die dann in der Kopfzeile erscheint." },
+  { id: "heute-ring", tab: "heute", ref: "heute-ring", title: "Deine Tagespunkte", text: "Der Kreis zeigt, wie viele Punkte dir heute noch zur Verf\u00fcgung stehen, und z\u00e4hlt bei jedem Eintrag weich herunter. Gr\u00fcn im ersten Drittel deines Budgets, Gelb im zweiten, Rot ab dem letzten Drittel. Bleibst du mehrere Tage in Folge im Budget, erscheint oben in der Kopfzeile eine Serie mit Flamme." },
+  { id: "heute-flex", tab: "heute", ref: "heute-flex", title: "Flexpoints", text: "Ein w\u00f6chentlicher Puffer von 49 Punkten. Sobald dein Tagesbudget aufgebraucht ist, greift die App automatisch darauf zur\u00fcck \u2014 du musst nichts manuell umbuchen." },
+  { id: "heute-fluid", tab: "heute", ref: "heute-fluid", forceHeuteSubTab: "essen", title: "Drei Kennzahlen auf einen Blick", text: "Fl\u00fcssigkeit (Richtwert 1,5 Liter), Obst und Gem\u00fcse (Richtwert 650 g) sowie dein Sport-Bonus. Die ersten beiden f\u00fchren mit einem Tipp zur vollen Ern\u00e4hrungs\u00fcbersicht, die dritte zum Sport-Reiter." },
+  { id: "heute-subtabs", tab: "heute", ref: "heute-subtabs", forceHeuteSubTab: "essen", title: "Essen & Trinken / Sport", text: "Zwei Reiter: alles Gegessene und Getrunkene im ersten, dein Sport im zweiten. Beide funktionieren nach demselben Prinzip \u2014 \u00dcbersicht oben, runder Plus-Button unten zum Hinzuf\u00fcgen." },
+  { id: "heute-add", tab: "heute", ref: "heute-add", forceHeuteSubTab: "essen", title: "Eintragen", text: "Der Plus-Button \u00f6ffnet alle Wege: zuletzt verwendete Lebensmittel als Chips ganz oben, Favoriten, Datenbanksuche, Getr\u00e4nke, Barcode-Scanner, Rezeptbaukasten und der eigene Eintrag mit N\u00e4hrwerten oder Punkten direkt. Dar\u00fcber w\u00e4hlst du auch die Mahlzeit \u2014 vorausgew\u00e4hlt nach Uhrzeit. Findet die Suche etwas nicht, legst du es direkt dort als neues Lebensmittel an." },
+  { id: "heute-entries", tab: "heute", ref: "heute-entries", forceHeuteSubTab: "essen", title: "Deine Tagesliste", text: "Alles Eingetragene, gruppiert nach Fr\u00fchst\u00fcck, Mittag, Snack, Abend und Getr\u00e4nken \u2014 mit Punktesumme je Abschnitt. Der Stift \u00e4ndert einen Eintrag, der Papierkorb l\u00f6scht ihn, und ein Wisch nach links l\u00f6scht ebenfalls. Versehentlich erwischt? Der Hinweis unten macht es r\u00fcckg\u00e4ngig." },
+  { id: "ernaehrung-wasser", tab: "ernaehrung", ref: "ernaehrung-wasser", title: "T\u00e4gliche Fl\u00fcssigkeit", text: "Dein heutiger Stand gemessen an der DGE-Empfehlung von 1,5 Litern. Getr\u00e4nke tr\u00e4gst du im Heute-Tab \u00fcber den Plus-Button ein; sie erscheinen dort als eigene Gruppe. Wasser, unges\u00fc\u00dfter Tee, Kaffee und Schorlen z\u00e4hlen hier mit \u2014 Alkohol, S\u00e4fte und Softdrinks nicht, in die Kalorienbilanz gehen sie trotzdem ein." },
+  { id: "ernaehrung-obstgemuese", tab: "ernaehrung", ref: "ernaehrung-obstgemuese", title: "Obst & Gem\u00fcse", text: "Dieser Balken bef\u00fcllt sich automatisch aus deinen heutigen Mahlzeiten, sobald ein Lebensmittel als \"Obst\" oder \"Gem\u00fcse\" kategorisiert ist \u2014 kein zus\u00e4tzliches Eintragen n\u00f6tig. Ziel: 650 g pro Tag (DGE \"5 am Tag\")." },
+  { id: "ernaehrung-makros", tab: "ernaehrung", ref: "ernaehrung-makros", title: "Pers\u00f6nliche N\u00e4hrstoff-Ziele", text: "Protein, Fett, Kohlenhydrate und Ballaststoffe im Vergleich zu Richtwerten, die auf dein K\u00f6rpergewicht und dein Kalorienziel zugeschnitten sind \u2014 nicht nur ein grober Prozentsatz wie im Tages-Kreis." },
+  { id: "lebensmittel-search", tab: "lebensmittel", ref: "lebensmittel-search", forceOpenProfilSection: "search", title: "Datenbanksuche", text: "Durchsuche die mitgelieferte Datenbank und deine eigenen Eintr\u00e4ge. Das Herz macht ein Lebensmittel zum Favoriten f\u00fcr die Schnellauswahl, das Plus tr\u00e4gt es direkt f\u00fcr heute ein. Nichts gefunden? Dann legst du es gleich hier neu an." },
+  { id: "lebensmittel-foods", tab: "lebensmittel", ref: "lebensmittel-foods", forceOpenProfilSection: "foods", title: "Eigene Lebensmittel", text: "Alle selbst angelegten Lebensmittel landen hier \u2014 bearbeitbar \u00fcber den Stift, l\u00f6schbar \u00fcber den Papierkorb. Bei Getr\u00e4nken legst du hier auch fest, ob sie zur Fl\u00fcssigkeitsbilanz z\u00e4hlen und ob sie alkoholisch sind." },
+  { id: "lebensmittel-dishes", tab: "lebensmittel", ref: "lebensmittel-dishes", forceOpenProfilSection: "dishes", title: "Eigene Gerichte", text: "Tr\u00e4gst du etwas \u00fcber \"Punkte direkt\" ein, merkt sich die App Name und Punktzahl automatisch hier \u2014 beim n\u00e4chsten Mal findest du das Gericht \u00fcber die Suche wieder. L\u00f6schen geht \u00fcber den Papierkorb." },
+  { id: "profil-rezept", tab: "lebensmittel", ref: "profil-rezept", forceOpenProfilSection: "recipeBuilder", title: "Rezeptbaukasten", text: "Bau dir Gerichte aus mehreren Zutaten zusammen, inklusive Alltagseinheiten wie Essl\u00f6ffel oder Scheibe. Das Ergebnis wird als eigenes Lebensmittel gespeichert und l\u00e4sst sich sp\u00e4ter jederzeit wieder \u00f6ffnen und \u00e4ndern." },
+  { id: "verlauf-summary", tab: "verlauf", forceVerlaufSubTab: "woche", ref: "verlauf-summary", title: "Wochenzusammenfassung", text: "Standardm\u00e4\u00dfig eingeklappt \u2014 bei Bedarf antippen f\u00fcr die Wochensumme, den Flexpoint-Verbrauch und, falls erfasst, deine Gewichts- und Bauchumfang-Durchschnitte im Vergleich zur Vorwoche." },
+  { id: "verlauf-days", tab: "verlauf", forceVerlaufSubTab: "woche", ref: "verlauf-days", title: "Tage antippen", text: "Ein Tag l\u00e4sst sich antippen, um die Eintr\u00e4ge einzusehen, nachtr\u00e4glich zu bearbeiten oder \u2014 falls du mal etwas vergessen hast \u2014 nachzutragen. Auch hier ist alles nach Mahlzeiten gruppiert. \"Kein Eintrag\" bedeutet: an diesem Tag wurde nichts gespeichert, im Unterschied zu einem Tag mit tats\u00e4chlich 0 Punkten." },
+  { id: "gewicht-kacheln", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-kacheln", title: "Gewicht & Ma\u00dfe", text: "Der zweite Reiter im Verlauf. Ganz oben dein aktueller Stand: letzter gemessener Wert, Ver\u00e4nderung der letzten 30 Tage und Abstand zum Zielgewicht. Ein Tipp auf eine Kachel \u00f6ffnet direkt die Eingabe." },
+  { id: "gewicht-verlauf", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-verlauf", title: "Diagramm & Prognose", text: "Gewicht, Bauchumfang und dein tats\u00e4chliches Kaloriendefizit auf einer Zeitachse; antippen zeigt es gro\u00df. Dar\u00fcber schaltest du zwischen Monat und Jahr, darunter findest du Trend und Prognose (ab etwa 6 Messungen \u00fcber 2 Wochen) sowie unter \"Anzeige & Linien\" die Umschaltung auf eine Tabelle und die Auswahl, welche Linien du sehen willst." },
+  { id: "gewicht-eingabe", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-eingabe", title: "Werte eintragen", text: "Derselbe runde Plus-Button wie beim Essen: Er \u00f6ffnet die Eingabe f\u00fcr Gewicht und Bauchumfang samt Zielwerten. Den Bauchumfang kannst du dort auch ganz ausblenden, wenn du ihn nicht mitf\u00fchren willst." },
+  { id: "profil-grund", tab: "profil", ref: "profil-grund", forceOpenProfilSection: "profil", title: "Grundlagen", text: "Gr\u00f6\u00dfe, Gewicht, Alter und Aktivit\u00e4tslevel flie\u00dfen in deine t\u00e4gliche Punktezahl ein. Hier stellst du auch die individuelle Reset-Uhrzeit ein, falls dein Tag nicht um Mitternacht endet." },
+  { id: "profil-sattmacher", tab: "profil", ref: "profil-sattmacher", forceOpenProfilSection: "profil", title: "Sattmacher-Modus", text: "Schaltest du diesen Modus ein, z\u00e4hlen Obst und Gem\u00fcse unabh\u00e4ngig von der Menge 0 Punkte, und klassische Beilagen wie Reis, Nudeln oder Kartoffeln sind auf maximal 7 Punkte gedeckelt. Die N\u00e4hrwerte bleiben dabei immer ehrlich sichtbar \u2014 nur die Punktzahl \u00e4ndert sich. Mehr Details \u00fcber das \u24d8 neben dem Schalter." },
+  { id: "profil-matrix", tab: "profil", ref: "profil-matrix", forceOpenProfilSection: "matrix", title: "Punkte-Matrix", text: "In der Standardeinstellung berechnet die App deine Punkte aus einer ausgewogenen Mischung von Kalorien, Fett, Protein und Ballaststoffen. Wer m\u00f6chte, kann hier jeden Faktor einzeln gewichten. F\u00fcr den Einstieg ist die Standardeinstellung aber v\u00f6llig ausreichend." },
+  { id: "profil-backup", tab: "profil", ref: "profil-backup", forceOpenProfilSection: "backup", title: "Datensicherung", text: "Alle deine Daten liegen nur auf diesem Ger\u00e4t. Exportiere regelm\u00e4\u00dfig ein Backup, damit bei einem Ger\u00e4tewechsel nichts verloren geht." },
+  { id: "darstellung", tab: null, ref: null, title: "Darstellung", text: "\u00dcber das Paletten-Symbol oben rechts w\u00e4hlst du Farbschema und Schriftart. Das erste Feld folgt automatisch der Hell/Dunkel-Einstellung deines Ger\u00e4ts." },
+  { id: "outro", tab: null, ref: null, title: "Das war's!", text: "Du findest diese Tour jederzeit wieder \u00fcber das Fragezeichen-Symbol oben im Header." },
 ];
 
 const INTENSITY_INFO = [
@@ -2353,6 +2358,24 @@ function NutritionPointsTracker() {
     }
     setStreakDays(count);
   }, [loaded, activeDayKey, dataRevision]);
+
+  // Kennzahlen für den Gewicht-Bereich: aktueller Stand, Veränderung im letzten Monat, Zielabstand.
+  const sortedWeights = [...weightLog].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  const latestWeightEntry = sortedWeights.length > 0 ? sortedWeights[sortedWeights.length - 1] : null;
+  const latestWeightKg = latestWeightEntry ? latestWeightEntry.weightKg : null;
+  const weightRef30 = (() => {
+    if (sortedWeights.length < 2) return null;
+    const cutoff = Date.now() - 30 * 86400000;
+    let best = null;
+    for (const w of sortedWeights) {
+      if (new Date(w.timestamp).getTime() <= cutoff) best = w;
+    }
+    return best || sortedWeights[0];
+  })();
+  const weightChange30 = latestWeightKg !== null && weightRef30 ? round1(latestWeightKg - weightRef30.weightKg) : null;
+  const weightToTarget = latestWeightKg !== null && Number(profile.targetWeightKg) > 0
+    ? round1(latestWeightKg - Number(profile.targetWeightKg))
+    : null;
 
   const animatedRemaining = useCountUp(remaining);
   const animatedUsed = useCountUp(used);
@@ -3710,6 +3733,8 @@ function NutritionPointsTracker() {
         .npt-recipe-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 10px; font-weight: 700; border-radius: 16px; background: var(--teal); color: var(--bg); vertical-align: middle; }
         .npt-chip-row { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 16px; scrollbar-width: none; }
         .npt-chip-row::-webkit-scrollbar { display: none; }
+        .npt-chip-row.split { gap: 8px; }
+        .npt-chip-row.split .npt-chip { flex: 1; text-align: center; }
         .npt-chip { padding: 10px 14px; min-height: 40px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--chalk-dim); font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
         .npt-chip.active { background: var(--teal); border-color: var(--teal); color: #12201d; font-weight: 600; }
         .npt-field { margin-bottom: 16px; }
@@ -3745,9 +3770,10 @@ function NutritionPointsTracker() {
         .npt-fact-text { font-size: 13.5px; line-height: 1.6; color: var(--chalk); }
         .npt-stat-tiles { display: flex; gap: 8px; margin-bottom: 12px; }
         .npt-stat-tile { flex: 1; background: var(--surface); border: none; border-radius: 16px; padding: 10px 12px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 5px; min-height: 44px; }
-        .npt-stat-label { display: flex; align-items: center; gap: 5px; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--chalk-dim); }
+        .npt-stat-label { display: flex; align-items: center; gap: 5px; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--chalk-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .npt-stat-value { font-family: ${currentFont.display}; font-size: 16px; font-weight: 700; color: var(--chalk); font-variant-numeric: tabular-nums; }
-        .npt-stat-sub { font-size: 10.5px; color: var(--chalk-dim); font-variant-numeric: tabular-nums; }
+        .npt-stat-sub { font-size: 10.5px; color: var(--chalk-dim); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .npt-stat-track.placeholder { visibility: hidden; }
         .npt-stat-track { height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
         .npt-stat-fill { display: block; height: 100%; border-radius: 999px; transition: width 0.4s ease; }
         @keyframes npt-rise { 0% { opacity: 0; transform: translate(-50%, 6px) scale(0.9); } 20% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -46px) scale(1); } }
@@ -3887,22 +3913,25 @@ function NutritionPointsTracker() {
               <button className="npt-stat-tile" onClick={() => setTab("ernaehrung")}>
                 <span className="npt-stat-label"><IconDroplet size={12} /> Flüssigkeit</span>
                 <span className="npt-stat-value">{(todayFluidMl / 1000).toFixed(1).replace(".", ",")} l</span>
+                <span className="npt-stat-sub">von 1,5 l</span>
                 <span className="npt-stat-track"><span className="npt-stat-fill" style={{ width: `${Math.min(todayFluidMl / FLUID_TARGET_ML, 1) * 100}%`, background: todayFluidMl >= FLUID_TARGET_ML ? "var(--good)" : "var(--teal)" }} /></span>
               </button>
               <button className="npt-stat-tile" onClick={() => setTab("ernaehrung")}>
-                <span className="npt-stat-label">Obst &amp; Gemüse</span>
+                <span className="npt-stat-label">Obst/Gemüse</span>
                 <span className="npt-stat-value">{Math.round(todayFruitVegG)} g</span>
+                <span className="npt-stat-sub">von {FRUITVEG_TARGET_G} g</span>
                 <span className="npt-stat-track"><span className="npt-stat-fill" style={{ width: `${Math.min(todayFruitVegG / FRUITVEG_TARGET_G, 1) * 100}%`, background: todayFruitVegG >= FRUITVEG_TARGET_G ? "var(--good)" : "var(--amber)" }} /></span>
               </button>
               <button className="npt-stat-tile" onClick={() => setHeuteSubTab("sport")}>
                 <span className="npt-stat-label">Sport</span>
                 <span className="npt-stat-value">{sportDone ? `+${sportBonus}` : "–"}</span>
                 <span className="npt-stat-sub">{sportDone ? `${caloriesBurned} kcal` : "nicht erfasst"}</span>
+                <span className="npt-stat-track placeholder" aria-hidden="true" />
               </button>
             </div>
 
 
-            <div className="npt-chip-row" style={{ marginBottom: 14 }} ref={setTourRef("heute-subtabs")}>
+            <div className="npt-chip-row split" style={{ marginBottom: 14 }} ref={setTourRef("heute-subtabs")}>
               <button className={`npt-chip ${heuteSubTab === "essen" ? "active" : ""}`} onClick={() => setHeuteSubTab("essen")}>Essen &amp; Trinken</button>
               <button className={`npt-chip ${heuteSubTab === "sport" ? "active" : ""}`} onClick={() => setHeuteSubTab("sport")}>Sport heute</button>
             </div>
@@ -4018,7 +4047,7 @@ function NutritionPointsTracker() {
                   </div>
                 )}
 
-                <div className="npt-adjust-card">
+                <div className="npt-adjust-card" ref={setTourRef("heute-entries")}>
                   <button className="npt-adjust-title-toggle" onClick={() => setShowTodayEntries((v) => !v)} aria-expanded={showTodayEntries}>
                     <div className="npt-adjust-title">Heute eingetragen{entries.length > 0 ? ` · ${entries.length}` : ""}</div>
                     <IconChevronDown size={18} style={{ transform: showTodayEntries ? "none" : "rotate(-90deg)", transition: "transform 0.2s ease" }} />
@@ -4162,6 +4191,28 @@ function NutritionPointsTracker() {
             </div>
 
             <div className="npt-accordion-section">
+              <button className={`npt-accordion-header ${openProfilSection === "dishes" ? "open" : ""}`} ref={setTourRef("lebensmittel-dishes")} onClick={() => setOpenProfilSection(openProfilSection === "dishes" ? null : "dishes")}>
+                <span>Eigene Gerichte (Punkte direkt){customDishes.length > 0 ? ` · ${customDishes.length}` : ""}</span>
+                <IconChevronDown size={18} />
+              </button>
+              {openProfilSection === "dishes" && (
+                <div className="npt-accordion-body">
+                  {customDishes.length === 0 && <div className="npt-empty">Noch keine eigenen Gerichte gespeichert. Sie entstehen automatisch, sobald du beim Eintragen "Punkte direkt" nutzt.</div>}
+                  {customDishes.map((d) => (
+                    <div className="npt-entry-row" key={d.id}>
+                      <div className="npt-entry-name">{d.name}</div>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <div className="npt-entry-points npt-font-display">{d.points}</div>
+                        <button className="npt-del-btn danger" onClick={() => deleteDish(d.id)} aria-label="Gericht löschen"><IconTrash size={16} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+
+            <div className="npt-accordion-section">
               <button className={`npt-accordion-header ${openProfilSection === "recipeBuilder" ? "open" : ""}`} ref={setTourRef("profil-rezept")} onClick={() => setOpenProfilSection(openProfilSection === "recipeBuilder" ? null : "recipeBuilder")}>
                 <span>Rezept-Baukasten</span>
                 <IconChevronDown size={18} />
@@ -4282,7 +4333,7 @@ function NutritionPointsTracker() {
 
         {tab === "verlauf" && (
           <>
-            <div className="npt-chip-row" style={{ marginBottom: 14 }}>
+            <div className="npt-chip-row split" style={{ marginBottom: 14 }}>
               <button className={`npt-chip ${verlaufSubTab === "woche" ? "active" : ""}`} onClick={() => setVerlaufSubTab("woche")}>Woche</button>
               <button className={`npt-chip ${verlaufSubTab === "gewicht" ? "active" : ""}`} onClick={() => setVerlaufSubTab("gewicht")}>Gewicht &amp; Maße</button>
             </div>
@@ -4399,71 +4450,25 @@ function NutritionPointsTracker() {
 
         {tab === "verlauf" && verlaufSubTab === "gewicht" && (
           <>
-            <div className="npt-accordion-section">
-              <button className={`npt-accordion-header ${showWeightSettings ? "open" : ""}`} ref={setTourRef("gewicht-eingabe")} onClick={() => setShowWeightSettings((v) => !v)}>
-                <span>Gewicht &amp; Bauchumfang</span>
-                <IconChevronDown size={18} />
+            <div className="npt-stat-tiles" ref={setTourRef("gewicht-kacheln")}>
+              <button className="npt-stat-tile" onClick={() => setShowWeightSettings(true)}>
+                <span className="npt-stat-label">Aktuell</span>
+                <span className="npt-stat-value">{latestWeightKg !== null ? `${round1(latestWeightKg)} kg` : "–"}</span>
+                <span className="npt-stat-sub">{latestWeightEntry ? new Date(latestWeightEntry.timestamp).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) : "noch kein Eintrag"}</span>
               </button>
-              {showWeightSettings && (
-                <div className="npt-accordion-body">
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--chalk)", marginBottom: 8 }}>Aktuelles Gewicht</div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <input type="number" inputMode="decimal" style={{ flex: 1 }} value={weightInput} onChange={(ev) => setWeightInput(ev.target.value)} />
-                    <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px" }} onClick={addWeightEntry}>Eintragen</button>
-                  </div>
-
-                  <div style={{ height: 1, background: "var(--line)", margin: "14px 0" }} />
-
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--chalk)", marginBottom: 8 }}>Zielgewicht (optional)</div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <input type="number" inputMode="decimal" style={{ flex: 1 }} value={targetWeightInput} onChange={(ev) => setTargetWeightInput(ev.target.value)} />
-                    <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px" }} onClick={applyTargetWeight}>Übernehmen</button>
-                  </div>
-
-                  <div style={{ height: 1, background: "var(--line)", margin: "14px 0" }} />
-
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "var(--chalk)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={waistEnabled} onChange={(ev) => setWaistEnabled(ev.target.checked)} /> Bauchumfang (optional)
-                    </label>
-                    {waistEnabled && (
-                      <button className="npt-info-btn" onClick={() => setShowWaistInfo((v) => !v)} aria-label="Messanleitung anzeigen">ⓘ</button>
-                    )}
-                  </div>
-                  {waistEnabled && showWaistInfo && (
-                    <div className="npt-sample-box info" style={{ marginTop: 10 }}>
-                      <div style={{ marginBottom: 6, fontWeight: 600, color: "var(--chalk)" }}>So misst du konsistent</div>
-                      <div style={{ marginBottom: 3 }}>• Aufrecht stehen, Füße zusammen, Arme entspannt</div>
-                      <div style={{ marginBottom: 3 }}>• Maßband auf der Mitte zwischen unterster Rippe und Beckenkamm ansetzen (nicht am Bauchnabel, der wandert)</div>
-                      <div style={{ marginBottom: 3 }}>• Normal ausatmen, Bauch nicht einziehen</div>
-                      <div style={{ marginBottom: 3 }}>• Band anliegend, aber ohne die Haut einzudrücken</div>
-                      <div>• Immer zur gleichen Tageszeit messen (z. B. morgens nüchtern), das macht Werte vergleichbar</div>
-                    </div>
-                  )}
-                  {waistEnabled && (
-                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      <input type="number" inputMode="decimal" style={{ flex: 1 }} value={waistInput} onChange={(ev) => setWaistInput(ev.target.value)} />
-                      <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px" }} onClick={addWaistEntry}>Eintragen</button>
-                    </div>
-                  )}
-
-                  {waistEnabled && (
-                    <>
-                      <div style={{ height: 1, background: "var(--line)", margin: "14px 0" }} />
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--chalk)", marginBottom: 8 }}>Ziel-Bauchumfang (optional)</div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <input type="number" inputMode="decimal" style={{ flex: 1 }} value={targetWaistInput} onChange={(ev) => setTargetWaistInput(ev.target.value)} />
-                        <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px" }} onClick={applyTargetWaist}>Übernehmen</button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
+              <button className="npt-stat-tile" onClick={() => setShowWeightSettings(true)}>
+                <span className="npt-stat-label">30 Tage</span>
+                <span className="npt-stat-value">{weightChange30 === null ? "–" : `${weightChange30 > 0 ? "+" : ""}${weightChange30} kg`}</span>
+                <span className="npt-stat-sub">Veränderung</span>
+              </button>
+              <button className="npt-stat-tile" onClick={() => setShowWeightSettings(true)}>
+                <span className="npt-stat-label">Ziel</span>
+                <span className="npt-stat-value">{weightToTarget === null ? "–" : `${Math.abs(weightToTarget)} kg`}</span>
+                <span className="npt-stat-sub">{weightToTarget === null ? "kein Ziel gesetzt" : "Abstand"}</span>
+              </button>
             </div>
 
-            <div className="npt-section-title" style={{ marginTop: 20 }} ref={setTourRef("gewicht-verlauf")}>Verlauf</div>
-
-            <div className="npt-chip-row">
+            <div className="npt-chip-row split">
               <button className={`npt-chip ${weightViewMode === "monat" ? "active" : ""}`} onClick={() => setWeightViewMode("monat")}>Monat</button>
               <button className={`npt-chip ${weightViewMode === "jahr" ? "active" : ""}`} onClick={() => setWeightViewMode("jahr")}>Jahr</button>
             </div>
@@ -4475,61 +4480,7 @@ function NutritionPointsTracker() {
               <button className="npt-week-nav" onClick={() => shiftWeightView(1)} disabled={isCurrentWeightPeriod} aria-label="Weiter">›</button>
             </div>
 
-            <div className="npt-accordion-section">
-              <button className={`npt-accordion-header ${showChartSettings ? "open" : ""}`} onClick={() => setShowChartSettings((v) => !v)}>
-                <span>Grafikeinstellungen</span>
-                <IconChevronDown size={18} />
-              </button>
-              {showChartSettings && (
-                <div className="npt-accordion-body">
-                  <div className="npt-chip-row">
-                    <button className={`npt-chip ${weightViewDisplay === "chart" ? "active" : ""}`} onClick={() => setWeightViewDisplay("chart")}>Diagramm</button>
-                    <button className={`npt-chip ${weightViewDisplay === "table" ? "active" : ""}`} onClick={() => setWeightViewDisplay("table")}>Tabelle</button>
-                  </div>
-
-                  <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WEIGHT, marginBottom: 6 }}>Gewicht</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--chalk-dim)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showWeightLine} onChange={(ev) => setShowWeightLine(ev.target.checked)} /> Kurve
-                    </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWeightLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showWeightTarget && showWeightLine} disabled={!showWeightLine} onChange={(ev) => setShowWeightTarget(ev.target.checked)} /> Ziel
-                    </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWeightLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showTrendLine && showWeightLine} disabled={!showWeightLine} onChange={(ev) => setShowTrendLine(ev.target.checked)} /> Trend
-                    </label>
-                  </div>
-
-                  {waistEnabled && (
-                    <>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WAIST, marginBottom: 6 }}>Bauchumfang</div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--chalk-dim)" }}>
-                          <input type="checkbox" className="npt-checkbox" checked={showWaistLine} onChange={(ev) => setShowWaistLine(ev.target.checked)} /> Kurve
-                        </label>
-                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWaistLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                          <input type="checkbox" className="npt-checkbox" checked={showWaistTarget && showWaistLine} disabled={!showWaistLine} onChange={(ev) => setShowWaistTarget(ev.target.checked)} /> Ziel
-                        </label>
-                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWaistLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                          <input type="checkbox" className="npt-checkbox" checked={showWaistTrendLine && showWaistLine} disabled={!showWaistLine} onChange={(ev) => setShowWaistTrendLine(ev.target.checked)} /> Trend
-                        </label>
-                      </div>
-                    </>
-                  )}
-
-                  <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_DEFICIT, marginBottom: 6 }}>Kalorien-Defizit</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--chalk-dim)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showDeficitLine} onChange={(ev) => setShowDeficitLine(ev.target.checked)} /> Kurve
-                    </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showDeficitLine ? "var(--chalk-dim)" : "var(--line)" }}>
-                      <input type="checkbox" className="npt-checkbox" checked={showDeficitTarget && showDeficitLine} disabled={!showDeficitLine} onChange={(ev) => setShowDeficitTarget(ev.target.checked)} /> Ziel
-                    </label>
-                  </div>
-                </div>
-              )}
-            </div>
-
+            <div ref={setTourRef("gewicht-verlauf")}>
             {weightViewDisplay === "table" ? (
               weightChartLoading ? (
                 <div className="npt-empty">Lädt …</div>
@@ -4636,6 +4587,10 @@ function NutritionPointsTracker() {
               </div>
             )}
 
+            </div>
+
+            <div className="npt-section-title" style={{ marginTop: 4 }}>Trend &amp; Prognose</div>
+
             {trend && trend.insufficientData && (
               <div className="npt-empty" style={{ marginBottom: 16 }}>Noch nicht genug Daten für eine verlässliche Prognose (mind. {MIN_TREND_MEASUREMENTS} Messungen über mind. {MIN_TREND_SPAN_DAYS} Tage nötig).</div>
             )}
@@ -4672,6 +4627,67 @@ function NutritionPointsTracker() {
                 {profile.targetWaistCm && waistTrend.status === "no_trend" && <div style={{ marginTop: 4 }}>Dein Bauchumfang hält sich aktuell stabil — noch keine klare Richtung erkennbar. Bleib dran, in ein paar Tagen zeigt sich mehr.</div>}
               </div>
             )}
+
+            <div className="npt-accordion-section">
+              <button className={`npt-accordion-header ${showChartSettings ? "open" : ""}`} onClick={() => setShowChartSettings((v) => !v)}>
+                <span>Anzeige &amp; Linien</span>
+                <IconChevronDown size={18} />
+              </button>
+              {showChartSettings && (
+                <div className="npt-accordion-body">
+                  <div className="npt-chip-row">
+                    <button className={`npt-chip ${weightViewDisplay === "chart" ? "active" : ""}`} onClick={() => setWeightViewDisplay("chart")}>Diagramm</button>
+                    <button className={`npt-chip ${weightViewDisplay === "table" ? "active" : ""}`} onClick={() => setWeightViewDisplay("table")}>Tabelle</button>
+                  </div>
+
+                  <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WEIGHT, marginBottom: 6 }}>Gewicht</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--chalk-dim)" }}>
+                      <input type="checkbox" className="npt-checkbox" checked={showWeightLine} onChange={(ev) => setShowWeightLine(ev.target.checked)} /> Kurve
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWeightLine ? "var(--chalk-dim)" : "var(--line)" }}>
+                      <input type="checkbox" className="npt-checkbox" checked={showWeightTarget && showWeightLine} disabled={!showWeightLine} onChange={(ev) => setShowWeightTarget(ev.target.checked)} /> Ziel
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWeightLine ? "var(--chalk-dim)" : "var(--line)" }}>
+                      <input type="checkbox" className="npt-checkbox" checked={showTrendLine && showWeightLine} disabled={!showWeightLine} onChange={(ev) => setShowTrendLine(ev.target.checked)} /> Trend
+                    </label>
+                  </div>
+
+                  {waistEnabled && (
+                    <>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WAIST, marginBottom: 6 }}>Bauchumfang</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--chalk-dim)" }}>
+                          <input type="checkbox" className="npt-checkbox" checked={showWaistLine} onChange={(ev) => setShowWaistLine(ev.target.checked)} /> Kurve
+                        </label>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWaistLine ? "var(--chalk-dim)" : "var(--line)" }}>
+                          <input type="checkbox" className="npt-checkbox" checked={showWaistTarget && showWaistLine} disabled={!showWaistLine} onChange={(ev) => setShowWaistTarget(ev.target.checked)} /> Ziel
+                        </label>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showWaistLine ? "var(--chalk-dim)" : "var(--line)" }}>
+                          <input type="checkbox" className="npt-checkbox" checked={showWaistTrendLine && showWaistLine} disabled={!showWaistLine} onChange={(ev) => setShowWaistTrendLine(ev.target.checked)} /> Trend
+                        </label>
+                      </div>
+                    </>
+                  )}
+
+                  <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_DEFICIT, marginBottom: 6 }}>Kalorien-Defizit</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--chalk-dim)" }}>
+                      <input type="checkbox" className="npt-checkbox" checked={showDeficitLine} onChange={(ev) => setShowDeficitLine(ev.target.checked)} /> Kurve
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: showDeficitLine ? "var(--chalk-dim)" : "var(--line)" }}>
+                      <input type="checkbox" className="npt-checkbox" checked={showDeficitTarget && showDeficitLine} disabled={!showDeficitLine} onChange={(ev) => setShowDeficitTarget(ev.target.checked)} /> Ziel
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", padding: "20px 0 8px" }}>
+              <button className="npt-fab-inline" ref={setTourRef("gewicht-eingabe")} onClick={() => setShowWeightSettings(true)} aria-label="Gewicht oder Bauchumfang eintragen">
+                <IconPlus size={30} />
+              </button>
+            </div>
           </>
         )}
 
@@ -4852,28 +4868,6 @@ function NutritionPointsTracker() {
             </div>
 
             <div className="npt-accordion-section">
-              <button className={`npt-accordion-header ${openProfilSection === "dishes" ? "open" : ""}`} onClick={() => setOpenProfilSection(openProfilSection === "dishes" ? null : "dishes")}>
-                <span>Eigene Gerichte (Punkte direkt){customDishes.length > 0 ? ` · ${customDishes.length}` : ""}</span>
-                <IconChevronDown size={18} />
-              </button>
-              {openProfilSection === "dishes" && (
-                <div className="npt-accordion-body">
-                  {customDishes.length === 0 && <div className="npt-empty">Noch keine eigenen Gerichte gespeichert. Sie entstehen automatisch, sobald du beim Eintragen "Punkte direkt" nutzt.</div>}
-                  {customDishes.map((d) => (
-                    <div className="npt-entry-row" key={d.id}>
-                      <div className="npt-entry-name">{d.name}</div>
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <div className="npt-entry-points npt-font-display">{d.points}</div>
-                        <button className="npt-del-btn danger" onClick={() => deleteDish(d.id)} aria-label="Gericht löschen"><IconTrash size={16} /></button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-
-            <div className="npt-accordion-section">
               <button className={`npt-accordion-header ${openProfilSection === "backup" ? "open" : ""}`} ref={setTourRef("profil-backup")} onClick={() => setOpenProfilSection(openProfilSection === "backup" ? null : "backup")}>
                 <span>Datensicherung</span>
                 <IconChevronDown size={18} />
@@ -4946,6 +4940,69 @@ function NutritionPointsTracker() {
               <canvas ref={weightChartZoomCanvasRef}></canvas>
             </div>
             {renderWeightLegend()}
+          </div>
+        </div>
+      )}
+
+      {showWeightSettings && (
+        <div className="npt-modal-overlay" onClick={() => setShowWeightSettings(false)}>
+          <div className="npt-modal-sheet" onClick={(ev) => ev.stopPropagation()}>
+            <div className="npt-sheet-handle" />
+            <div className="npt-modal-header">
+              <div className="npt-modal-title">Werte eintragen</div>
+              <button className="npt-info-btn" onClick={() => setShowWeightSettings(false)} aria-label="Schließen"><IconX size={16} /></button>
+            </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--chalk)", marginBottom: 8 }}>Aktuelles Gewicht</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input type="number" inputMode="decimal" style={{ flex: 1 }} value={weightInput} onChange={(ev) => setWeightInput(ev.target.value)} />
+                    <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px" }} onClick={addWeightEntry}>Eintragen</button>
+                  </div>
+
+                  <div style={{ height: 1, background: "var(--line)", margin: "14px 0" }} />
+
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--chalk)", marginBottom: 8 }}>Zielgewicht (optional)</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input type="number" inputMode="decimal" style={{ flex: 1 }} value={targetWeightInput} onChange={(ev) => setTargetWeightInput(ev.target.value)} />
+                    <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px" }} onClick={applyTargetWeight}>Übernehmen</button>
+                  </div>
+
+                  <div style={{ height: 1, background: "var(--line)", margin: "14px 0" }} />
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "var(--chalk)" }}>
+                      <input type="checkbox" className="npt-checkbox" checked={waistEnabled} onChange={(ev) => setWaistEnabled(ev.target.checked)} /> Bauchumfang (optional)
+                    </label>
+                    {waistEnabled && (
+                      <button className="npt-info-btn" onClick={() => setShowWaistInfo((v) => !v)} aria-label="Messanleitung anzeigen">ⓘ</button>
+                    )}
+                  </div>
+                  {waistEnabled && showWaistInfo && (
+                    <div className="npt-sample-box info" style={{ marginTop: 10 }}>
+                      <div style={{ marginBottom: 6, fontWeight: 600, color: "var(--chalk)" }}>So misst du konsistent</div>
+                      <div style={{ marginBottom: 3 }}>• Aufrecht stehen, Füße zusammen, Arme entspannt</div>
+                      <div style={{ marginBottom: 3 }}>• Maßband auf der Mitte zwischen unterster Rippe und Beckenkamm ansetzen (nicht am Bauchnabel, der wandert)</div>
+                      <div style={{ marginBottom: 3 }}>• Normal ausatmen, Bauch nicht einziehen</div>
+                      <div style={{ marginBottom: 3 }}>• Band anliegend, aber ohne die Haut einzudrücken</div>
+                      <div>• Immer zur gleichen Tageszeit messen (z. B. morgens nüchtern), das macht Werte vergleichbar</div>
+                    </div>
+                  )}
+                  {waistEnabled && (
+                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                      <input type="number" inputMode="decimal" style={{ flex: 1 }} value={waistInput} onChange={(ev) => setWaistInput(ev.target.value)} />
+                      <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px" }} onClick={addWaistEntry}>Eintragen</button>
+                    </div>
+                  )}
+
+                  {waistEnabled && (
+                    <>
+                      <div style={{ height: 1, background: "var(--line)", margin: "14px 0" }} />
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--chalk)", marginBottom: 8 }}>Ziel-Bauchumfang (optional)</div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input type="number" inputMode="decimal" style={{ flex: 1 }} value={targetWaistInput} onChange={(ev) => setTargetWaistInput(ev.target.value)} />
+                        <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 18px" }} onClick={applyTargetWaist}>Übernehmen</button>
+                      </div>
+                    </>
+                  )}
           </div>
         </div>
       )}
