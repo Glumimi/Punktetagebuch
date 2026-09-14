@@ -1339,11 +1339,11 @@ const TOUR_STEPS = [
   { id: "heute-fakt", tab: "heute", ref: "heute-fakt", title: "Fakt des Tages", text: "Oben begr\u00fc\u00dft dich ein t\u00e4glich wechselnder Ern\u00e4hrungsfakt. Mit dem Kreuz blendest du ihn f\u00fcr heute aus \u2014 zur\u00fcck holst du ihn \u00fcber die Gl\u00fchbirne oben rechts, die dann in der Kopfzeile erscheint." },
   { id: "heute-ring", tab: "heute", ref: "heute-ring", title: "Deine Tagespunkte", text: "Der Kreis zeigt, wie viele Punkte dir heute noch zur Verf\u00fcgung stehen, und z\u00e4hlt bei jedem Eintrag weich herunter. Gr\u00fcn im ersten Drittel deines Budgets, Gelb im zweiten, Rot ab dem letzten Drittel. Bleibst du mehrere Tage in Folge im Budget, erscheint oben in der Kopfzeile eine Serie mit Flamme." },
   { id: "heute-flex", tab: "heute", ref: "heute-flex", title: "Flexpoints", text: "Ein w\u00f6chentlicher Puffer von 49 Punkten. Sobald dein Tagesbudget aufgebraucht ist, greift die App automatisch darauf zur\u00fcck \u2014 du musst nichts manuell umbuchen." },
-  { id: "heute-fluid", tab: "heute", ref: "heute-fluid", forceHeuteSubTab: "essen", title: "Drei Kennzahlen auf einen Blick", text: "Fl\u00fcssigkeit (Richtwert 1,5 Liter), Obst und Gem\u00fcse (Richtwert 650 g) sowie dein Sport-Bonus. Die ersten beiden f\u00fchren mit einem Tipp zur vollen Ern\u00e4hrungs\u00fcbersicht, die dritte zum Sport-Reiter." },
+  { id: "heute-fluid", tab: "heute", ref: "heute-fluid", forceHeuteSubTab: "essen", title: "Drei Kennzahlen auf einen Blick", text: "Fl\u00fcssigkeit (Ziel aus K\u00f6rpergewicht und Sport), Obst und Gem\u00fcse (Richtwert 650 g) sowie dein Sport-Bonus. Die ersten beiden f\u00fchren mit einem Tipp zur vollen Ern\u00e4hrungs\u00fcbersicht, die dritte zum Sport-Reiter." },
   { id: "heute-subtabs", tab: "heute", ref: "heute-subtabs", forceHeuteSubTab: "essen", title: "Essen & Trinken / Sport", text: "Zwei Reiter: alles Gegessene und Getrunkene im ersten, dein Sport im zweiten. Beide funktionieren nach demselben Prinzip \u2014 \u00dcbersicht oben, runder Plus-Button unten zum Hinzuf\u00fcgen." },
   { id: "heute-add", tab: "heute", ref: "heute-add", forceHeuteSubTab: "essen", title: "Eintragen", text: "Der Plus-Button \u00f6ffnet alle Wege: zuletzt verwendete Lebensmittel als Chips ganz oben, Favoriten, Datenbanksuche, Getr\u00e4nke, Barcode-Scanner, Rezeptbaukasten und der eigene Eintrag mit N\u00e4hrwerten oder Punkten direkt. Dar\u00fcber w\u00e4hlst du auch die Mahlzeit \u2014 vorausgew\u00e4hlt nach Uhrzeit. Findet die Suche etwas nicht, legst du es direkt dort als neues Lebensmittel an." },
   { id: "heute-entries", tab: "heute", ref: "heute-entries", forceHeuteSubTab: "essen", title: "Deine Tagesliste", text: "Hier \u00f6ffnet sich deine Tagesliste in zwei Ebenen: zuerst die farbigen Abschnitte Fr\u00fchst\u00fcck, Mittag, Snack, Abend und Getr\u00e4nke, jeweils mit Anzahl und Punktesumme. Ein Tipp darauf klappt die Eintr\u00e4ge auf. Gleichartiges wird zusammengefasst \u2014 f\u00fcnf Gl\u00e4ser Wasser stehen als eine Zeile mit \"\u00d7 5\". Der Stift \u00e4ndert einen Eintrag, der Papierkorb l\u00f6scht ihn, ein Wisch nach links ebenfalls; beides wirkt auf den zuletzt hinzugef\u00fcgten Eintrag der Zeile. Versehentlich erwischt? Der Hinweis unten macht es r\u00fcckg\u00e4ngig." },
-  { id: "ernaehrung-wasser", tab: "ernaehrung", ref: "ernaehrung-wasser", title: "T\u00e4gliche Fl\u00fcssigkeit", text: "Dein heutiger Stand gemessen an der DGE-Empfehlung von 1,5 Litern. Getr\u00e4nke tr\u00e4gst du im Heute-Tab \u00fcber den Plus-Button ein; sie erscheinen dort als eigene Gruppe. Wasser, unges\u00fc\u00dfter Tee, Kaffee und Schorlen z\u00e4hlen hier mit \u2014 Alkohol, S\u00e4fte und Softdrinks nicht, in die Kalorienbilanz gehen sie trotzdem ein." },
+  { id: "ernaehrung-wasser", tab: "ernaehrung", ref: "ernaehrung-wasser", title: "T\u00e4gliche Fl\u00fcssigkeit", text: "Der Balken hat zwei Zonen: bis zur 1,5-Liter-Marke \u2014 dem DGE-Richtwert f\u00fcr Getr\u00e4nke \u2014 und dar\u00fcber hinaus bis zu deinem pers\u00f6nlichen Ziel. Das rechnet 25 ml je kg K\u00f6rpergewicht, und sobald du Sport eintr\u00e4gst, kommen je nach Intensit\u00e4t und Dauer 0,3 bis 0,8 Liter pro Stunde automatisch dazu. Getr\u00e4nke tr\u00e4gst du im Heute-Tab \u00fcber den Plus-Button ein; sie erscheinen dort als eigene Gruppe. Wasser, unges\u00fc\u00dfter Tee, Kaffee und Schorlen z\u00e4hlen hier mit \u2014 Alkohol, S\u00e4fte und Softdrinks nicht, in die Kalorienbilanz gehen sie trotzdem ein." },
   { id: "ernaehrung-obstgemuese", tab: "ernaehrung", ref: "ernaehrung-obstgemuese", title: "Obst & Gem\u00fcse", text: "Dieser Balken bef\u00fcllt sich automatisch aus deinen heutigen Mahlzeiten, sobald ein Lebensmittel als \"Obst\" oder \"Gem\u00fcse\" kategorisiert ist \u2014 kein zus\u00e4tzliches Eintragen n\u00f6tig. Ziel: 650 g pro Tag (DGE \"5 am Tag\")." },
   { id: "ernaehrung-makros", tab: "ernaehrung", ref: "ernaehrung-makros", title: "Pers\u00f6nliche N\u00e4hrstoff-Ziele", text: "Protein, Fett, Kohlenhydrate und Ballaststoffe im Vergleich zu Richtwerten, die auf dein K\u00f6rpergewicht und dein Kalorienziel zugeschnitten sind \u2014 nicht nur ein grober Prozentsatz wie im Tages-Kreis." },
   { id: "lebensmittel-search", tab: "lebensmittel", ref: "lebensmittel-search", forceOpenProfilSection: "search", title: "Datenbanksuche", text: "Durchsuche die mitgelieferte Datenbank und deine eigenen Eintr\u00e4ge. Das Herz macht ein Lebensmittel zum Favoriten f\u00fcr die Schnellauswahl, das Plus tr\u00e4gt es direkt f\u00fcr heute ein. Nichts gefunden? Dann legst du es gleich hier neu an." },
@@ -1896,21 +1896,20 @@ function NutritionPointsTracker() {
   const todayFluidMl = computeFluidMl(entries);
   const todayDrinkEntries = entries.filter((e) => !e.isDirect && e.category === "Getränk");
   // Getränke stehen als eigene Gruppe in derselben Tagesliste (siehe groupEntriesByMeal).
-  // Flüssigkeit: zwei Marken statt einer.
-  //  • Minimum  = DGE-Richtwert von 1,5 l über Getränke pro Tag für Erwachsene.
-  //  • Optimum  = Faustformel 35 ml je kg Körpergewicht (D-A-CH-Richtwert 30–40 ml/kg, altersabhängig).
-  // Der Wert je Kilogramm lässt sich im Profil ändern; gerundet wird auf volle 100 ml, damit im
-  // Balken keine krummen Zahlen wie 3.010 ml stehen.
+  // Flüssigkeit: Grundbedarf plus Sportzuschlag.
+  //  • Minimum      = DGE-Richtwert von 1,5 l über Getränke pro Tag für Erwachsene.
+  //  • Grundbedarf  = 25 ml je kg Körpergewicht, aber nie unter dem Minimum. Bewusst am unteren
+  //    Ende des D-A-CH-Rahmens (30–40 ml/kg gelten für die Gesamtwasserzufuhr inklusive fester
+  //    Nahrung) — als reines Trinkziel wäre mehr zu hoch gegriffen.
+  //  • Sportzuschlag = 0,3 l/h bei leichter bis 0,8 l/h bei sehr intensiver Belastung
+  //    (ACSM: 0,4–0,8 l/h bei intensiver Ausdauerbelastung). Wird aus der erfassten Dauer und
+  //    Intensität berechnet, sodass niemand einen Regler nachführen muss.
   const FLUID_TARGET_ML = 1500;
-  const fluidMlPerKg = Number(profile.fluidMlPerKg) > 0 ? Number(profile.fluidMlPerKg) : 35;
-  const fluidOptimalMlProfile = Math.max(
-    1500,
-    Math.round((profileWeightKg(profile) * (Number(profile.fluidMlPerKg) > 0 ? Number(profile.fluidMlPerKg) : 35)) / 100) * 100
-  );
-  const fluidOptimalMl = Math.max(
-    FLUID_TARGET_ML,
-    Math.round((profileWeightKg(profile) * fluidMlPerKg) / 100) * 100
-  );
+  const FLUID_ML_PER_KG = 25;
+  const fluidBaseMl = Math.max(FLUID_TARGET_ML, Math.round((profileWeightKg(profile) * FLUID_ML_PER_KG) / 100) * 100);
+  const fluidSportMlPerHour = 300 + ((Math.max(1, Math.min(10, sportIntensity)) - 1) / 9) * 500;
+  const fluidSportMl = sportDone ? Math.round((sportDurationHours * fluidSportMlPerHour) / 100) * 100 : 0;
+  const fluidOptimalMl = fluidBaseMl + fluidSportMl;
   const todayFruitVegG = computeFruitVegGrams(entries);
   const FRUITVEG_TARGET_G = 650; // DGE "5 am Tag": 3 Portionen Gemüse (~400g) + 2 Portionen Obst (~250g)
   // Persönliche Makro-Ziele nach DACH-Referenzwerten: Protein nach Körpergewicht (0,8 g/kg, ab 65
@@ -1948,10 +1947,10 @@ function NutritionPointsTracker() {
         </div>
         <div className="npt-fluid-scale">
           <span>Minimum {asL(FLUID_TARGET_ML)} l</span>
-          <span>Optimal {asL(scale)} l</span>
+          <span>{fluidSportMl > 0 ? `Ziel ${asL(scale)} l (inkl. +${asL(fluidSportMl)} l Sport)` : `Ziel ${asL(scale)} l`}</span>
         </div>
         <div className="npt-field-hint" style={{ marginTop: 6 }}>
-          1,5 l sind der DGE-Richtwert für Getränke. Das Optimum rechnet {fluidMlPerKg} ml je kg Körpergewicht — bei Sport, Hitze oder Fieber liegt der Bedarf höher.
+          1,5 l sind der DGE-Richtwert für Getränke. Dein Grundbedarf rechnet 25 ml je kg Körpergewicht{fluidSportMl > 0 ? `, dazu ${(fluidSportMl / 1000).toFixed(1).replace(".", ",")} l für den heute erfassten Sport` : ""}. An heißen Tagen, bei Fieber oder starkem Schwitzen liegt der Bedarf höher; bei Herz- oder Nierenerkrankungen gilt eine ärztlich verordnete Trinkmenge vor.
         </div>
       </div>
     );
@@ -4956,12 +4955,11 @@ function NutritionPointsTracker() {
                   </div>
 
                   <div className="npt-field">
-                    <label>Optimale Trinkmenge (ml je kg Körpergewicht) <span className="npt-range-val">{Number(profile.fluidMlPerKg) > 0 ? profile.fluidMlPerKg : 35}</span></label>
-                    <input type="range" min="25" max="45" step="1" value={Number(profile.fluidMlPerKg) > 0 ? profile.fluidMlPerKg : 35}
-                      onChange={(ev) => setProfile({ ...profile, fluidMlPerKg: Number(ev.target.value) })} />
-                    <div className="npt-field-hint">
-                      Der D-A-CH-Richtwert liegt bei 30–40 ml je kg Körpergewicht, 35 gilt als üblicher Mittelwert für Erwachsene bis 50 Jahre. Daraus errechnet die App dein Optimum von {(fluidOptimalMlProfile / 1000).toFixed(1).replace(".", ",")} l; die 1,5-l-Marke bleibt als Minimum bestehen. Hinweis: Der Richtwert meint streng genommen die Gesamtwasserzufuhr inklusive fester Nahrung — als reines Trinkziel ist er also sportlich angesetzt.
+                    <label>Tägliche Trinkmenge</label>
+                    <div className="npt-sample-box info" style={{ marginBottom: 0 }}>
+                      Grundbedarf <strong>{(fluidBaseMl / 1000).toFixed(1).replace(".", ",")} l</strong> — 25 ml je kg Körpergewicht, mindestens aber die von der DGE empfohlenen 1,5 l. Machst du Sport, kommen je nach Intensität und Dauer 0,3 bis 0,8 l pro Stunde automatisch dazu, sobald du ihn im Heute-Tab einträgst.
                     </div>
+                    <div className="npt-field-hint" style={{ marginTop: 6 }}>Bei Hitze oder Fieber zusätzlich trinken. Bei Herz- oder Nierenerkrankungen gilt eine ärztlich verordnete Trinkmenge vor.</div>
                   </div>
 
                   <div className="npt-field" ref={setTourRef("profil-sattmacher")}>
