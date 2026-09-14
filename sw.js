@@ -4,7 +4,9 @@
 // eigentliche index.html wird bei vorhandenem Netz trotzdem immer aktuell
 // nachgeladen, damit Updates sofort ankommen.
 
-const CACHE_NAME = "punktetagebuch-v1";
+// Bei Änderungen an APP_SHELL (z. B. neue CDN-Version) die Zahl hochzählen –
+// dann wird der alte Cache beim Aktivieren verworfen und neu befüllt.
+const CACHE_NAME = "punktetagebuch-v2";
 
 const APP_SHELL = [
   "./",
@@ -19,6 +21,21 @@ const APP_SHELL = [
   "icons/icon-192.png",
   "icons/icon-512.png",
 ];
+
+// Darf diese Antwort in den Cache? Teilinhalte (206) und Fehler nicht –
+// undurchsichtige Antworten (opaque, z. B. Schriftdateien von gstatic) schon,
+// denn genau die braucht die App offline.
+function darfGecachtWerden(res) {
+  if (!res) return false;
+  if (res.status === 206) return false;
+  return res.ok || res.type === "opaque";
+}
+
+function inCacheLegen(req, res) {
+  if (!darfGecachtWerden(res)) return;
+  const copy = res.clone();
+  caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {});
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -45,7 +62,14 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
 
-  const isAppShellDoc = req.mode === "navigate" || req.url.endsWith("index.html") || req.url.endsWith("/");
+  // index.html und – falls du irgendwann vorkompilierst – app.js sind der
+  // eigentliche Programmcode. Beide immer zuerst aus dem Netz, damit ein
+  // Update sofort ankommt und nicht in einer alten Cache-Fassung hängen bleibt.
+  const isAppShellDoc =
+    req.mode === "navigate" ||
+    req.url.endsWith("index.html") ||
+    req.url.endsWith("app.js") ||
+    req.url.endsWith("/");
 
   if (isAppShellDoc) {
     // Network-first: bei Netz immer die aktuelle Version holen (und
@@ -53,8 +77,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          inCacheLegen(req, res);
           return res;
         })
         .catch(() => caches.match(req).then((res) => res || caches.match("./index.html")))
@@ -62,18 +85,42 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Alles andere (CDN-Skripte, Google Fonts, Icons): cache-first, damit
-  // die App nach dem ersten Laden auch offline startet.
+  const sameOrigin = new URL(req.url).origin === self.location.origin;
+
+  if (sameOrigin) {
+    // Eigene Dateien (Icons, manifest.json): sofort aus dem Cache antworten,
+    // im Hintergrund aber trotzdem auffrischen. Sonst bliebe z. B. ein neues
+    // App-Icon ewig die alte Fassung.
+    event.respondWith(
+      caches.match(req).then((cached) => {
+        const netz = fetch(req)
+          .then((res) => {
+            inCacheLegen(req, res);
+            return res;
+          })
+          .catch(() => cached);
+        return cached || netz;
+      })
+    );
+    return;
+  }
+
+  // Fremde Dateien mit fester Versionsnummer in der Adresse (CDN-Skripte,
+  // Schriften): cache-first, die ändern sich unter derselben URL nie.
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          inCacheLegen(req, res);
           return res;
         })
-        .catch(() => cached);
+        .catch(
+          () =>
+            // Ohne Netz und ohne Cache: eine saubere Fehlerantwort zurückgeben.
+            // Vorher stand hier "undefined", was den Aufruf abbrechen ließ.
+            new Response("", { status: 504, statusText: "Offline und nicht im Cache" })
+        );
     })
   );
 });
