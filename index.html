@@ -183,8 +183,8 @@ const FOOD_DATABASE = [
   { id: 63, name: "Haferkleie", calories: 246, fat: 7, protein: 17, fiber: 15 },
   { id: 64, name: "Dunkle Schokolade (70%)", calories: 546, fat: 31, protein: 7.8, fiber: 11 , category: "Süßes/Snack" },
   { id: 65, name: "Vollkornkekse", calories: 471, fat: 20, protein: 7, fiber: 6 , category: "Süßes/Snack" },
-  { id: 66, name: "Rotwein", calories: 85, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
-  { id: 67, name: "Weißwein", calories: 82, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
+  { id: 66, name: "Rotwein", calories: 85, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk", alcoholic: true, countsToFluid: false },
+  { id: 67, name: "Weißwein", calories: 82, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk", alcoholic: true, countsToFluid: false },
   { id: 68, name: "Hähnchenbrust (gegart)", calories: 165, fat: 3.6, protein: 31, fiber: 0 , category: "Fleisch" },
   { id: 69, name: "Rinderhack, mager (gebraten)", calories: 217, fat: 12, protein: 26, fiber: 0 , category: "Fleisch" },
   { id: 70, name: "Toastbrot", calories: 250, fat: 3.5, protein: 8, fiber: 3, units: { Scheibe: 25 } },
@@ -197,11 +197,11 @@ const FOOD_DATABASE = [
   { id: 77, name: "Pommes frites (Ofen)", calories: 165, fat: 5, protein: 3, fiber: 2.6 , category: "Süßes/Snack" },
   { id: 78, name: "Milch, Vollmilch (3,5%)", calories: 64, fat: 3.6, protein: 3.3, fiber: 0 , category: "Milchprodukt" },
   { id: 79, name: "Milch, fettarm (1,5%)", calories: 47, fat: 1.5, protein: 3.4, fiber: 0 , category: "Milchprodukt" },
-  { id: 80, name: "Kaffee (schwarz)", calories: 1, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
-  { id: 81, name: "Apfelsaft", calories: 46, fat: 0.1, protein: 0.1, fiber: 0.2 , category: "Getränk" },
-  { id: 82, name: "Orangensaft", calories: 45, fat: 0.2, protein: 0.7, fiber: 0.2 , category: "Getränk" },
-  { id: 83, name: "Cola", calories: 42, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
-  { id: 84, name: "Bier (Pils)", calories: 43, fat: 0, protein: 0.5, fiber: 0 , category: "Getränk" },
+  { id: 80, name: "Kaffee (schwarz)", calories: 1, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk", alcoholic: false, countsToFluid: true },
+  { id: 81, name: "Apfelsaft", calories: 46, fat: 0.1, protein: 0.1, fiber: 0.2 , category: "Getränk", alcoholic: false, countsToFluid: false },
+  { id: 82, name: "Orangensaft", calories: 45, fat: 0.2, protein: 0.7, fiber: 0.2 , category: "Getränk", alcoholic: false, countsToFluid: false },
+  { id: 83, name: "Cola", calories: 42, fat: 0, protein: 0, fiber: 0 , category: "Getränk", alcoholic: false, countsToFluid: false },
+  { id: 84, name: "Bier (Pils)", calories: 43, fat: 0, protein: 0.5, fiber: 0 , category: "Getränk", alcoholic: true, countsToFluid: false },
   { id: 85, name: "Zucker, weiß", calories: 400, fat: 0, protein: 0, fiber: 0, units: { EL: 10, TL: 3 } , category: "Süßes/Snack" },
   { id: 86, name: "Marmelade", calories: 250, fat: 0.1, protein: 0.3, fiber: 0.8 , category: "Süßes/Snack" },
   { id: 87, name: "Nuss-Nougat-Creme", calories: 539, fat: 31, protein: 6, fiber: 3.4 , category: "Süßes/Snack" },
@@ -239,17 +239,17 @@ const FOOD_DATABASE = [
   { id: 118, name: "Speisestärke", calories: 343, fat: 0.1, protein: 0.6, fiber: 0.5, units: { EL: 7, TL: 2 } },
   { id: 119, name: "Puderzucker", calories: 387, fat: 0, protein: 0, fiber: 0, units: { EL: 4, TL: 1 } , category: "Süßes/Snack" },
   // Getränke-Erweiterung
-  { id: 120, name: "Wasser (still/mit Kohlensäure)", calories: 0, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
-  { id: 121, name: "Tee, ungesüßt (schwarz/grün)", calories: 1, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
-  { id: 122, name: "Cola Zero / Light", calories: 0.3, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
-  { id: 123, name: "Apfelschorle", calories: 23, fat: 0, protein: 0.1, fiber: 0.1 , category: "Getränk" },
-  { id: 124, name: "Sekt / Prosecco", calories: 78, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk" },
-  { id: 125, name: "Spirituosen, klar (Wodka/Korn, 40% vol)", calories: 231, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
-  { id: 126, name: "Whisky (40% vol)", calories: 250, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
-  { id: 127, name: "Tonic Water", calories: 34, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
-  { id: 128, name: "Energy Drink", calories: 45, fat: 0, protein: 0, fiber: 0 , category: "Getränk" },
+  { id: 120, name: "Wasser (still/mit Kohlensäure)", calories: 0, fat: 0, protein: 0, fiber: 0 , category: "Getränk", alcoholic: false, countsToFluid: true },
+  { id: 121, name: "Tee, ungesüßt (schwarz/grün)", calories: 1, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk", alcoholic: false, countsToFluid: true },
+  { id: 122, name: "Cola Zero / Light", calories: 0.3, fat: 0, protein: 0, fiber: 0 , category: "Getränk", alcoholic: false, countsToFluid: false },
+  { id: 123, name: "Apfelschorle", calories: 23, fat: 0, protein: 0.1, fiber: 0.1 , category: "Getränk", alcoholic: false, countsToFluid: true },
+  { id: 124, name: "Sekt / Prosecco", calories: 78, fat: 0, protein: 0.1, fiber: 0 , category: "Getränk", alcoholic: true, countsToFluid: false },
+  { id: 125, name: "Spirituosen, klar (Wodka/Korn, 40% vol)", calories: 231, fat: 0, protein: 0, fiber: 0 , category: "Getränk", alcoholic: true, countsToFluid: false },
+  { id: 126, name: "Whisky (40% vol)", calories: 250, fat: 0, protein: 0, fiber: 0 , category: "Getränk", alcoholic: true, countsToFluid: false },
+  { id: 127, name: "Tonic Water", calories: 34, fat: 0, protein: 0, fiber: 0 , category: "Getränk", alcoholic: false, countsToFluid: false },
+  { id: 128, name: "Energy Drink", calories: 45, fat: 0, protein: 0, fiber: 0 , category: "Getränk", alcoholic: false, countsToFluid: false },
   { id: 129, name: "Buttermilch", calories: 35, fat: 1, protein: 3.5, fiber: 0 , category: "Milchprodukt" },
-  { id: 130, name: "Kakao (Fertiggetränk, gesüßt)", calories: 75, fat: 3, protein: 3.4, fiber: 0 , category: "Getränk" },
+  { id: 130, name: "Kakao (Fertiggetränk, gesüßt)", calories: 75, fat: 3, protein: 3.4, fiber: 0 , category: "Getränk", alcoholic: false, countsToFluid: false },
   { id: 131, name: "Heidelbeeren", calories: 57, fat: 0.3, protein: 0.7, fiber: 2.4, category: "Obst" },
   { id: 132, name: "Himbeeren", calories: 52, fat: 0.7, protein: 1.2, fiber: 6.5, category: "Obst" },
   { id: 133, name: "Pfirsich", calories: 39, fat: 0.3, protein: 0.9, fiber: 1.5, category: "Obst" },
@@ -320,8 +320,8 @@ const FOOD_DATABASE = [
   { id: 199, name: "Okra", calories: 33, fat: 0.2, protein: 1.9, fiber: 3.2, category: "Gemüse" },
   { id: 200, name: "Litschi", calories: 66, fat: 0.4, protein: 0.8, fiber: 1.3, category: "Obst" },
   { id: 201, name: "Physalis", calories: 53, fat: 0.7, protein: 1.9, fiber: 3.0, category: "Obst" },
-  { id: 202, name: "Kombucha", calories: 25, fat: 0.0, protein: 0.0, fiber: 0.0, category: "Getränk" },
-  { id: 203, name: "Mate-Tee", calories: 2, fat: 0.0, protein: 0.0, fiber: 0.0, category: "Getränk" },
+  { id: 202, name: "Kombucha", calories: 25, fat: 0.0, protein: 0.0, fiber: 0.0, category: "Getränk", alcoholic: false, countsToFluid: true },
+  { id: 203, name: "Mate-Tee", calories: 2, fat: 0.0, protein: 0.0, fiber: 0.0, category: "Getränk", alcoholic: false, countsToFluid: true },
   { id: 204, name: "Gemüsebrühe (fertig)", calories: 5, fat: 0.2, protein: 0.3, fiber: 0.0, category: "Sonstiges" },
   { id: 205, name: "Weingummi", calories: 343, fat: 0.1, protein: 5.0, fiber: 0.0, category: "Süßes/Snack" },
   { id: 206, name: "Marmorkuchen", calories: 382, fat: 18, protein: 8.0, fiber: 1.5, category: "Süßes/Snack" },
@@ -456,6 +456,8 @@ const FOOD_DATABASE = [
   { id: 335, name: "Zimtschnecke", calories: 370, fat: 16.0, protein: 6.0, fiber: 1.5, category: "Süßes/Snack" },
   { id: 336, name: "Zartbitterschokolade (70%)", calories: 579, fat: 42.0, protein: 8.8, fiber: 1.5, category: "Süßes/Snack" },
   { id: 337, name: "Popcorn, süß", calories: 400, fat: 9.0, protein: 5.0, fiber: 1.5, category: "Süßes/Snack" },
+  { id: 338, name: "Mineralwasser", calories: 0, fat: 0, protein: 0, fiber: 0, category: "Getränk", alcoholic: false, countsToFluid: true },
+  { id: 339, name: "Kräuter-/Früchtetee, ungesüßt", calories: 1, fat: 0, protein: 0.1, fiber: 0, category: "Getränk", alcoholic: false, countsToFluid: true },
 ];
 
 // ---------- Hilfsfunktionen ----------
@@ -515,6 +517,28 @@ function weekKey() {
   return dateKeyFor(monday);
 }
 function round1(x) { return Math.round(x * 10) / 10; }
+// Wandelt eine Sport-Zeiteingabe im Format "Std:Min" (z.B. "1:29") in Stunden und Minuten um.
+// Ohne Doppelpunkt wird die Zahl als Minuten interpretiert (z.B. "45" -> 0 Std 45 Min).
+function parseSportTime(str) {
+  const s = (str || "").trim();
+  if (!s) return { hours: 0, minutes: 0 };
+  if (s.includes(":")) {
+    const [h, m] = s.split(":");
+    const hours = Math.max(0, Math.floor(Number(h)) || 0);
+    const minutes = Math.max(0, Math.min(59, Math.floor(Number(m)) || 0));
+    return { hours, minutes };
+  }
+  const totalMinutes = Math.max(0, Math.floor(Number(s)) || 0);
+  return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 };
+}
+// Formatiert Stunden/Minuten zurück in die "Std:Min"-Anzeige, z.B. für das Wiederherstellen eines
+// gespeicherten Sport-Eintrags im Eingabefeld.
+function formatSportTime(hours, minutes) {
+  const h = Number(hours) || 0;
+  const m = Number(minutes) || 0;
+  if (h === 0 && m === 0) return "";
+  return `${h}:${String(m).padStart(2, "0")}`;
+}
 // Punkte werden auf halbe Schritte gerundet (0,5), nicht mehr nur auf ganze Zahlen — reicht für
 // Nährwerte, bei denen ganzzahliges Runden zu ungenau wäre (z.B. 1,5 Punkte statt 1 oder 2).
 function roundToHalf(x) { return Math.round(x * 2) / 2; }
@@ -786,6 +810,19 @@ function computeFruitVegGrams(entriesList) {
     } else if (e.category === "Obst" || e.category === "Gemüse") {
       total += Number(e.amountG) || 0;
     }
+  }
+  return total;
+}
+
+// Summiert die Flüssigkeitsmenge (ml, 1:1 mit Gramm angenähert) aus den heutigen Getränke-Einträgen —
+// nur Getränke, die laut DGE zum Flüssigkeitsbedarf zählen (Wasser, ungesüßter Tee, Kaffee in Maßen,
+// verdünnte Saftschorlen). Alkohol, pure Säfte, Milch und zuckerhaltige Softdrinks zählen bewusst
+// nicht mit, auch wenn sie als Getränk geloggt werden.
+function computeFluidMl(entriesList) {
+  let total = 0;
+  for (const e of entriesList) {
+    if (e.isDirect) continue;
+    if (e.category === "Getränk" && e.countsToFluid) total += Number(e.amountG) || 0;
   }
   return total;
 }
@@ -1210,9 +1247,11 @@ const TOUR_STEPS = [
   { id: "intro", tab: null, ref: null, title: "Willkommen im Punktetagebuch", text: "Kurzer Rundgang durch die wichtigsten Funktionen — du kannst jederzeit über die Pfeile durchblättern oder über die Punkte unten direkt zu einem Abschnitt springen." },
   { id: "heute-ring", tab: "heute", ref: "heute-ring", title: "Deine Tagespunkte", text: "Der Kreis zeigt, wie viele Punkte dir heute noch zur Verfügung stehen. Grün im ersten Drittel deines Budgets, Gelb im zweiten, Rot ab dem letzten Drittel — und bleibt rot, auch wenn du danach noch auf den Flexpuffer zurückgreifst." },
   { id: "heute-flex", tab: "heute", ref: "heute-flex", title: "Flexpoints", text: "Ein wöchentlicher Puffer von 49 Punkten. Sobald dein Tagesbudget aufgebraucht ist, greift die App automatisch darauf zurück — du musst nichts manuell umbuchen." },
-  { id: "heute-subtabs", tab: "heute", ref: "heute-subtabs", forceHeuteSubTab: "essen", title: "Essen / Sport / Fakt des Tages", text: "Diese drei Reiter trennen Nahrung, Sport und einen kleinen täglichen Ernährungsfakt, damit der Bildschirm übersichtlich bleibt." },
+  { id: "heute-subtabs", tab: "heute", ref: "heute-subtabs", forceHeuteSubTab: "essen", title: "Essen / Getränke / Sport", text: "Diese drei Reiter trennen Nahrung, Getränke und Sport, damit der Bildschirm übersichtlich bleibt — alle drei funktionieren nach demselben Prinzip: Übersicht oben, runder Plus-Button unten zum Hinzufügen." },
   { id: "heute-add", tab: "heute", ref: "heute-add", forceHeuteSubTab: "essen", title: "Essen eintragen", text: "Über den Plus-Button öffnet sich ein Menü mit fünf Wegen: deine Favoriten als Schnellauswahl, Datenbanksuche, Barcode-Scanner, der Rezeptbaukasten für Gerichte aus mehreren Zutaten, oder ein eigener Eintrag mit Nährwerten oder Punkten direkt. Ein Herz-Symbol bei jedem Lebensmittel markiert es als Favorit für die Schnellauswahl." },
-  { id: "ernaehrung-wasser", tab: "ernaehrung", ref: "ernaehrung-wasser", title: "Wasser", text: "Trag getrunkenes Wasser über die Schnellauswahl oder frei ein. Der Balken füllt sich bis zur DGE-Empfehlung von 1,5 Litern über Getränke pro Tag und wird grün, sobald das Ziel erreicht ist." },
+  { id: "heute-getraenke", tab: "heute", ref: "heute-getraenke", forceHeuteSubTab: "getraenke", forceShowTodayDrinks: true, title: "Getränke heute", text: "Ausgeklappt siehst du oben deine Flüssigkeitsübersicht und darunter deine heutigen Getränke. Über das Plus unten öffnet sich eine Schnellauswahl (Glas/Flasche Wasser oder ein anderes Getränk aus der Datenbank) — zählt automatisch zu deiner Kalorienbilanz UND, sofern nicht-alkoholisch und flüssigkeitsfördernd, zur Flüssigkeitsübersicht." },
+  { id: "ernaehrung-fakt", tab: "ernaehrung", ref: "ernaehrung-fakt", title: "Fakt des Tages", text: "Ein kleiner, täglich wechselnder Ernährungsfakt — früher im Heute-Tab, jetzt hier bei der Ernährungsübersicht." },
+  { id: "ernaehrung-wasser", tab: "ernaehrung", ref: "ernaehrung-wasser", title: "Tägliche Flüssigkeit", text: "Übersicht deiner heutigen Flüssigkeitsaufnahme, gemessen an der DGE-Empfehlung von 1,5 Litern. Eingetragen werden Getränke im Heute-Tab unter \"Getränke heute\" — hier siehst du nur den Stand." },
   { id: "ernaehrung-obstgemuese", tab: "ernaehrung", ref: "ernaehrung-obstgemuese", title: "Obst & Gemüse", text: "Dieser Balken befüllt sich automatisch aus deinen heutigen Mahlzeiten, sobald ein Lebensmittel als \"Obst\" oder \"Gemüse\" kategorisiert ist — kein zusätzliches Eintragen nötig. Ziel: 650 g pro Tag (DGE \"5 am Tag\")." },
   { id: "ernaehrung-makros", tab: "ernaehrung", ref: "ernaehrung-makros", title: "Persönliche Nährstoff-Ziele", text: "Protein, Fett, Kohlenhydrate und Ballaststoffe im Vergleich zu Richtwerten, die auf dein Körpergewicht und dein Kalorienziel zugeschnitten sind — nicht nur ein grober Prozentsatz wie im Tages-Kreis." },
   { id: "lebensmittel-foods", tab: "lebensmittel", ref: "lebensmittel-foods", title: "Eigene Lebensmittel", text: "Alle selbst angelegten Lebensmittel landen hier — bearbeitbar über den Stift, löschbar über den Papierkorb. Über das Herz-Symbol markierst du Favoriten für die Schnellauswahl beim Eintragen." },
@@ -1262,8 +1301,7 @@ function NutritionPointsTracker() {
   const [entries, setEntries] = useState([]);
   const [sportDone, setSportDone] = useState(false);
   const [sportIntensity, setSportIntensity] = useState(5);
-  const [sportHours, setSportHours] = useState("");
-  const [sportMinutes, setSportMinutes] = useState("");
+  const [sportTimeInput, setSportTimeInput] = useState("");
   const [showIntensityInfo, setShowIntensityInfo] = useState(false);
   const [showSattmacherInfo, setShowSattmacherInfo] = useState(false);
   const [openMatrixInfo, setOpenMatrixInfo] = useState(null);
@@ -1281,10 +1319,8 @@ function NutritionPointsTracker() {
   const [weightViewMonth, setWeightViewMonth] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [weightViewYear, setWeightViewYear] = useState(() => new Date().getFullYear());
   const [waistLog, setWaistLog] = useState([]);
-  const [waterLog, setWaterLog] = useState([]);
   const [favoriteFoodIds, setFavoriteFoodIds] = useState([]);
   const [libSearchQuery, setLibSearchQuery] = useState("");
-  const [waterCustomInput, setWaterCustomInput] = useState("");
   const [waistInput, setWaistInput] = useState("");
   const [showWaistInfo, setShowWaistInfo] = useState(false);
   const [showAllWeightEntries, setShowAllWeightEntries] = useState(false);
@@ -1350,6 +1386,12 @@ function NutritionPointsTracker() {
   const [showForm, setShowForm] = useState(false);
   const [heuteSubTab, setHeuteSubTab] = useState("essen");
   const [showTodayEntries, setShowTodayEntries] = useState(true);
+  const [showTodayDrinks, setShowTodayDrinks] = useState(false);
+  const [showDrinkPicker, setShowDrinkPicker] = useState(false);
+  const [drinkPickerSelectedId, setDrinkPickerSelectedId] = useState("");
+  const [drinkPickerAmount, setDrinkPickerAmount] = useState(200);
+  const [showTodaySport, setShowTodaySport] = useState(false);
+  const [showSportForm, setShowSportForm] = useState(false);
   const [dailyFact, setDailyFact] = useState("");
   const [formMode, setFormMode] = useState("naehrwerte");
   const [entryMethod, setEntryMethod] = useState(null);
@@ -1363,6 +1405,7 @@ function NutritionPointsTracker() {
   const [recipeIngredients, setRecipeIngredients] = useState([]);
   const [recipeName, setRecipeName] = useState("");
   const [recipeServings, setRecipeServings] = useState(1);
+  const [editingRecipeId, setEditingRecipeId] = useState(null);
   const [recipeIngredientQuery, setRecipeIngredientQuery] = useState("");
   const [recipeIngredientDropdownOpen, setRecipeIngredientDropdownOpen] = useState(false);
   const [recipeIngredientAmount, setRecipeIngredientAmount] = useState(100);
@@ -1420,8 +1463,7 @@ function NutritionPointsTracker() {
         if (!Array.isArray(parsed) && parsed.sport) {
           setSportDone(!!parsed.sport.done);
           if (parsed.sport.intensity) setSportIntensity(parsed.sport.intensity);
-          setSportHours(parsed.sport.hours || parsed.sport.hours === 0 ? String(parsed.sport.hours) : "");
-          setSportMinutes(parsed.sport.minutes || parsed.sport.minutes === 0 ? String(parsed.sport.minutes) : "");
+          setSportTimeInput(formatSportTime(parsed.sport.hours, parsed.sport.minutes));
         }
       } catch (e) {}
     }
@@ -1440,10 +1482,6 @@ function NutritionPointsTracker() {
     const wal = storageGet("waistLog");
     if (wal && wal.value) {
       try { setWaistLog(JSON.parse(wal.value)); } catch (e) {}
-    }
-    const watl = storageGet("waterLog");
-    if (watl && watl.value) {
-      try { setWaterLog(JSON.parse(watl.value)); } catch (e) {}
     }
     const fav = storageGet("favoriteFoodIds");
     if (fav && fav.value) {
@@ -1508,8 +1546,7 @@ function NutritionPointsTracker() {
       setEntries(nextEntries);
       setSportDone(nextSport ? !!nextSport.done : false);
       setSportIntensity(nextSport && nextSport.intensity ? nextSport.intensity : 5);
-      setSportHours(nextSport && (nextSport.hours || nextSport.hours === 0) ? String(nextSport.hours) : "");
-      setSportMinutes(nextSport && (nextSport.minutes || nextSport.minutes === 0) ? String(nextSport.minutes) : "");
+      setSportTimeInput(nextSport ? formatSportTime(nextSport.hours, nextSport.minutes) : "");
       setExpandedHistoryDay(null);
       setHistoryWeekMonday(mondayOf(effectiveNow(profile.dayResetMinutes || 0)));
       setActiveDayKey(key);
@@ -1575,7 +1612,8 @@ function NutritionPointsTracker() {
       showWaistTarget, profile.targetWaistCm, showDeficitTarget, profile.deficitPercent,
       weightZoom, waistZoom, deficitZoom]);
 
-  const sportDurationHours = (Number(sportHours) || 0) + (Number(sportMinutes) || 0) / 60;
+  const { hours: sportHoursParsed, minutes: sportMinutesParsed } = parseSportTime(sportTimeInput);
+  const sportDurationHours = sportHoursParsed + sportMinutesParsed / 60;
   const sportMet = METS_BY_INTENSITY[Math.min(Math.max(sportIntensity, 1), 10) - 1];
   const caloriesBurned = sportDone ? Math.round(sportMet * profileWeightKg(profile) * sportDurationHours) : 0;
   const sportBonus = sportDone ? Math.max(0, Math.round((caloriesBurned * (matrix.sportFactor ?? 0.5)) / matrix.calDiv)) : 0;
@@ -1600,11 +1638,12 @@ function NutritionPointsTracker() {
     if (coachTips.length === 0) coachTips.push("Sieht ausgewogen aus — weiter so!");
   }
 
-  // ---------- Ernährungsübersicht: Wasser, Obst/Gemüse, persönliche Makro-Ziele ----------
-  const todayWaterMl = waterLog
-    .filter((w) => dateKeyFor(new Date(w.timestamp)) === activeDayKey)
-    .reduce((s, w) => s + w.ml, 0);
-  const WATER_TARGET_ML = 1500; // DGE-Richtwert: ca. 1,5 l über Getränke pro Tag für Erwachsene
+  // ---------- Ernährungsübersicht: Flüssigkeit, Obst/Gemüse, persönliche Makro-Ziele ----------
+  // Die Flüssigkeitsmenge wird jetzt direkt aus den heutigen Getränke-Einträgen berechnet (nicht mehr
+  // aus einem separaten ml-Zähler) — Getränke hinzufügen passiert über "Getränke heute" im Heute-Tab.
+  const todayFluidMl = computeFluidMl(entries);
+  const todayDrinkEntries = entries.filter((e) => !e.isDirect && e.category === "Getränk");
+  const FLUID_TARGET_ML = 1500; // DGE-Richtwert: ca. 1,5 l über Getränke pro Tag für Erwachsene
   const todayFruitVegG = computeFruitVegGrams(entries);
   const FRUITVEG_TARGET_G = 650; // DGE "5 am Tag": 3 Portionen Gemüse (~400g) + 2 Portionen Obst (~250g)
   // Persönliche Makro-Ziele nach DACH-Referenzwerten: Protein nach Körpergewicht (0,8 g/kg, ab 65
@@ -1639,11 +1678,11 @@ function NutritionPointsTracker() {
     const payload = {
       target: target.total,
       entries,
-      sport: { done: sportDone, intensity: sportIntensity, hours: Number(sportHours) || 0, minutes: Number(sportMinutes) || 0, bonusPoints: sportBonus, caloriesBurned },
+      sport: { done: sportDone, intensity: sportIntensity, hours: sportHoursParsed, minutes: sportMinutesParsed, bonusPoints: sportBonus, caloriesBurned },
     };
     const ok = storageSet(`log:${activeDayKey}`, JSON.stringify(payload));
     setSaveError(!ok);
-  }, [entries, loaded, target.total, sportDone, sportIntensity, sportHours, sportMinutes, sportBonus, caloriesBurned, activeDayKey]);
+  }, [entries, loaded, target.total, sportDone, sportIntensity, sportTimeInput, sportBonus, caloriesBurned, activeDayKey]);
 
   // Flexpoints der Vortage dieser Woche — bewusst in einem Effekt statt bei jedem Render, weil
   // dafür sieben Tageslogs aus dem Speicher gelesen werden müssen.
@@ -1676,12 +1715,6 @@ function NutritionPointsTracker() {
     const ok = storageSet("waistLog", JSON.stringify(waistLog));
     setSaveError(!ok);
   }, [waistLog, loaded]);
-
-  useEffect(() => {
-    if (!loaded) return;
-    const ok = storageSet("waterLog", JSON.stringify(waterLog));
-    setSaveError(!ok);
-  }, [waterLog, loaded]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -2084,6 +2117,7 @@ function NutritionPointsTracker() {
   const dashOffset = circumference * (1 - Math.min(ratio, 1));
 
   const combinedFoods = [...customFoods, ...FOOD_DATABASE];
+  const nonAlcoholicDrinks = combinedFoods.filter((f) => f.category === "Getränk" && !f.alcoholic);
 
   const searchResults =
     searchQuery.trim().length > 0 && !form.selectedFoodId
@@ -2107,6 +2141,47 @@ function NutritionPointsTracker() {
     setNutrientBasis("kalorien");
     setSearchQuery(food.name);
     setDropdownOpen(false);
+  }
+  // Öffnet das "Essen hinzufügen"-Fenster direkt mit einem aus der Lebensmittel-Datenbanksuche
+  // gewählten Eintrag — zeigt Nährwerte je Menge und bietet direkt den Hinzufügen-Button, ohne den
+  // Umweg über die Essen-Suche im Heute-Bereich.
+  function quickAddFromLibrary(food) {
+    setForm(EMPTY_FORM);
+    selectFood(food);
+    setFormMode("naehrwerte");
+    setEntryMethod("search");
+    setEditingEntryId(null);
+    setFormTargetDay(null);
+    setShowForm(true);
+  }
+  // Trägt ein Getränk (z.B. "1 Glas Wasser") direkt und ohne Umweg über das Formular ein — für die
+  // Schnellauswahl-Buttons bei "Getränke heute".
+  function quickAddDirectDrink(foodName, amountG) {
+    const food = combinedFoods.find((f) => f.name === foodName);
+    if (!food) return;
+    const factor = amountG / 100;
+    const calories = Math.round(food.calories * factor);
+    const fat = round1(food.fat * factor);
+    const protein = round1(food.protein * factor);
+    const fiber = round1(food.fiber * factor);
+    const points = calcFoodPointsWithMode({ calories, fat, protein, fiber }, matrix, profile.sattmacherMode, food.category, !!food.sattmacherExempt);
+    const entryData = {
+      name: food.name, calories, carbs: null, fat, protein, fiber,
+      calcBasis: "kalorien", points,
+      category: food.category, sattmacherExempt: !!food.sattmacherExempt, countsToFluid: !!food.countsToFluid,
+      recipeSnapshot: null, amountG,
+    };
+    setEntries((prev) => [...prev, { id: newId(), ...entryData }]);
+  }
+  // Fügt das im Getränke-Picker per Dropdown gewählte Getränk mit der eingegebenen Menge hinzu.
+  function addSelectedDrink() {
+    const food = combinedFoods.find((f) => String(f.id) === String(drinkPickerSelectedId));
+    const amountG = Number(drinkPickerAmount) || 0;
+    if (!food || amountG <= 0) return;
+    quickAddDirectDrink(food.name, amountG);
+    setShowDrinkPicker(false);
+    setDrinkPickerSelectedId("");
+    setDrinkPickerAmount(200);
   }
 
   // Setzt Menge + Einheit (g, ml, l oder Alltagseinheit wie EL/TL/Scheibe/Tasse/Stück) und rechnet
@@ -2220,6 +2295,7 @@ function NutritionPointsTracker() {
     const step = TOUR_STEPS[tourStep];
     if (step.tab) setTab(step.tab);
     if (step.forceHeuteSubTab) setHeuteSubTab(step.forceHeuteSubTab);
+    if (step.forceShowTodayDrinks) setShowTodayDrinks(true);
     if (step.forceOpenProfilSection) setOpenProfilSection(step.forceOpenProfilSection);
     stopTourSpeech();
     let cancelled = false;
@@ -2347,6 +2423,7 @@ function NutritionPointsTracker() {
     const selectedFoodForPoints = form.selectedFoodId ? combinedFoods.find((f) => f.id === form.selectedFoodId) : null;
     const entryCategory = selectedFoodForPoints ? selectedFoodForPoints.category : form.category;
     const entryExempt = selectedFoodForPoints ? !!selectedFoodForPoints.sattmacherExempt : false;
+    const entryCountsToFluid = selectedFoodForPoints ? !!selectedFoodForPoints.countsToFluid : false;
     const isRecipeEntry = !!(selectedFoodForPoints && selectedFoodForPoints.isRecipe);
     // Für Rezepte wird ein bereits auf die verzehrte Menge skalierter Zutaten-Snapshot mitgespeichert
     // (nicht nur Name/Kategorie des Gesamt-"Lebensmittels") — nur so lässt sich die Punktzahl später
@@ -2384,6 +2461,7 @@ function NutritionPointsTracker() {
       calcBasis: form.selectedFoodId ? "kalorien" : nutrientBasis, points,
       category: hasRecipeBasis ? undefined : entryCategory,
       sattmacherExempt: hasRecipeBasis ? undefined : entryExempt,
+      countsToFluid: hasRecipeBasis ? undefined : entryCountsToFluid,
       recipeSnapshot,
       amountG: Number(form.amountG) || 100,
     };
@@ -2647,6 +2725,49 @@ function NutritionPointsTracker() {
     setFoodFormAttempted(false);
     setShowFoodForm(true);
   }
+  // Wie openNewFood, aber mit vorausgefülltem Namen — genutzt von der Datenbanksuche, wenn ein
+  // getippter Suchbegriff nicht gefunden wird und direkt als neues Lebensmittel angelegt werden soll.
+  function openNewFoodFromSearch(name) {
+    setFoodForm({ name, calories: "", fat: "", protein: "", fiber: "", category: "" });
+    setEditingFoodId(null);
+    setFoodFormAttempted(false);
+    setShowFoodForm(true);
+    setOpenProfilSection("search");
+  }
+  // Formular zum Anlegen/Bearbeiten eines einfachen Lebensmittels — wird sowohl bei "Eigene
+  // Lebensmittel" als auch direkt aus der Datenbanksuche heraus verwendet (dieselbe UI, dasselbe
+  // Formular, nur zwei verschiedene Startpunkte).
+  function renderFoodForm() {
+    return (
+      <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+        <div style={{ fontWeight: 700, marginBottom: 8 }}>{editingFoodId ? "Lebensmittel bearbeiten" : "Neues Lebensmittel"} (je 100g)</div>
+        <div className="npt-field"><label>Name *</label><input type="text" className={!foodForm.name.trim() ? "npt-input-error" : ""} value={foodForm.name} onChange={(ev) => setFoodForm({ ...foodForm, name: ev.target.value })} /></div>
+        <div className="npt-field"><label>Kalorien (kcal) *</label><input type="number" inputMode="decimal" className={foodForm.calories === "" ? "npt-input-error" : ""} value={foodForm.calories} onChange={(ev) => setFoodForm({ ...foodForm, calories: ev.target.value })} /></div>
+        <div className="npt-form-grid">
+          <div className="npt-field"><label>Fett (g)</label><input type="number" inputMode="decimal" value={foodForm.fat} onChange={(ev) => setFoodForm({ ...foodForm, fat: ev.target.value })} /></div>
+          <div className="npt-field"><label>Protein (g)</label><input type="number" inputMode="decimal" value={foodForm.protein} onChange={(ev) => setFoodForm({ ...foodForm, protein: ev.target.value })} /></div>
+          <div className="npt-field"><label>Ballaststoffe (g)</label><input type="number" inputMode="decimal" value={foodForm.fiber} onChange={(ev) => setFoodForm({ ...foodForm, fiber: ev.target.value })} /></div>
+        </div>
+        <div className="npt-field-hint" style={{ marginTop: -10, marginBottom: 12 }}>* Pflichtfelder. Fett/Protein/Ballaststoffe dürfen leer bleiben, falls (noch) unbekannt — zählen dann als 0 und lassen sich später ergänzen.</div>
+        <div className="npt-field">
+          <label>Kategorie (optional)</label>
+          <select value={foodForm.category} onChange={(ev) => setFoodForm({ ...foodForm, category: ev.target.value })}>
+            <option value="">– keine –</option>
+            {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        {foodForm.calories !== "" && (
+          <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+            ≈ <strong className="npt-font-display">{calcFoodPointsWithMode({ calories: Number(foodForm.calories) || 0, fat: Number(foodForm.fat) || 0, protein: Number(foodForm.protein) || 0, fiber: Number(foodForm.fiber) || 0 }, matrix, profile.sattmacherMode, foodForm.category, false)} Punkte</strong> je 100g
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelFoodForm}>Abbrechen</button>
+          <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveFoodForm} disabled={!foodForm.name.trim() || foodForm.calories === ""}>Speichern</button>
+        </div>
+      </div>
+    );
+  }
   function openEditFood(food) {
     setFoodForm({
       name: food.name, calories: String(food.calories), fat: String(food.fat),
@@ -2764,6 +2885,19 @@ function NutritionPointsTracker() {
     setRecipeIngredientSelected(null);
     setRecipeIngredientAmount(100);
     setRecipeIngredientUnit("g");
+    setEditingRecipeId(null);
+  }
+  // Lädt ein bestehendes Rezept zurück in den Baukasten, um es zu ändern — z.B. wenn eine Zutat
+  // vergessen wurde oder sich die Zusammensetzung geändert hat. Landet beim Speichern wieder unter
+  // derselben ID, ersetzt also das bestehende Rezept statt ein zweites anzulegen.
+  function startEditRecipe(food) {
+    setRecipeName(food.name);
+    setRecipeServings(food.recipeServings || 1);
+    setRecipeIngredients((food.recipeIngredients || []).map((ing) => ({ ...ing })));
+    setRecipeIngredientQuery("");
+    setRecipeIngredientSelected(null);
+    setEditingRecipeId(food.id);
+    setOpenProfilSection("recipeBuilder");
   }
   function buildRecipeFood() {
     const servings = Math.max(1, Number(recipeServings) || 1);
@@ -2789,7 +2923,12 @@ function NutritionPointsTracker() {
   function saveRecipe() {
     if (!recipeName.trim() || recipeIngredients.length === 0 || recipeTotals.totalG <= 0) return;
     const newFood = buildRecipeFood();
-    setCustomFoods((prev) => [newFood, ...prev]);
+    if (editingRecipeId) {
+      const updatedFood = { ...newFood, id: editingRecipeId };
+      setCustomFoods((prev) => prev.map((f) => (f.id === editingRecipeId ? updatedFood : f)));
+    } else {
+      setCustomFoods((prev) => [newFood, ...prev]);
+    }
     resetRecipeBuilder();
   }
   // Speichert das Rezept als eigenes Lebensmittel UND trägt direkt eine Portion als Eintrag ein —
@@ -2866,26 +3005,6 @@ function NutritionPointsTracker() {
     setWaistLog((prev) => [...prev, entry]);
     setProfile((prev) => ({ ...prev, waistCm: val }));
     setWaistInput("");
-  }
-
-  // ---------- Wasserzähler ----------
-  function addWater(ml) {
-    if (!ml || ml <= 0) return;
-    setWaterLog((prev) => [...prev, { id: newId(), timestamp: new Date().toISOString(), ml }]);
-  }
-  // Nimmt den letzten Wassereintrag DES AKTUELLEN TAGES zurück — vorher wurde blind der letzte
-  // Eintrag im gesamten Log entfernt, also unter Umständen einer von gestern.
-  function undoLastWater() {
-    setWaterLog((prev) => {
-      for (let i = prev.length - 1; i >= 0; i--) {
-        if (dateKeyFor(new Date(prev[i].timestamp)) === activeDayKey) {
-          const copy = [...prev];
-          copy.splice(i, 1);
-          return copy;
-        }
-      }
-      return prev;
-    });
   }
 
   // ---------- Favoriten ----------
@@ -3300,64 +3419,158 @@ function NutritionPointsTracker() {
 
             <div className="npt-chip-row" style={{ marginBottom: 14 }} ref={setTourRef("heute-subtabs")}>
               <button className={`npt-chip ${heuteSubTab === "essen" ? "active" : ""}`} onClick={() => setHeuteSubTab("essen")}>Essen heute</button>
+              <button className={`npt-chip ${heuteSubTab === "getraenke" ? "active" : ""}`} onClick={() => setHeuteSubTab("getraenke")}>Getränke heute</button>
               <button className={`npt-chip ${heuteSubTab === "sport" ? "active" : ""}`} onClick={() => setHeuteSubTab("sport")}>Sport heute</button>
-              <button className={`npt-chip ${heuteSubTab === "fakt" ? "active" : ""}`} onClick={() => setHeuteSubTab("fakt")}>Fakt des Tages</button>
             </div>
 
-            {heuteSubTab === "fakt" && (
-              <div className="npt-adjust-card">
-                <div className="npt-adjust-title">Fakt des Tages</div>
-                <div className="npt-adjust-row">
-                  <div style={{ fontSize: 14, lineHeight: 1.6 }}>{dailyFact}</div>
-                </div>
-              </div>
-            )}
-
-            {heuteSubTab === "sport" && (
-              <div className="npt-adjust-card">
-                <div className="npt-adjust-title">Sport heute</div>
-                <div className="npt-adjust-row">
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div>
-                      <div className="npt-flex-label">Sport heute gemacht</div>
-                      <div className="npt-flex-sub">{sportDone ? `≈ ${caloriesBurned} kcal → +${sportBonus} Bonuspunkte` : "Kein Sport-Bonus"}</div>
-                    </div>
-                    <input type="checkbox" className="npt-checkbox" checked={sportDone} onChange={(ev) => setSportDone(ev.target.checked)} aria-label="Sport heute gemacht" />
-                  </div>
-
-                  {sportDone && (
-                    <div style={{ marginTop: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                        <label style={{ fontSize: 12.5, color: "var(--chalk-dim)" }}>
-                          Intensität: <span className="npt-font-display" style={{ color: "var(--teal)" }}>{sportIntensity}</span>/10
-                        </label>
-                        <button className="npt-info-btn" onClick={() => setShowIntensityInfo((v) => !v)} aria-label="Intensitätsstufen erklären">ⓘ</button>
-                      </div>
-                      <input type="range" min="1" max="10" step="1" value={sportIntensity} onChange={(ev) => setSportIntensity(Number(ev.target.value))} style={{ width: "100%", accentColor: "var(--teal)" }} />
-
-                      {showIntensityInfo && (
-                        <div className="npt-sample-box info" style={{ marginTop: 10 }}>
-                          <div style={{ marginBottom: 6, fontWeight: 600, color: "var(--chalk)" }}>Was bedeuten die Stufen?</div>
-                          {INTENSITY_INFO.map((text, idx) => (
-                            <div key={idx} style={{ marginBottom: 3 }}><strong className="npt-font-display">{idx + 1}</strong> – {text}</div>
-                          ))}
+            {heuteSubTab === "getraenke" && (
+              <>
+                <div className="npt-adjust-card" ref={setTourRef("heute-getraenke")}>
+                  <button className="npt-adjust-title-toggle" onClick={() => setShowTodayDrinks((v) => !v)} aria-expanded={showTodayDrinks}>
+                    <div className="npt-adjust-title">Heute getrunken{todayDrinkEntries.length > 0 ? ` · ${todayDrinkEntries.length}` : ""}</div>
+                    <IconChevronDown size={18} style={{ transform: showTodayDrinks ? "none" : "rotate(-90deg)", transition: "transform 0.2s ease" }} />
+                  </button>
+                  {showTodayDrinks && (
+                    <div className="npt-adjust-row">
+                      {renderNutrientBar("Flüssigkeit", todayFluidMl, FLUID_TARGET_ML, "ml", "--teal", "water-heute")}
+                      {todayDrinkEntries.length === 0 && <div className="npt-empty">Noch nichts eingetragen.</div>}
+                      {todayDrinkEntries.map((e) => (
+                        <div className="npt-entry-row" key={e.id}>
+                          <div>
+                            <div className="npt-entry-name">{e.name}</div>
+                            <div className="npt-entry-meta">{e.amountG} ml · {e.calories} kcal{e.countsToFluid ? "" : " · zählt nicht zur Flüssigkeitsbilanz"}</div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center" }}>
+                            <div className="npt-entry-points npt-font-display">{e.points}</div>
+                            <button className="npt-del-btn" onClick={() => startEditEntry(e)} aria-label="Getränk bearbeiten"><IconPencil size={15} /></button>
+                            <button className="npt-del-btn" onClick={() => deleteEntry(e.id)} aria-label="Getränk löschen"><IconTrash size={16} /></button>
+                          </div>
                         </div>
-                      )}
-
-                      <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-                        <div style={{ flex: 1 }}>
-                          <label style={{ fontSize: 12, color: "var(--chalk-dim)", display: "block", marginBottom: 4 }}>Stunden</label>
-                          <input type="number" inputMode="numeric" min="0" className="npt-mini-input" style={{ width: "100%" }} value={sportHours} onChange={(ev) => setSportHours(ev.target.value)} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <label style={{ fontSize: 12, color: "var(--chalk-dim)", display: "block", marginBottom: 4 }}>Minuten</label>
-                          <input type="number" inputMode="numeric" min="0" max="59" className="npt-mini-input" style={{ width: "100%" }} value={sportMinutes} onChange={(ev) => setSportMinutes(ev.target.value)} />
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   )}
                 </div>
-              </div>
+
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 0 8px" }}>
+                  {!showDrinkPicker && (
+                    <button className="npt-fab-inline" onClick={() => setShowDrinkPicker(true)} aria-label="Getränk hinzufügen">
+                      <IconPlus size={30} />
+                    </button>
+                  )}
+                </div>
+
+                {showDrinkPicker && (
+                  <div className="npt-sample-box info">
+                    <div style={{ fontWeight: 700, marginBottom: 10 }}>Getränk hinzufügen</div>
+                    <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                      <button className="npt-btn-secondary" style={{ flex: 1, flexDirection: "column", height: "auto", padding: "12px 8px", gap: 4 }}
+                        onClick={() => { quickAddDirectDrink("Wasser (still/mit Kohlensäure)", 250); setShowDrinkPicker(false); }}>
+                        <IconDroplet size={22} />
+                        <span>Kleines Glas<br />(250 ml)</span>
+                      </button>
+                      <button className="npt-btn-secondary" style={{ flex: 1, flexDirection: "column", height: "auto", padding: "12px 8px", gap: 4 }}
+                        onClick={() => { quickAddDirectDrink("Wasser (still/mit Kohlensäure)", 500); setShowDrinkPicker(false); }}>
+                        <IconDroplet size={30} />
+                        <span>Großes Glas<br />(500 ml)</span>
+                      </button>
+                    </div>
+
+                    <div className="npt-field">
+                      <label>Anderes Getränk</label>
+                      <select value={drinkPickerSelectedId} onChange={(ev) => setDrinkPickerSelectedId(ev.target.value)}>
+                        <option value="">– Getränk wählen –</option>
+                        {nonAlcoholicDrinks.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      </select>
+                    </div>
+                    {drinkPickerSelectedId && (
+                      <div className="npt-field">
+                        <label>Menge (ml)</label>
+                        <input type="number" inputMode="numeric" value={drinkPickerAmount} onChange={(ev) => setDrinkPickerAmount(ev.target.value)} />
+                      </div>
+                    )}
+                    <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                      <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={() => { setShowDrinkPicker(false); setDrinkPickerSelectedId(""); }}>Abbrechen</button>
+                      <button className="npt-btn-primary" style={{ flex: 1 }} onClick={addSelectedDrink} disabled={!drinkPickerSelectedId || !drinkPickerAmount}>Hinzufügen</button>
+                    </div>
+                    <button className="npt-btn-secondary" style={{ width: "100%" }} onClick={() => { openNewFood(); setFoodForm((f) => ({ ...f, category: "Getränk" })); }}>+ Neues Getränk anlegen</button>
+                    {showFoodForm && renderFoodForm()}
+                  </div>
+                )}
+              </>
+            )}
+
+            {heuteSubTab === "sport" && (
+              <>
+                <div className="npt-adjust-card">
+                  <button className="npt-adjust-title-toggle" onClick={() => setShowTodaySport((v) => !v)} aria-expanded={showTodaySport}>
+                    <div className="npt-adjust-title">Sport heute{sportDone ? " · erfasst" : ""}</div>
+                    <IconChevronDown size={18} style={{ transform: showTodaySport ? "none" : "rotate(-90deg)", transition: "transform 0.2s ease" }} />
+                  </button>
+                  {showTodaySport && (
+                    <div className="npt-adjust-row">
+                      {!sportDone ? (
+                        <div className="npt-empty">Noch kein Sport erfasst.</div>
+                      ) : (
+                        <div className="npt-entry-row">
+                          <div>
+                            <div className="npt-entry-name">Sport erfasst</div>
+                            <div className="npt-entry-meta">{sportTimeInput || "0:00"} Std · Intensität {sportIntensity}/10 · ≈ {caloriesBurned} kcal</div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center" }}>
+                            <div className="npt-entry-points npt-font-display">+{sportBonus}</div>
+                            <button className="npt-del-btn" onClick={() => setShowSportForm(true)} aria-label="Sport bearbeiten"><IconPencil size={15} /></button>
+                            <button className="npt-del-btn" onClick={() => setSportDone(false)} aria-label="Sport löschen"><IconTrash size={16} /></button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 0 8px" }}>
+                  {!showSportForm && (
+                    <button className="npt-fab-inline" onClick={() => setShowSportForm(true)} aria-label="Sport hinzufügen">
+                      <IconPlus size={30} />
+                    </button>
+                  )}
+                </div>
+
+                {showSportForm && (
+                  <div className="npt-sample-box info">
+                    <div style={{ fontWeight: 700, marginBottom: 10 }}>Sport eintragen</div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                      <label style={{ fontSize: 12.5, color: "var(--chalk-dim)" }}>
+                        Intensität: <span className="npt-font-display" style={{ color: "var(--teal)" }}>{sportIntensity}</span>/10
+                      </label>
+                      <button className="npt-info-btn" onClick={() => setShowIntensityInfo((v) => !v)} aria-label="Intensitätsstufen erklären">ⓘ</button>
+                    </div>
+                    <input type="range" min="1" max="10" step="1" value={sportIntensity} onChange={(ev) => setSportIntensity(Number(ev.target.value))} style={{ width: "100%", accentColor: "var(--teal)" }} />
+
+                    {showIntensityInfo && (
+                      <div className="npt-sample-box info" style={{ marginTop: 10 }}>
+                        <div style={{ marginBottom: 6, fontWeight: 600, color: "var(--chalk)" }}>Was bedeuten die Stufen?</div>
+                        {INTENSITY_INFO.map((text, idx) => (
+                          <div key={idx} style={{ marginBottom: 3 }}><strong className="npt-font-display">{idx + 1}</strong> – {text}</div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ marginTop: 12, marginBottom: 14 }}>
+                      <label style={{ fontSize: 12, color: "var(--chalk-dim)", display: "block", marginBottom: 4 }}>Dauer (Std:Min, z. B. 1:29)</label>
+                      <input type="text" inputMode="numeric" placeholder="0:00" pattern="[0-9]{1,2}:[0-9]{2}" className="npt-mini-input" style={{ width: "100%" }} value={sportTimeInput} onChange={(ev) => setSportTimeInput(ev.target.value)} />
+                    </div>
+
+                    {caloriesBurned > 0 && (
+                      <div className="npt-field-hint" style={{ marginBottom: 12 }}>≈ {caloriesBurned} kcal verbrannt → +{sportBonus} Bonuspunkte</div>
+                    )}
+
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={() => setShowSportForm(false)}>Abbrechen</button>
+                      <button className="npt-btn-primary" style={{ flex: 1 }} onClick={() => { setSportDone(true); setShowSportForm(false); setShowTodaySport(true); }} disabled={!sportTimeInput.trim()}>Speichern</button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {heuteSubTab === "essen" && (
@@ -3445,20 +3658,17 @@ function NutritionPointsTracker() {
           <div>
             <div className="npt-today-date">Ernährungsübersicht</div>
 
+            <div className="npt-adjust-card" ref={setTourRef("ernaehrung-fakt")}>
+              <div className="npt-adjust-title">Fakt des Tages</div>
+              <div className="npt-adjust-row">
+                <div style={{ fontSize: 14, lineHeight: 1.6 }}>{dailyFact}</div>
+              </div>
+            </div>
+
             <div className="npt-adjust-card" style={{ padding: 16 }} ref={setTourRef("ernaehrung-wasser")}>
-              <div className="npt-adjust-title" style={{ padding: 0, marginBottom: 14 }}>Wasser</div>
-              {renderNutrientBar("Wasser", todayWaterMl, WATER_TARGET_ML, "ml", "--teal", "water")}
-              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                <input type="number" inputMode="numeric" placeholder="ml" value={waterCustomInput} onChange={(ev) => setWaterCustomInput(ev.target.value)} style={{ flex: 1 }} />
-                <button className="npt-btn-primary" style={{ flex: "0 0 auto", padding: "0 16px" }} onClick={() => { addWater(Number(waterCustomInput) || 0); setWaterCustomInput(""); }}>+ Hinzufügen</button>
-              </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button className="npt-btn-secondary" onClick={() => addWater(250)}>+ 250 ml (Glas)</button>
-                <button className="npt-btn-secondary" onClick={() => addWater(500)}>+ 500 ml (Flasche)</button>
-                {todayWaterMl > 0 && (
-                  <button className="npt-del-btn" onClick={undoLastWater} aria-label="Letzten Wassereintrag rückgängig"><IconReset size={14} /></button>
-                )}
-              </div>
+              <div className="npt-adjust-title" style={{ padding: 0, marginBottom: 14 }}>Tägliche Flüssigkeit</div>
+              {renderNutrientBar("Flüssigkeit", todayFluidMl, FLUID_TARGET_ML, "ml", "--teal", "water")}
+              <div className="npt-field-hint">Getränke trägst du im Heute-Tab unter "Getränke heute" ein — hier siehst du nur die Übersicht.</div>
             </div>
 
             <div className="npt-adjust-card" style={{ padding: 16 }} ref={setTourRef("ernaehrung-obstgemuese")}>
@@ -3493,19 +3703,24 @@ function NutritionPointsTracker() {
                   <div className="npt-field">
                     <input type="text" placeholder="z. B. Linsen, Lachs, Sojamilch…" value={libSearchQuery} onChange={(ev) => setLibSearchQuery(ev.target.value)} />
                   </div>
-                  {libSearchQuery.trim().length > 0 && libSearchResults.length === 0 && (
+                  {libSearchQuery.trim().length > 0 && !showFoodForm && (
+                    <button className="npt-btn-secondary" style={{ width: "100%", marginBottom: 12 }} onClick={() => openNewFoodFromSearch(libSearchQuery.trim())}>+ "{libSearchQuery.trim()}" als neues Lebensmittel anlegen</button>
+                  )}
+                  {showFoodForm && renderFoodForm()}
+                  {!showFoodForm && libSearchQuery.trim().length > 0 && libSearchResults.length === 0 && (
                     <div className="npt-empty">Nichts gefunden.</div>
                   )}
-                  {libSearchResults.length > 0 && (
+                  {!showFoodForm && libSearchResults.length > 0 && (
                     <div className="npt-dropdown" style={{ position: "static", maxHeight: "none", border: "1px solid var(--line)", borderRadius: 10, marginTop: 0 }}>
                       {libSearchResults.map((f) => (
                         <div key={f.id} className="npt-dropdown-item">
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}{f.isRecipe ? <span className="npt-recipe-badge">Rezept</span> : ""}</span>
-                          <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                             <span className="npt-dropdown-kcal">{f.calories} kcal/100g</span>
                             <button className={`npt-fav-btn${favoriteFoodIds.includes(f.id) ? " active" : ""}`} onClick={() => toggleFavorite(f.id)} aria-label={favoriteFoodIds.includes(f.id) ? "Favorit entfernen" : "Als Favorit markieren"}>
                               <IconHeart size={16} filled={favoriteFoodIds.includes(f.id)} />
                             </button>
+                            <button className="npt-del-btn" style={{ width: 24, height: 24 }} onClick={() => quickAddFromLibrary(f)} aria-label={`${f.name} zu heute hinzufügen`}><IconPlus size={14} /></button>
                           </span>
                         </div>
                       ))}
@@ -3525,35 +3740,7 @@ function NutritionPointsTracker() {
                   {!showFoodForm && (
                     <button className="npt-btn-secondary" style={{ width: "100%", marginBottom: 12 }} onClick={openNewFood}>+ Neues Lebensmittel anlegen</button>
                   )}
-                  {showFoodForm && (
-                    <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
-                      <div style={{ fontWeight: 700, marginBottom: 8 }}>{editingFoodId ? "Lebensmittel bearbeiten" : "Neues Lebensmittel"} (je 100g)</div>
-                      <div className="npt-field"><label>Name *</label><input type="text" className={!foodForm.name.trim() ? "npt-input-error" : ""} value={foodForm.name} onChange={(ev) => setFoodForm({ ...foodForm, name: ev.target.value })} /></div>
-                      <div className="npt-field"><label>Kalorien (kcal) *</label><input type="number" inputMode="decimal" className={foodForm.calories === "" ? "npt-input-error" : ""} value={foodForm.calories} onChange={(ev) => setFoodForm({ ...foodForm, calories: ev.target.value })} /></div>
-                      <div className="npt-form-grid">
-                        <div className="npt-field"><label>Fett (g)</label><input type="number" inputMode="decimal" value={foodForm.fat} onChange={(ev) => setFoodForm({ ...foodForm, fat: ev.target.value })} /></div>
-                        <div className="npt-field"><label>Protein (g)</label><input type="number" inputMode="decimal" value={foodForm.protein} onChange={(ev) => setFoodForm({ ...foodForm, protein: ev.target.value })} /></div>
-                        <div className="npt-field"><label>Ballaststoffe (g)</label><input type="number" inputMode="decimal" value={foodForm.fiber} onChange={(ev) => setFoodForm({ ...foodForm, fiber: ev.target.value })} /></div>
-                      </div>
-                      <div className="npt-field-hint" style={{ marginTop: -10, marginBottom: 12 }}>* Pflichtfelder. Fett/Protein/Ballaststoffe dürfen leer bleiben, falls (noch) unbekannt — zählen dann als 0 und lassen sich später ergänzen.</div>
-                      <div className="npt-field">
-                        <label>Kategorie (optional)</label>
-                        <select value={foodForm.category} onChange={(ev) => setFoodForm({ ...foodForm, category: ev.target.value })}>
-                          <option value="">– keine –</option>
-                          {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      {foodForm.calories !== "" && (
-                        <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
-                          ≈ <strong className="npt-font-display">{calcFoodPointsWithMode({ calories: Number(foodForm.calories) || 0, fat: Number(foodForm.fat) || 0, protein: Number(foodForm.protein) || 0, fiber: Number(foodForm.fiber) || 0 }, matrix, profile.sattmacherMode, foodForm.category, false)} Punkte</strong> je 100g
-                        </div>
-                      )}
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelFoodForm}>Abbrechen</button>
-                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveFoodForm} disabled={!foodForm.name.trim() || foodForm.calories === ""}>Speichern</button>
-                      </div>
-                    </div>
-                  )}
+                  {showFoodForm && renderFoodForm()}
                   <div className="npt-field-hint" style={{ marginBottom: 12 }}>Für Gerichte aus mehreren Zutaten den Rezept-Baukasten weiter unten nutzen.</div>
                   {customFoods.length === 0 && <div className="npt-empty">Noch keine eigenen Lebensmittel gespeichert.</div>}
                   {customFoods.map((f) => (
@@ -3568,7 +3755,9 @@ function NutritionPointsTracker() {
                         </div>
                         <div style={{ display: "flex", alignItems: "center" }}>
                           <button className={`npt-fav-btn${favoriteFoodIds.includes(f.id) ? " active" : ""}`} onClick={(ev) => { ev.stopPropagation(); toggleFavorite(f.id); }} aria-label={favoriteFoodIds.includes(f.id) ? "Favorit entfernen" : "Als Favorit markieren"}><IconHeart size={16} filled={favoriteFoodIds.includes(f.id)} /></button>
-                          {!f.isRecipe && (
+                          {f.isRecipe ? (
+                            <button className="npt-del-btn" onClick={(ev) => { ev.stopPropagation(); startEditRecipe(f); }} aria-label="Rezept bearbeiten"><IconPencil size={15} /></button>
+                          ) : (
                             <button className="npt-del-btn" onClick={(ev) => { ev.stopPropagation(); openEditFood(f); }} aria-label="Lebensmittel bearbeiten"><IconPencil size={15} /></button>
                           )}
                           <button className="npt-del-btn" onClick={(ev) => { ev.stopPropagation(); deleteFood(f.id); }} aria-label="Lebensmittel löschen"><IconTrash size={16} /></button>
@@ -3580,7 +3769,7 @@ function NutritionPointsTracker() {
                           {f.recipeIngredients.map((ing, idx) => (
                             <div key={idx}>• {ing.name} – {ing.unit && ing.unit !== "g" ? `${ing.amount} ${ing.unit} (≈ ${ing.amountG} g)` : `${ing.amountG} g`}</div>
                           ))}
-                          <div className="npt-field-hint" style={{ marginTop: 6 }}>Rezepte lassen sich aktuell nur löschen und im Rezept-Baukasten neu anlegen, nicht direkt bearbeiten.</div>
+                          <button className="npt-btn-secondary" style={{ width: "100%", marginTop: 10 }} onClick={(ev) => { ev.stopPropagation(); startEditRecipe(f); }}>Rezept bearbeiten</button>
                         </div>
                       )}
                     </div>
@@ -3697,8 +3886,8 @@ function NutritionPointsTracker() {
                       )}
 
                       <div style={{ display: "flex", gap: 8 }}>
-                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveRecipe} disabled={!recipeName.trim()}>Rezept speichern</button>
-                        <button className="npt-reset-btn" style={{ flex: "0 0 auto" }} onClick={resetRecipeBuilder}>Verwerfen</button>
+                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveRecipe} disabled={!recipeName.trim()}>{editingRecipeId ? "Änderungen speichern" : "Rezept speichern"}</button>
+                        <button className="npt-reset-btn" style={{ flex: "0 0 auto" }} onClick={resetRecipeBuilder}>{editingRecipeId ? "Abbrechen" : "Verwerfen"}</button>
                       </div>
                     </>
                   )}
