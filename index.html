@@ -1163,6 +1163,16 @@ function resolveAmountToGrams(food, amount, unit) {
 }
 // Kehrfunktion zu resolveAmountToGrams — rechnet Gramm zurück in die Menge einer Einheit, damit
 // beim Wechsel der Einheit (z.B. von "g" zu "EL") ein sinnvoller, umgerechneter Wert angezeigt wird.
+// Beim Wechsel der Einheit: Gewichts- und Volumenangaben lassen sich sinnvoll ineinander
+// umrechnen (100 g bleiben 100 ml bzw. 0,1 l). Bei Stück-Einheiten wie Teelöffel, Scheibe oder
+// Stück ist die Umrechnung dagegen unbrauchbar: Aus 100 g Leinsamen würden 20 Teelöffel, und wer
+// von Gramm auf Teelöffel umstellt, meint fast immer einen. Deshalb wird dort auf 1 gesetzt.
+const SCALE_UNITS = ["g", "ml", "l"];
+function amountValueForNewUnit(food, grams, unit) {
+  if (SCALE_UNITS.includes(unit)) return resolveGramsToUnitAmount(food, grams, unit);
+  return 1;
+}
+
 function resolveGramsToUnitAmount(food, grams, unit) {
   const g = Number(grams) || 0;
   if (unit === "g" || unit === "ml") return round1(g);
@@ -1572,7 +1582,6 @@ function NutritionPointsTracker() {
   const [showWaistTrendLine, setShowWaistTrendLine] = useState(true);
   const [waistEnabled, setWaistEnabled] = useState(false);
   const [weightViewDisplay, setWeightViewDisplay] = useState("chart");
-  const [showChartSettings, setShowChartSettings] = useState(false);
   const [showWeekSummary, setShowWeekSummary] = useState(false);
   const [showWeightSettings, setShowWeightSettings] = useState(false);
   const [chartZoomed, setChartZoomed] = useState(false);
@@ -1635,6 +1644,8 @@ function NutritionPointsTracker() {
   const [recipeIngredients, setRecipeIngredients] = useState([]);
   const [recipeName, setRecipeName] = useState("");
   const [recipeServings, setRecipeServings] = useState(1);
+  // Nachfrage beim Speichern eines neuen Rezepts: nur in die Datenbank, oder gleich mitessen?
+  const [recipeSavePrompt, setRecipeSavePrompt] = useState(false);
   const [editingRecipeId, setEditingRecipeId] = useState(null);
   const [recipeIngredientQuery, setRecipeIngredientQuery] = useState("");
   const [recipeIngredientDropdownOpen, setRecipeIngredientDropdownOpen] = useState(false);
@@ -2335,7 +2346,19 @@ function NutritionPointsTracker() {
     if (weightChartData.length === 0) return;
     const ctx = weightChartCanvasRef.current.getContext("2d");
     weightChartInstanceRef.current = new Chart(ctx, buildWeightChartConfig());
-    return () => { if (weightChartInstanceRef.current) { weightChartInstanceRef.current.destroy(); weightChartInstanceRef.current = null; } };
+    // Auf manchen Geräten steht die Layoutgröße des Canvas im Moment des Erzeugens noch nicht fest.
+    // Chart.js zeichnet dann in eine 0-Pixel-Fläche, und die Grafik bleibt weiß, bis irgendetwas
+    // eine Größenänderung auslöst (z. B. das Öffnen der Vergrößerung). Ein Resize im nächsten
+    // Frame — also nach dem ersten Layout — behebt das zuverlässig.
+    const resizeRaf = requestAnimationFrame(() => {
+      if (weightChartInstanceRef.current) {
+        try { weightChartInstanceRef.current.resize(); } catch (e) {}
+      }
+    });
+    return () => {
+      cancelAnimationFrame(resizeRaf);
+      if (weightChartInstanceRef.current) { weightChartInstanceRef.current.destroy(); weightChartInstanceRef.current = null; }
+    };
     // "tab" steht bewusst mit in den Abhängigkeiten: Der Gewicht-Tab wird bedingt ein-/ausgehängt,
     // das Canvas existiert also erst NACH dem Wechsel auf diesen Tab. Ohne "tab" hier würde der
     // Effekt beim Wechsel nicht erneut laufen und das frisch gemountete (leere) Canvas nie befüllt.
@@ -2533,8 +2556,15 @@ function NutritionPointsTracker() {
     if (foodId === null || foodId === undefined) return;
     setRecentFoodIds((prev) => [foodId, ...prev.filter((id) => id !== foodId)].slice(0, 12));
   }
+  // Schnellwahl-Getränke immer aus der mitgelieferten Datenbank auflösen. Ein selbst angelegtes
+  // Lebensmittel mit gleichem Namen steht in combinedFoods weiter vorn und würde sonst gewinnen —
+  // ihm fehlt aber die Angabe, ob es zur Flüssigkeitsbilanz zählt, und der Kaffee wäre "unsichtbar".
+  function resolveDrinkFood(foodName) {
+    return FOOD_DATABASE.find((f) => f.name === foodName) || combinedFoods.find((f) => f.name === foodName);
+  }
+
   function quickAddDirectDrink(foodName, amountG) {
-    const food = combinedFoods.find((f) => f.name === foodName);
+    const food = resolveDrinkFood(foodName);
     if (!food) return;
     const factor = amountG / 100;
     const calories = Math.round(food.calories * factor);
@@ -3491,6 +3521,7 @@ function NutritionPointsTracker() {
     { totalG: 0, calories: 0, fat: 0, protein: 0, fiber: 0 }
   );
   function resetRecipeBuilder() {
+    setRecipeSavePrompt(false);
     setRecipeIngredients([]);
     setRecipeName("");
     setRecipeServings(1);
@@ -3546,7 +3577,7 @@ function NutritionPointsTracker() {
   }
   // Speichert das Rezept als eigenes Lebensmittel UND trägt direkt eine Portion als Eintrag ein —
   // für den Rezeptbaukasten-Zugriff direkt beim Essen-Eintragen im Heute-Bereich.
-  function saveRecipeAndLog() {
+  function saveRecipeAndLog(mealOverride) {
     if (!recipeName.trim() || recipeIngredients.length === 0 || recipeTotals.totalG <= 0) return;
     const newFood = buildRecipeFood();
     setCustomFoods((prev) => [newFood, ...prev]);
@@ -3560,7 +3591,7 @@ function NutritionPointsTracker() {
       recipeTotalG: newFood.recipeServingG,
       recipeIngredients: newFood.recipeIngredients.map((ing) => ({ ...ing, amountG: (ing.amountG || 0) * (newFood.recipeServingG / newFood.recipeTotalG) })),
     };
-    const entryData = { name: newFood.name, calories, carbs: null, fat, protein, fiber, calcBasis: "kalorien", points, recipeSnapshot, amountG: newFood.recipeServingG, meal: formMeal, createdAt: new Date().toISOString() };
+    const entryData = { name: newFood.name, calories, carbs: null, fat, protein, fiber, calcBasis: "kalorien", points, recipeSnapshot, amountG: newFood.recipeServingG, meal: mealOverride || formMeal, createdAt: new Date().toISOString() };
     if (formTargetDay && formTargetDay !== activeDayKey) {
       const entryWithId = { ...entryData, id: newId() };
       setExpandedDayEntries((prev) => {
@@ -3886,6 +3917,8 @@ function NutritionPointsTracker() {
         .npt-cat-row { display: flex; flex-wrap: wrap; gap: 7px; }
         .npt-cat-chip { padding: 9px 13px; min-height: 40px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--chalk-dim); font-size: 12.5px; cursor: pointer; opacity: 0.6; }
         .npt-cat-chip.active { opacity: 1; background: var(--surface); border-color: var(--teal); color: var(--chalk); font-weight: 600; }
+        .npt-chart-options { border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px 4px; margin-bottom: 16px; }
+        .npt-chart-options-title { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--chalk-dim); margin-bottom: 10px; }
         .npt-toggle-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
         .npt-toggle-tile { display: flex; align-items: center; gap: 7px; padding: 9px 13px; min-height: 40px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--chalk-dim); font-size: 12.5px; cursor: pointer; opacity: 0.5; transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease; }
         .npt-toggle-tile.active { opacity: 1; background: var(--surface); }
@@ -4558,10 +4591,20 @@ function NutritionPointsTracker() {
                         </div>
                       )}
 
+                      {recipeSavePrompt ? (
+                        <div className="npt-sample-box info" style={{ marginBottom: 0 }}>
+                          <div style={{ marginBottom: 10 }}>Rezept ist fertig. Soll eine Portion gleich als heutiger Eintrag mitgebucht werden?</div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={() => { setRecipeSavePrompt(false); saveRecipe(); }}>Nur speichern</button>
+                            <button className="npt-btn-primary" style={{ flex: 1 }} onClick={() => { setRecipeSavePrompt(false); saveRecipeAndLog(defaultMealForNow()); }}>Speichern &amp; eintragen</button>
+                          </div>
+                        </div>
+                      ) : (
                       <div style={{ display: "flex", gap: 8 }}>
-                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={saveRecipe} disabled={!recipeName.trim()}>{editingRecipeId ? "Änderungen speichern" : "Rezept speichern"}</button>
+                        <button className="npt-btn-primary" style={{ flex: 1 }} onClick={() => { if (editingRecipeId) { saveRecipe(); } else { setRecipeSavePrompt(true); } }} disabled={!recipeName.trim()}>{editingRecipeId ? "Änderungen speichern" : "Rezept speichern"}</button>
                         <button className="npt-reset-btn" style={{ flex: "0 0 auto" }} onClick={resetRecipeBuilder}>{editingRecipeId ? "Abbrechen" : "Verwerfen"}</button>
                       </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -4719,6 +4762,11 @@ function NutritionPointsTracker() {
               <button className="npt-week-nav" onClick={() => shiftWeightView(1)} disabled={isCurrentWeightPeriod} aria-label="Weiter">›</button>
             </div>
 
+            <div className="npt-chip-row split" style={{ marginBottom: 12 }}>
+              <button className={`npt-chip ${weightViewDisplay === "chart" ? "active" : ""}`} onClick={() => setWeightViewDisplay("chart")}>Diagramm</button>
+              <button className={`npt-chip ${weightViewDisplay === "table" ? "active" : ""}`} onClick={() => setWeightViewDisplay("table")}>Tabelle</button>
+            </div>
+
             <div ref={setTourRef("gewicht-verlauf")}>
             {weightViewDisplay === "table" ? (
               weightChartLoading ? (
@@ -4828,6 +4876,33 @@ function NutritionPointsTracker() {
 
             </div>
 
+            <div className="npt-chart-options">
+              <div className="npt-chart-options-title">Diagramm-Optionen</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WEIGHT, marginBottom: 6 }}>Gewicht</div>
+              <div className="npt-toggle-row">
+                {renderToggleTile("Kurve", showWeightLine, setShowWeightLine, COLOR_WEIGHT)}
+                {renderToggleTile("Ziel", showWeightTarget && showWeightLine, setShowWeightTarget, COLOR_WEIGHT, !showWeightLine)}
+                {renderToggleTile("Trend", showTrendLine && showWeightLine, setShowTrendLine, COLOR_WEIGHT, !showWeightLine)}
+              </div>
+
+              {waistEnabled && (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WAIST, marginBottom: 6 }}>Bauchumfang</div>
+                  <div className="npt-toggle-row">
+                    {renderToggleTile("Kurve", showWaistLine, setShowWaistLine, COLOR_WAIST)}
+                    {renderToggleTile("Ziel", showWaistTarget && showWaistLine, setShowWaistTarget, COLOR_WAIST, !showWaistLine)}
+                    {renderToggleTile("Trend", showWaistTrendLine && showWaistLine, setShowWaistTrendLine, COLOR_WAIST, !showWaistLine)}
+                  </div>
+                </>
+              )}
+
+              <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_DEFICIT, marginBottom: 6 }}>Kalorien-Defizit</div>
+              <div className="npt-toggle-row" style={{ marginBottom: 0 }}>
+                {renderToggleTile("Kurve", showDeficitLine, setShowDeficitLine, COLOR_DEFICIT)}
+                {renderToggleTile("Ziel", showDeficitTarget && showDeficitLine, setShowDeficitTarget, COLOR_DEFICIT, !showDeficitLine)}
+              </div>
+            </div>
+
             <div className="npt-section-title" style={{ marginTop: 4 }}>Trend &amp; Prognose</div>
 
             {trend && trend.insufficientData && (
@@ -4866,45 +4941,6 @@ function NutritionPointsTracker() {
                 {profile.targetWaistCm && waistTrend.status === "no_trend" && <div style={{ marginTop: 4 }}>Dein Bauchumfang hält sich aktuell stabil — noch keine klare Richtung erkennbar. Bleib dran, in ein paar Tagen zeigt sich mehr.</div>}
               </div>
             )}
-
-            <div className="npt-accordion-section">
-              <button className={`npt-accordion-header ${showChartSettings ? "open" : ""}`} onClick={() => setShowChartSettings((v) => !v)}>
-                <span>Anzeige &amp; Linien</span>
-                <IconChevronDown size={18} />
-              </button>
-              {showChartSettings && (
-                <div className="npt-accordion-body">
-                  <div className="npt-chip-row">
-                    <button className={`npt-chip ${weightViewDisplay === "chart" ? "active" : ""}`} onClick={() => setWeightViewDisplay("chart")}>Diagramm</button>
-                    <button className={`npt-chip ${weightViewDisplay === "table" ? "active" : ""}`} onClick={() => setWeightViewDisplay("table")}>Tabelle</button>
-                  </div>
-
-                  <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WEIGHT, marginBottom: 6 }}>Gewicht</div>
-                  <div className="npt-toggle-row">
-                    {renderToggleTile("Kurve", showWeightLine, setShowWeightLine, COLOR_WEIGHT)}
-                    {renderToggleTile("Ziel", showWeightTarget && showWeightLine, setShowWeightTarget, COLOR_WEIGHT, !showWeightLine)}
-                    {renderToggleTile("Trend", showTrendLine && showWeightLine, setShowTrendLine, COLOR_WEIGHT, !showWeightLine)}
-                  </div>
-
-                  {waistEnabled && (
-                    <>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_WAIST, marginBottom: 6 }}>Bauchumfang</div>
-                      <div className="npt-toggle-row">
-                        {renderToggleTile("Kurve", showWaistLine, setShowWaistLine, COLOR_WAIST)}
-                        {renderToggleTile("Ziel", showWaistTarget && showWaistLine, setShowWaistTarget, COLOR_WAIST, !showWaistLine)}
-                        {renderToggleTile("Trend", showWaistTrendLine && showWaistLine, setShowWaistTrendLine, COLOR_WAIST, !showWaistLine)}
-                      </div>
-                    </>
-                  )}
-
-                  <div style={{ fontSize: 11, fontWeight: 700, color: COLOR_DEFICIT, marginBottom: 6 }}>Kalorien-Defizit</div>
-                  <div className="npt-toggle-row" style={{ marginBottom: 0 }}>
-                    {renderToggleTile("Kurve", showDeficitLine, setShowDeficitLine, COLOR_DEFICIT)}
-                    {renderToggleTile("Ziel", showDeficitTarget && showDeficitLine, setShowDeficitTarget, COLOR_DEFICIT, !showDeficitLine)}
-                  </div>
-                </div>
-              )}
-            </div>
 
             <div style={{ display: "flex", justifyContent: "center", padding: "20px 0 8px" }}>
               <button className="npt-fab-inline" ref={setTourRef("gewicht-eingabe")} onClick={() => setShowWeightSettings(true)} aria-label="Gewicht oder Bauchumfang eintragen">
@@ -5538,7 +5574,7 @@ function NutritionPointsTracker() {
                         <label>Einheit</label>
                         <select value={form.amountUnit} onChange={(ev) => {
                           const food = combinedFoods.find((f) => f.id === form.selectedFoodId);
-                          const newUnitValue = resolveGramsToUnitAmount(food, form.amountG, ev.target.value);
+                          const newUnitValue = amountValueForNewUnit(food, form.amountG, ev.target.value);
                           updateAmountUnit(newUnitValue, ev.target.value);
                         }}>
                           {RECIPE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
@@ -5583,7 +5619,7 @@ function NutritionPointsTracker() {
                       <div style={{ flex: "0 0 84px" }}>
                         <label>Einheit</label>
                         <select value={form.amountUnit} onChange={(ev) => {
-                          const newUnitValue = resolveGramsToUnitAmount(null, form.amountG, ev.target.value);
+                          const newUnitValue = amountValueForNewUnit(null, form.amountG, ev.target.value);
                           const grams = resolveAmountToGrams(null, newUnitValue, ev.target.value);
                           setForm({ ...form, amountUnit: ev.target.value, amountUnitValue: newUnitValue, amountG: round1(grams) });
                         }}>
