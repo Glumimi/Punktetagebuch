@@ -3471,9 +3471,16 @@ function NutritionPointsTracker() {
   useEffect(() => {
     try { window.history.pushState({ npt: true }, ""); } catch (e) { return; }
     function onPop() {
+      // Den Anker SOFORT neu setzen, bevor React-Zustand verändert wird. Wird er erst danach
+      // gesetzt, kann er verloren gehen — dann liegt beim nächsten Zurück kein Eintrag mehr vor
+      // und das Betriebssystem schließt die App, obwohl noch Ebenen offen waren.
+      try { window.history.pushState({ npt: true }, ""); } catch (e) {}
       const handled = backHandlerRef.current();
-      if (handled) {
-        try { window.history.pushState({ npt: true }, ""); } catch (e) {}
+      if (!handled) {
+        // Nichts mehr zu schließen und der Heute-Reiter ist aktiv: zwei Schritte zurück — der
+        // eben gesetzte Anker und der ursprüngliche Eintrag — damit die App sich schließt.
+        window.removeEventListener("popstate", onPop);
+        try { window.history.go(-2); } catch (e) {}
       }
     }
     window.addEventListener("popstate", onPop);
