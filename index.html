@@ -1666,6 +1666,9 @@ function NutritionPointsTracker() {
   // Nachfrage beim Speichern, wenn keine Kategorie gewählt wurde — sie ist optional, aber wichtig
   // genug, dass ein versehentliches Übergehen auffallen sollte.
   const [categoryPrompt, setCategoryPrompt] = useState(false);
+  // Zweite Nachfrage: nur in die Datenbank oder gleich für heute mitbuchen?
+  const [foodLogPrompt, setFoodLogPrompt] = useState(false);
+  const [foodLogAmount, setFoodLogAmount] = useState(100);
   const [entryFormAttempted, setEntryFormAttempted] = useState(false);
   const [expandedRecipeId, setExpandedRecipeId] = useState(null);
   const [saveError, setSaveError] = useState(false);
@@ -3098,6 +3101,13 @@ function NutritionPointsTracker() {
     });
   }
 
+  // Sicherheitsabfrage vor dem Löschen. Sie erscheint mittig im Bildfeld, nicht am Seitenende —
+  // ein Undo-Hinweis unten bringt nichts, wenn man ihn erst durch Scrollen findet.
+  const [confirmDialog, setConfirmDialog] = useState(null);
+  function askDelete(message, onConfirm) {
+    setConfirmDialog({ message, onConfirm });
+  }
+
   function showUndoToast(message, restoreFn) {
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     setUndoToast({ message, restore: restoreFn });
@@ -3140,16 +3150,18 @@ function NutritionPointsTracker() {
     const idx = expandedDayEntries.findIndex((e) => e.id === entryId);
     if (idx === -1) return;
     const item = expandedDayEntries[idx];
-    const updated = expandedDayEntries.filter((e) => e.id !== entryId);
-    setExpandedDayEntries(updated);
     const dayKeyAtCall = expandedHistoryDay;
-    persistDayEntries(dayKeyAtCall, updated);
-    showUndoToast("Eintrag gelöscht", () => {
-      setExpandedDayEntries((prev) => {
-        const restored = [...prev];
-        restored.splice(Math.min(idx, restored.length), 0, item);
-        persistDayEntries(dayKeyAtCall, restored);
-        return restored;
+    askDelete(`„${item.name}“ aus diesem Tag entfernen?`, () => {
+      const updated = expandedDayEntries.filter((e) => e.id !== entryId);
+      setExpandedDayEntries(updated);
+      persistDayEntries(dayKeyAtCall, updated);
+      showUndoToast("Eintrag gelöscht", () => {
+        setExpandedDayEntries((prev) => {
+          const restored = [...prev];
+          restored.splice(Math.min(idx, restored.length), 0, item);
+          persistDayEntries(dayKeyAtCall, restored);
+          return restored;
+        });
       });
     });
   }
@@ -3168,15 +3180,19 @@ function NutritionPointsTracker() {
     const idx = entries.findIndex((e) => e.id === id);
     if (idx === -1) return;
     const item = entries[idx];
-    setEntries((prev) => prev.filter((e) => e.id !== id));
-    showUndoToast("Eintrag gelöscht", () => restoreAt(setEntries, item, idx));
+    askDelete(`„${item.name}“ aus dem heutigen Tag entfernen?`, () => {
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+      showUndoToast("Eintrag gelöscht", () => restoreAt(setEntries, item, idx));
+    });
   }
   function deleteDish(id) {
     const idx = customDishes.findIndex((d) => d.id === id);
     if (idx === -1) return;
     const item = customDishes[idx];
-    setCustomDishes((prev) => prev.filter((d) => d.id !== id));
-    showUndoToast("Gericht gelöscht", () => restoreAt(setCustomDishes, item, idx));
+    askDelete(`Gericht „${item.name}“ löschen?`, () => {
+      setCustomDishes((prev) => prev.filter((d) => d.id !== id));
+      showUndoToast("Gericht gelöscht", () => restoreAt(setCustomDishes, item, idx));
+    });
   }
   function deleteFood(id) {
     const idx = customFoods.findIndex((f) => f.id === id);
@@ -3184,11 +3200,13 @@ function NutritionPointsTracker() {
     const item = customFoods[idx];
     // Ein gelöschtes Lebensmittel darf nicht als "Leiche" in den Favoriten zurückbleiben.
     const wasFavorite = favoriteFoodIds.includes(id);
-    setCustomFoods((prev) => prev.filter((f) => f.id !== id));
-    if (wasFavorite) setFavoriteFoodIds((prev) => prev.filter((fid) => fid !== id));
-    showUndoToast("Lebensmittel gelöscht", () => {
-      restoreAt(setCustomFoods, item, idx);
-      if (wasFavorite) setFavoriteFoodIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    askDelete(`„${item.name}“ aus deinen Lebensmitteln löschen?`, () => {
+      setCustomFoods((prev) => prev.filter((f) => f.id !== id));
+      if (wasFavorite) setFavoriteFoodIds((prev) => prev.filter((fid) => fid !== id));
+      showUndoToast("Lebensmittel gelöscht", () => {
+        restoreAt(setCustomFoods, item, idx);
+        if (wasFavorite) setFavoriteFoodIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+      });
     });
   }
 
@@ -3199,6 +3217,7 @@ function NutritionPointsTracker() {
     setEditingFoodId(null);
     setFoodFormAttempted(false);
     setCategoryPrompt(false);
+    setFoodLogPrompt(false);
     setFoodFormContext(context);
     setShowFoodForm(true);
   }
@@ -3209,6 +3228,7 @@ function NutritionPointsTracker() {
     setEditingFoodId(null);
     setFoodFormAttempted(false);
     setCategoryPrompt(false);
+    setFoodLogPrompt(false);
     setFoodFormContext(context);
     setShowFoodForm(true);
     if (context === "library") setOpenProfilSection("search");
@@ -3268,10 +3288,25 @@ function NutritionPointsTracker() {
             </div>
           </div>
         )}
+        {foodLogPrompt && (
+          <div className="npt-sample-box info" style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: 10 }}>Fertig. Nur in die Datenbank aufnehmen — oder gleich für heute eintragen?</div>
+            <div className="npt-field">
+              <label>Menge für heute ({foodForm.category === "Getränk" ? "ml" : "g"})</label>
+              <input type="number" inputMode="decimal" value={foodLogAmount} onChange={(ev) => setFoodLogAmount(ev.target.value)} />
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={() => saveFoodForm(true, "save")}>Nur speichern</button>
+              <button className="npt-btn-primary" style={{ flex: 1 }} onClick={() => saveFoodForm(true, "log")} disabled={!(Number(foodLogAmount) > 0)}>Speichern &amp; eintragen</button>
+            </div>
+          </div>
+        )}
+        {!categoryPrompt && !foodLogPrompt && (
         <div style={{ display: "flex", gap: 8 }}>
           <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={cancelFoodForm}>Abbrechen</button>
           <button className="npt-btn-primary" style={{ flex: 1 }} onClick={() => saveFoodForm()} disabled={!foodForm.name.trim() || foodForm.calories === ""}>Speichern</button>
         </div>
+        )}
       </div>
     );
   }
@@ -3284,6 +3319,7 @@ function NutritionPointsTracker() {
     setEditingFoodId(food.id);
     setFoodFormAttempted(false);
     setCategoryPrompt(false);
+    setFoodLogPrompt(false);
     setFoodFormContext("own");
     setShowFoodForm(true);
   }
@@ -3292,8 +3328,33 @@ function NutritionPointsTracker() {
     setEditingFoodId(null);
     setFoodFormAttempted(false);
     setCategoryPrompt(false);
+    setFoodLogPrompt(false);
   }
-  function saveFoodForm(skipCategoryCheck) {
+  // Bucht ein gerade angelegtes Lebensmittel direkt als heutigen Eintrag — ohne Umweg über die
+  // Suche im Eintragsformular.
+  function logFoodDirect(food, amount) {
+    const grams = Number(amount) || 0;
+    if (grams <= 0) return;
+    const factor = grams / 100;
+    const calories = Math.round((Number(food.calories) || 0) * factor);
+    const fat = round1((Number(food.fat) || 0) * factor);
+    const protein = round1((Number(food.protein) || 0) * factor);
+    const fiber = round1((Number(food.fiber) || 0) * factor);
+    const points = calcFoodPointsWithMode({ calories, fat, protein, fiber }, matrix, profile.sattmacherMode, food.category, !!food.sattmacherExempt);
+    const entryData = {
+      name: food.name, calories, carbs: null, fat, protein, fiber,
+      calcBasis: "kalorien", points,
+      category: food.category, sattmacherExempt: !!food.sattmacherExempt, countsToFluid: !!food.countsToFluid,
+      recipeSnapshot: null, amountG: grams,
+      meal: food.category === "Getränk" ? "getraenke" : defaultMealForNow(),
+      createdAt: new Date().toISOString(),
+    };
+    setEntries((prev) => [...prev, { id: newId(), ...entryData }]);
+    flashPoints(points);
+    rememberRecentFood(food.id);
+  }
+
+  function saveFoodForm(skipCategoryCheck, logChoice) {
     // Nur Name + Kalorien sind Pflicht — Fett/Protein/Ballaststoffe dürfen leer bleiben, falls sie
     // (noch) nicht bekannt sind; sie zählen dann einfach als 0, das Lebensmittel lässt sich später
     // jederzeit über den Bearbeiten-Button vervollständigen.
@@ -3306,6 +3367,14 @@ function NutritionPointsTracker() {
       return;
     }
     setCategoryPrompt(false);
+    // Neu angelegt und nicht aus dem Eintragsformular heraus (dort wird es ohnehin direkt in den
+    // offenen Eintrag übernommen)? Dann einmal nachfragen, ob es auch heute zählen soll.
+    if (!editingFoodId && foodFormContext !== "entry" && logChoice === undefined) {
+      setFoodLogAmount(foodForm.category === "Getränk" ? 200 : 100);
+      setFoodLogPrompt(true);
+      return;
+    }
+    setFoodLogPrompt(false);
     const data = {
       name: foodForm.name.trim(),
       calories: Number(foodForm.calories) || 0,
@@ -3327,10 +3396,12 @@ function NutritionPointsTracker() {
       selectFood(savedFood);
       setNutrientBasis("kalorien");
     }
+    if (logChoice === "log") logFoodDirect(savedFood, foodLogAmount);
     setShowFoodForm(false);
     setEditingFoodId(null);
     setFoodFormAttempted(false);
     setCategoryPrompt(false);
+    setFoodLogPrompt(false);
   }
 
   // Blendet den Fakt des Tages bis zum nächsten Tag aus (der Tagesschlüssel wird gemerkt).
@@ -3372,6 +3443,42 @@ function NutritionPointsTracker() {
       </button>
     );
   }
+
+  // ---------- Zurück-Taste des Geräts ----------
+  // Auf Android erwartet man, dass die Zurück-Taste eine Ebene nach oben führt und nicht die App
+  // schließt. Die App legt dazu beim Start einen zusätzlichen Verlaufseintrag an: Bei jedem
+  // Zurück wird die oberste offene Ebene geschlossen und der Eintrag neu gesetzt. Erst wenn
+  // nichts mehr offen ist und der Heute-Reiter aktiv ist, läuft das Zurück durch — dann schließt
+  // sich die App wie gewohnt.
+  const backHandlerRef = useRef(() => false);
+  backHandlerRef.current = () => {
+    if (confirmDialog) { setConfirmDialog(null); return true; }
+    if (showScanner) { stopScanner(); return true; }
+    if (chartZoomed) { setChartZoomed(false); return true; }
+    if (showFoodForm) { cancelFoodForm(); return true; }
+    if (showSportForm) { cancelSportForm(); return true; }
+    if (showWeightSettings) { setShowWeightSettings(false); return true; }
+    if (showForm) { closeForm(); return true; }
+    if (tourActive) { endTour(); return true; }
+    if (expandedHistoryDay) { setExpandedHistoryDay(null); return true; }
+    if (expandedRecipeId) { setExpandedRecipeId(null); return true; }
+    if (openProfilSection) { setOpenProfilSection(null); return true; }
+    if (showChartOptions) { setShowChartOptions(false); return true; }
+    if (tab !== "heute") { setTab("heute"); return true; }
+    return false;
+  };
+
+  useEffect(() => {
+    try { window.history.pushState({ npt: true }, ""); } catch (e) { return; }
+    function onPop() {
+      const handled = backHandlerRef.current();
+      if (handled) {
+        try { window.history.pushState({ npt: true }, ""); } catch (e) {}
+      }
+    }
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   // ---------- Wischen zum Löschen ----------
   // Die Zeile wird direkt über den DOM verschoben (kein Re-Render pro Fingerbewegung). Ab 90px
@@ -3565,6 +3672,14 @@ function NutritionPointsTracker() {
       recipeServingG: round1(recipeTotals.totalG / servings),
     };
   }
+  // Punktevorschau für das gerade zusammengestellte Rezept — die Zutaten sind schon mit ihren
+  // Nährwerten je 100 g gespeichert, also lässt sich derselbe Rechenweg nutzen wie beim Eintragen.
+  const recipeDraft = { recipeIngredients, recipeTotalG: recipeTotals.totalG };
+  const recipeDraftPoints = recipeTotals.totalG > 0 ? calcRecipePoints(recipeDraft, recipeTotals.totalG, matrix, profile.sattmacherMode) : 0;
+  const recipeDraftPortionPoints = recipeTotals.totalG > 0
+    ? calcRecipePoints(recipeDraft, recipeTotals.totalG / Math.max(1, Number(recipeServings) || 1), matrix, profile.sattmacherMode)
+    : 0;
+
   function saveRecipe() {
     if (!recipeName.trim() || recipeIngredients.length === 0 || recipeTotals.totalG <= 0) return;
     const newFood = buildRecipeFood();
@@ -3635,8 +3750,10 @@ function NutritionPointsTracker() {
     const idx = weightLog.findIndex((w) => w.id === id);
     if (idx === -1) return;
     const item = weightLog[idx];
-    setWeightLog((prev) => prev.filter((w) => w.id !== id));
-    showUndoToast("Gewichtseintrag gelöscht", () => restoreAt(setWeightLog, item, idx));
+    askDelete("Diesen Gewichtseintrag löschen?", () => {
+      setWeightLog((prev) => prev.filter((w) => w.id !== id));
+      showUndoToast("Gewichtseintrag gelöscht", () => restoreAt(setWeightLog, item, idx));
+    });
   }
   function startEditWeight(w) { setEditingWeightId(w.id); setEditWeightValue(String(w.weightKg)); }
   function saveWeightEdit(id) {
@@ -3662,8 +3779,10 @@ function NutritionPointsTracker() {
     const idx = waistLog.findIndex((w) => w.id === id);
     if (idx === -1) return;
     const item = waistLog[idx];
-    setWaistLog((prev) => prev.filter((w) => w.id !== id));
-    showUndoToast("Bauchumfang-Eintrag gelöscht", () => restoreAt(setWaistLog, item, idx));
+    askDelete("Diesen Bauchumfang-Eintrag löschen?", () => {
+      setWaistLog((prev) => prev.filter((w) => w.id !== id));
+      showUndoToast("Bauchumfang-Eintrag gelöscht", () => restoreAt(setWaistLog, item, idx));
+    });
   }
   function startEditWaist(w) { setEditingWaistId(w.id); setEditWaistValue(String(w.waistCm)); }
   function saveWaistEdit(id) {
@@ -4052,8 +4171,12 @@ function NutritionPointsTracker() {
         .npt-tour-dot.active { background: var(--teal); }
         .npt-tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .npt-warn { font-size: 11.5px; color: var(--amber); text-align: center; padding: 6px 22px 0; }
+        .npt-confirm-overlay { position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .npt-confirm-box { width: 100%; max-width: 320px; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 18px 16px 16px; box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+        .npt-confirm-text { font-size: 14.5px; line-height: 1.55; color: var(--chalk); margin-bottom: 16px; }
+        .npt-btn-danger { background: var(--bad); color: var(--bg); border: none; border-radius: 8px; padding: 12px 16px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; min-height: 44px; }
         .npt-toast {
-          position: absolute; left: 16px; right: 16px; bottom: 70px; z-index: 30;
+          position: fixed; left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 110;
           background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
           padding: 10px 12px 10px 16px; display: flex; align-items: center; justify-content: space-between;
           font-size: 13px; color: var(--chalk); box-shadow: 0 6px 18px rgba(0,0,0,0.35);
@@ -4402,7 +4525,7 @@ function NutritionPointsTracker() {
                         <div key={f.id} className="npt-dropdown-item">
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}{f.isRecipe ? <span className="npt-recipe-badge">Rezept</span> : ""}</span>
                           <span style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                            <span className="npt-dropdown-kcal">{f.calories} kcal/100g</span>
+                            <span className="npt-dropdown-kcal">{f.calories} kcal · {calcFoodPointsWithMode(f, matrix, profile.sattmacherMode, f.category, !!f.sattmacherExempt)} P</span>
                             <button className={`npt-fav-btn${favoriteFoodIds.includes(f.id) ? " active" : ""}`} onClick={() => toggleFavorite(f.id)} aria-label={favoriteFoodIds.includes(f.id) ? "Favorit entfernen" : "Als Favorit markieren"}>
                               <IconHeart size={16} filled={favoriteFoodIds.includes(f.id)} />
                             </button>
@@ -4434,6 +4557,9 @@ function NutritionPointsTracker() {
                       <div className="npt-entry-row" onClick={() => f.isRecipe && setExpandedRecipeId(expandedRecipeId === f.id ? null : f.id)} style={{ cursor: f.isRecipe ? "pointer" : "default" }}>
                         <div>
                           <div className="npt-entry-name">{f.name}{f.isRecipe ? <span className="npt-recipe-badge">Rezept</span> : ""}</div>
+                          <div className="npt-entry-meta" style={{ color: "var(--chalk)", fontWeight: 600 }}>
+                            {calcFoodPointsWithMode(f, matrix, profile.sattmacherMode, f.category, !!f.sattmacherExempt)} Punkte je 100 g
+                          </div>
                           <div className="npt-entry-meta">
                             {f.calories} kcal · {f.fat} g Fett · {f.protein} g Protein · {f.fiber} g Ballaststoffe (je 100g)
                             {f.isRecipe ? ` · ${f.recipeTotalG} g gesamt, ${f.recipeServings} Portion${f.recipeServings > 1 ? "en" : ""} à ${f.recipeServingG} g` : ""}
@@ -4451,6 +4577,14 @@ function NutritionPointsTracker() {
                       </div>
                       {f.isRecipe && expandedRecipeId === f.id && (
                         <div className="npt-sample-box info" style={{ marginTop: -8, marginBottom: 10 }}>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--chalk)", marginBottom: 2 }}>
+                            {calcRecipePoints(f, f.recipeTotalG, matrix, profile.sattmacherMode)} Punkte für das ganze Rezept
+                          </div>
+                          <div style={{ marginBottom: 8 }}>
+                            {f.recipeServings > 1
+                              ? `${calcRecipePoints(f, f.recipeServingG, matrix, profile.sattmacherMode)} Punkte je Portion (${round1(f.recipeServingG)} g)`
+                              : `${round1(f.recipeTotalG)} g gesamt`}
+                          </div>
                           <div style={{ fontWeight: 700, marginBottom: 4 }}>Zutaten</div>
                           {f.recipeIngredients.map((ing, idx) => (
                             <div key={idx}>• {ing.name} – {ing.unit && ing.unit !== "g" ? `${ing.amount} ${ing.unit} (≈ ${ing.amountG} g)` : `${ing.amountG} g`}</div>
@@ -4582,6 +4716,10 @@ function NutritionPointsTracker() {
 
                       <div className="npt-sample-box info" style={{ marginTop: 8, marginBottom: 12 }}>
                         <div style={{ fontWeight: 700, marginBottom: 4 }}>Gesamt ({round1(recipeTotals.totalG)} g)</div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--chalk)", marginBottom: 4 }}>
+                          {recipeDraftPoints} Punkte gesamt
+                          {Number(recipeServings) > 1 ? ` · ${recipeDraftPortionPoints} je Portion` : ""}
+                        </div>
                         <div>{Math.round(recipeTotals.calories)} kcal · {round1(recipeTotals.fat)} g Fett · {round1(recipeTotals.protein)} g Protein · {round1(recipeTotals.fiber)} g Ballaststoffe</div>
                       </div>
 
@@ -5372,7 +5510,7 @@ function NutritionPointsTracker() {
                       <div key={f.id} className="npt-dropdown-item" onClick={() => { selectFood(f); setEntryMethod("search"); }}>
                         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}{f.isRecipe ? <span className="npt-recipe-badge">Rezept</span> : ""}</span>
                         <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                          <span className="npt-dropdown-kcal">{f.calories} kcal/100g</span>
+                          <span className="npt-dropdown-kcal">{f.calories} kcal · {calcFoodPointsWithMode(f, matrix, profile.sattmacherMode, f.category, !!f.sattmacherExempt)} P</span>
                           <button className="npt-fav-btn active" onClick={(ev) => { ev.stopPropagation(); toggleFavorite(f.id); }} aria-label="Favorit entfernen"><IconHeart size={15} filled={true} /></button>
                         </span>
                       </div>
@@ -5559,7 +5697,7 @@ function NutritionPointsTracker() {
                           <div key={f.id} className="npt-dropdown-item" onClick={() => selectFood(f)}>
                             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
                             <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                              <span className="npt-dropdown-kcal">{f.calories} kcal/100g</span>
+                              <span className="npt-dropdown-kcal">{f.calories} kcal · {calcFoodPointsWithMode(f, matrix, profile.sattmacherMode, f.category, !!f.sattmacherExempt)} P</span>
                               <button className={`npt-fav-btn${favoriteFoodIds.includes(f.id) ? " active" : ""}`} onClick={(ev) => { ev.stopPropagation(); toggleFavorite(f.id); }} aria-label={favoriteFoodIds.includes(f.id) ? "Favorit entfernen" : "Als Favorit markieren"}>
                                 <IconHeart size={15} filled={favoriteFoodIds.includes(f.id)} />
                               </button>
@@ -5739,6 +5877,18 @@ function NutritionPointsTracker() {
               {scanStatus === "error" && "Kamera nicht verfügbar oder Zugriff verweigert. Funktioniert nur über https:// (z. B. GitHub Pages), nicht als lokale Datei."}
             </div>
             <button className="npt-btn-secondary" style={{ width: "100%", marginTop: 12 }} onClick={stopScanner}>Abbrechen</button>
+          </div>
+        </div>
+      )}
+
+      {confirmDialog && (
+        <div className="npt-confirm-overlay" onClick={() => setConfirmDialog(null)}>
+          <div className="npt-confirm-box" onClick={(ev) => ev.stopPropagation()}>
+            <div className="npt-confirm-text">{confirmDialog.message}</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="npt-btn-secondary" style={{ flex: 1 }} onClick={() => setConfirmDialog(null)}>Abbrechen</button>
+              <button className="npt-btn-danger" style={{ flex: 1 }} onClick={() => { const fn = confirmDialog.onConfirm; setConfirmDialog(null); fn(); }}>Löschen</button>
+            </div>
           </div>
         </div>
       )}
