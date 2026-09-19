@@ -3468,20 +3468,36 @@ function NutritionPointsTracker() {
     return false;
   };
 
+  // Jede offene Ebene bekommt ihren eigenen Verlaufseintrag — und zwar in dem Moment, in dem sie
+  // geöffnet wird. Ein Eintrag, der erst während des Zurück-Ereignisses nachgeschoben wird, kommt
+  // auf Android nicht zuverlässig an; deshalb wird hier vorgesorgt statt nachgebessert.
+  const openLayerCount =
+    (confirmDialog ? 1 : 0) + (showScanner ? 1 : 0) + (chartZoomed ? 1 : 0) +
+    (showFoodForm ? 1 : 0) + (showSportForm ? 1 : 0) + (showWeightSettings ? 1 : 0) +
+    (showForm ? 1 : 0) + (tourActive ? 1 : 0) + (expandedHistoryDay ? 1 : 0) +
+    (expandedRecipeId ? 1 : 0) + (openProfilSection ? 1 : 0) + (showChartOptions ? 1 : 0) +
+    (tab !== "heute" ? 1 : 0);
+  const navDepthRef = useRef(0);
+
   useEffect(() => {
-    try { window.history.pushState({ npt: true }, ""); } catch (e) { return; }
+    if (openLayerCount <= navDepthRef.current) return;
+    const missing = openLayerCount - navDepthRef.current;
+    for (let i = 0; i < missing; i++) {
+      try { window.history.pushState({ npt: true }, ""); } catch (e) { return; }
+    }
+    navDepthRef.current = openLayerCount;
+  }, [openLayerCount]);
+
+  useEffect(() => {
     function onPop() {
-      // Den Anker SOFORT neu setzen, bevor React-Zustand verändert wird. Wird er erst danach
-      // gesetzt, kann er verloren gehen — dann liegt beim nächsten Zurück kein Eintrag mehr vor
-      // und das Betriebssystem schließt die App, obwohl noch Ebenen offen waren.
-      try { window.history.pushState({ npt: true }, ""); } catch (e) {}
-      const handled = backHandlerRef.current();
-      if (!handled) {
-        // Nichts mehr zu schließen und der Heute-Reiter ist aktiv: zwei Schritte zurück — der
-        // eben gesetzte Anker und der ursprüngliche Eintrag — damit die App sich schließt.
-        window.removeEventListener("popstate", onPop);
-        try { window.history.go(-2); } catch (e) {}
-      }
+      navDepthRef.current = Math.max(0, navDepthRef.current - 1);
+      // Oberste Ebene schließen — oder, wenn keine mehr offen ist, auf den Heute-Reiter springen.
+      if (backHandlerRef.current()) return;
+      // Ein überzähliger Eintrag (die Ebene wurde vorher schon über die Oberfläche geschlossen)
+      // wird stillschweigend verbraucht, damit die App nicht zu früh verschwindet.
+      if (navDepthRef.current > 0) return;
+      window.removeEventListener("popstate", onPop);
+      try { window.history.back(); } catch (e) {}
     }
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
