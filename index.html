@@ -1550,6 +1550,10 @@ const STREAK_CHEERS = {
 // Liest einen Tag aus dem Speicher und beantwortet die Frage: lag er im Budget?
 // "Im Budget" heißt: Tagesziel plus Sportbonus nicht überschritten — oder die Überschreitung war
 // noch durch die Flexpoints der Woche gedeckt. Tage ohne Eintrag zählen nicht mit.
+// DGE "5 am Tag": 3 Portionen Gemüse (~400 g) + 2 Portionen Obst (~250 g). Bewusst auf
+// Modulebene, weil auch Funktionen außerhalb der Komponente damit rechnen.
+const FRUITVEG_TARGET_G = 650;
+
 // Bewertet die Qualität eines Tages für die Serie:
 //   1 = im Budget, ggf. mit Flexpoints   2 = Tagesziel ohne Flex gehalten
 //   3 = zusätzlich Flüssigkeits- und Obst/Gemüse-Ziel   4 = zusätzlich Bewegung erfasst
@@ -1623,8 +1627,6 @@ function NutritionPointsTracker() {
   const [libSearchQuery, setLibSearchQuery] = useState("");
   const [waistInput, setWaistInput] = useState("");
   const [showWaistInfo, setShowWaistInfo] = useState(false);
-  const [showAllWeightEntries, setShowAllWeightEntries] = useState(false);
-  const [showAllWaistEntries, setShowAllWaistEntries] = useState(false);
   const [openProfilSection, setOpenProfilSection] = useState(null);
   const [themeId, setThemeId] = useState("dark");
   const [fontId, setFontId] = useState("scoreboard");
@@ -1928,6 +1930,21 @@ function NutritionPointsTracker() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, topStreak && topStreak.level, topStreak && topStreak.count, streakCelebrated]);
 
+  // Wenn der Speichern-Knopf ausgegraut ist, soll auch dastehen, warum — ein grauer Knopf ohne
+  // Erklärung ist die häufigste Sackgasse in Formularen.
+  const entryMissingHint = (() => {
+    if (!form.name.trim()) return "Bitte einen Namen eintragen.";
+    if (form.selectedFoodId) return form.calories === "" ? "Bitte eine Menge angeben." : "";
+    if (nutrientBasis === "kalorien" && form.calories === "") return "Bitte die Kalorien je 100 g eintragen.";
+    if (nutrientBasis === "kohlenhydrate" && form.carbs === "") return "Bitte die Kohlenhydrate je 100 g eintragen.";
+    return "";
+  })();
+  const foodMissingHint = !foodForm.name.trim()
+    ? "Bitte einen Namen eintragen."
+    : foodForm.calories === ""
+    ? "Bitte die Kalorien je 100 g eintragen."
+    : "";
+
   const target = calcDailyTarget(profile, matrix);
   const trend = useMemo(
     () => computeWeightTrend(weightLog, Number(profile.targetWeightKg) || null),
@@ -2029,7 +2046,6 @@ function NutritionPointsTracker() {
   const fluidSportMl = sportDone ? Math.round((sportDurationHours * fluidSportMlPerHour) / 100) * 100 : 0;
   const fluidOptimalMl = fluidBaseMl + fluidSportMl;
   const todayFruitVegG = computeFruitVegGrams(entries);
-  const FRUITVEG_TARGET_G = 650; // DGE "5 am Tag": 3 Portionen Gemüse (~400g) + 2 Portionen Obst (~250g)
   // Persönliche Makro-Ziele nach DACH-Referenzwerten: Protein nach Körpergewicht (0,8 g/kg, ab 65
   // Jahren 1,0 g/kg), Fett/Kohlenhydrate als Anteil am tatsächlichen Kalorienziel (nicht am
   // theoretischen Gesamtumsatz, da das für die tägliche Einordnung praxisnäher ist), Ballaststoffe
@@ -3459,6 +3475,9 @@ function NutritionPointsTracker() {
               <button className="npt-btn-primary" style={{ flex: 1 }} onClick={() => saveFoodForm(true, "log")} disabled={!(Number(foodLogAmount) > 0)}>Speichern &amp; eintragen</button>
             </div>
           </div>
+        )}
+        {foodMissingHint && (
+          <div className="npt-field-hint" style={{ marginBottom: 8, color: "var(--warn)" }}>{foodMissingHint}</div>
         )}
         {!categoryPrompt && !foodLogPrompt && (
         <div style={{ display: "flex", gap: 8 }}>
@@ -6046,6 +6065,9 @@ function NutritionPointsTracker() {
                   <div className="npt-empty">Tippe oben in die Suche, um ein Lebensmittel zu finden.</div>
                 )}
 
+                {entryMissingHint && (
+                  <div className="npt-field-hint" style={{ marginBottom: 8, color: "var(--warn)" }}>{entryMissingHint}</div>
+                )}
                 <div className="npt-form-actions">
                   <button className="npt-btn-secondary" onClick={closeForm}>Abbrechen</button>
                   <button className="npt-btn-primary" onClick={addEntry} disabled={!form.name.trim() || (form.selectedFoodId ? form.calories === "" : (nutrientBasis === "kalorien" ? form.calories === "" : form.carbs === ""))}>{editingEntryId ? "Speichern" : "Hinzufügen"}</button>
