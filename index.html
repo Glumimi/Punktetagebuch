@@ -581,6 +581,31 @@ function computeWeekFlexUsage(mondayDate, resetMinutes, liveTodayOverage) {
   return total;
 }
 function round1(x) { return Math.round(x * 10) / 10; }
+// ---------- Favoriten mit Menge ----------
+// Ein Favorit ist { id, foodId, amountValue, unit }. amountValue/unit = null heißt "Standardmenge":
+// 100 g, bei Getränken 100 ml, bei Rezepten eine Portion — so passt sich ein Rezept-Favorit an,
+// wenn sich die Portionsgröße des Rezepts später ändert.
+function defaultAmountFor(food) {
+  if (food && food.isRecipe && food.recipeServingG) return { value: round1(food.recipeServingG), unit: "g" };
+  if (food && food.category === "Getränk") return { value: 100, unit: "ml" };
+  return { value: 100, unit: "g" };
+}
+function favoriteAmount(fav, food) {
+  return fav && Number(fav.amountValue) > 0 ? { value: Number(fav.amountValue), unit: fav.unit || "g" } : defaultAmountFor(food);
+}
+// "2 EL (≈ 20 g)", "150 g", "250 ml" — Alltagseinheiten zeigen zur Einordnung die Grammzahl mit.
+function amountLabel(value, unit, grams) {
+  if (unit === "g" || unit === "ml" || unit === "l") return `${fmtNum(value)} ${unit}`;
+  return `${fmtNum(value)} ${unit} (≈ ${fmtNum(grams)} g)`;
+}
+// Ältere Datenstände kannten nur eine Liste von Lebensmittel-IDs — die werden zu Favoriten mit
+// Standardmenge.
+function migrateFavoriteIds(ids) {
+  return Array.isArray(ids) ? ids.map((foodId, i) => ({ id: `fav-${i}-${foodId}`, foodId, amountValue: null, unit: null })) : [];
+}
+function normalizeFavorites(list) {
+  return Array.isArray(list) ? list.filter((f) => f && f.foodId !== undefined && f.foodId !== null) : [];
+}
 // Prüft eine Backup-Datei, bevor irgendetwas überschrieben wird: nur Text-Werte, und mindestens
 // ein Schlüssel, den die App selbst schreibt. Eine beliebige andere JSON-Datei wird abgelehnt.
 function extractBackupData(payload) {
@@ -1272,6 +1297,49 @@ const COLOR_DEFICIT_LIGHT = "rgba(226,83,74,0.5)";
 const DEFAULT_MATRIX = { calDiv: 40, fatDiv: 12, proteinDiv: 10, fiberDiv: 5, fiberCap: 4, bonusCapPct: 50, sportFactor: 0.5 };
 const SAMPLE_FOOD = { calories: 250, fat: 10, protein: 20, fiber: 3 };
 
+// ---------- Zeiträume des Gewichtsdiagramms ----------
+// Gleitende Zeiträume enden immer heute (oder um ganze Zeiträume zurückgeblättert) — beim
+// Monatswechsel beginnt das Diagramm also nicht wieder leer, sondern schiebt sich weiter.
+// Der Kalendermonat bleibt für den Rückblick "Wie lief der September?".
+const WEIGHT_RANGES = [
+  { id: "1m", label: "1 M", months: 1 },
+  { id: "2m", label: "2 M", months: 2 },
+  { id: "3m", label: "3 M", months: 3 },
+  { id: "6m", label: "6 M", months: 6 },
+  { id: "12m", label: "12 M", months: 12 },
+  { id: "kalender", label: "Monat", months: 0 },
+];
+// Monate addieren, ohne über das Monatsende hinauszulaufen (31. März − 1 Monat = 28./29. Februar).
+function addMonthsClamped(date, n) {
+  const d = new Date(date.getFullYear(), date.getMonth() + n, 1);
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(date.getDate(), last));
+  return d;
+}
+function weightRangeBounds(rangeId, offset, calendarMonth, todayKey, withForecast) {
+  const today = new Date(todayKey + "T00:00:00");
+  if (rangeId === "kalender") {
+    const start = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+    const end = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
+    return { start, end, daily: true, calendar: true };
+  }
+  const r = WEIGHT_RANGES.find((x) => x.id === rangeId) || WEIGHT_RANGES[0];
+  const lastDay = addMonthsClamped(today, -r.months * offset);
+  const start = addMonthsClamped(lastDay, -r.months);
+  start.setDate(start.getDate() + 1);
+  // Im aktuellen Zeitraum läuft die Prognose ein Stück (ca. 20 % der Spanne) über heute hinaus.
+  const end = new Date(lastDay);
+  if (offset === 0 && withForecast) end.setDate(end.getDate() + Math.round(r.months * 30 * 0.2));
+  return { start, end, daily: r.months <= 3, calendar: false };
+}
+function formatDayMonth(d) { return `${d.getDate()}.${d.getMonth() + 1}.`; }
+function weightRangeTitle(bounds) {
+  if (bounds.calendar) return bounds.start.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+  const opts = { day: "numeric", month: "short" };
+  const sameYear = bounds.start.getFullYear() === bounds.end.getFullYear();
+  return `${bounds.start.toLocaleDateString("de-DE", sameYear ? opts : { ...opts, year: "numeric" })} – ${bounds.end.toLocaleDateString("de-DE", { ...opts, year: "numeric" })}`;
+}
+
 // ---------- Alltagseinheiten (Rezeptbaukasten) & Flüssigkeitseinheiten ----------
 // Generischer Fallback in Gramm, falls ein Lebensmittel keine eigene units-Angabe hat.
 // Richtwerte für gestrichene Löffel bei "durchschnittlicher" Dichte; bewusst grobe Näherung.
@@ -1482,14 +1550,14 @@ const TOUR_STEPS = [
   { id: "ernaehrung-wasser", tab: "ernaehrung", ref: "ernaehrung-wasser", title: "T\u00e4gliche Fl\u00fcssigkeit", text: "Der Balken hat zwei Zonen: bis zur 1,5-Liter-Marke \u2014 dem DGE-Richtwert f\u00fcr Getr\u00e4nke \u2014 und dar\u00fcber hinaus bis zu deinem pers\u00f6nlichen Ziel. Das rechnet 25 ml je kg K\u00f6rpergewicht, und sobald du Sport eintr\u00e4gst, kommen je nach Intensit\u00e4t und Dauer 0,3 bis 0,8 Liter pro Stunde automatisch dazu. Getr\u00e4nke tr\u00e4gst du im Heute-Tab \u00fcber den Plus-Button ein; sie erscheinen dort als eigene Gruppe. Wasser, unges\u00fc\u00dfter Tee, Kaffee und Schorlen z\u00e4hlen hier mit \u2014 Alkohol, S\u00e4fte und Softdrinks nicht, in die Kalorienbilanz gehen sie trotzdem ein." },
   { id: "ernaehrung-obstgemuese", tab: "ernaehrung", ref: "ernaehrung-obstgemuese", title: "Obst & Gem\u00fcse", text: "Dieser Balken bef\u00fcllt sich automatisch aus deinen heutigen Mahlzeiten, sobald ein Lebensmittel als \"Obst\" oder \"Gem\u00fcse\" kategorisiert ist \u2014 kein zus\u00e4tzliches Eintragen n\u00f6tig. Ziel: 650 g pro Tag (DGE \"5 am Tag\")." },
   { id: "ernaehrung-makros", tab: "ernaehrung", ref: "ernaehrung-makros", title: "Pers\u00f6nliche N\u00e4hrstoff-Ziele", text: "Protein, Fett, Kohlenhydrate und Ballaststoffe im Vergleich zu Richtwerten, die auf dein K\u00f6rpergewicht und dein Kalorienziel zugeschnitten sind \u2014 nicht nur ein grober Prozentsatz wie im Tages-Kreis. Unter dem Fett siehst du die ges\u00e4ttigten Fetts\u00e4uren mit ihrer Obergrenze (max. 10 % der Energie), wie gut deine Fettqualit\u00e4t heute ist und f\u00fcr welchen Anteil des Fetts der Wert \u00fcberhaupt erfasst ist." },
-  { id: "lebensmittel-search", tab: "lebensmittel", ref: "lebensmittel-search", forceOpenProfilSection: "search", title: "Datenbanksuche", text: "Durchsuche die mitgelieferte Datenbank und deine eigenen Eintr\u00e4ge. Das Herz macht ein Lebensmittel zum Favoriten f\u00fcr die Schnellauswahl, das Plus tr\u00e4gt es direkt f\u00fcr heute ein. Nichts gefunden? Dann legst du es gleich hier neu an." },
+  { id: "lebensmittel-search", tab: "lebensmittel", ref: "lebensmittel-search", forceOpenProfilSection: "search", title: "Datenbanksuche", text: "Durchsuche die mitgelieferte Datenbank und deine eigenen Eintr\u00e4ge. Das Herz macht ein Lebensmittel zum Favoriten f\u00fcr die Schnellauswahl, das Plus tr\u00e4gt es direkt f\u00fcr heute ein. Mit fester Menge (z. B. 2 EL) merkst du es dir im Eintragsfenster: erst Menge einstellen, dann \u201eals Favorit merken\u201c. Nichts gefunden? Dann legst du es gleich hier neu an." },
   { id: "lebensmittel-foods", tab: "lebensmittel", ref: "lebensmittel-foods", forceOpenProfilSection: "foods", title: "Eigene Lebensmittel", text: "Alle selbst angelegten Lebensmittel landen hier \u2014 bearbeitbar \u00fcber den Stift, l\u00f6schbar \u00fcber den Papierkorb. Bei Getr\u00e4nken legst du hier auch fest, ob sie zur Fl\u00fcssigkeitsbilanz z\u00e4hlen und ob sie alkoholisch sind." },
   { id: "lebensmittel-dishes", tab: "lebensmittel", ref: "lebensmittel-dishes", forceOpenProfilSection: "dishes", title: "Eigene Gerichte", text: "Tr\u00e4gst du etwas \u00fcber \"Punkte direkt\" ein, merkt sich die App Name und Punktzahl automatisch hier \u2014 beim n\u00e4chsten Mal findest du das Gericht \u00fcber die Suche wieder. L\u00f6schen geht \u00fcber den Papierkorb." },
   { id: "profil-rezept", tab: "lebensmittel", ref: "profil-rezept", forceOpenProfilSection: "recipeBuilder", title: "Rezeptbaukasten", text: "Bau dir Gerichte aus mehreren Zutaten zusammen, inklusive Alltagseinheiten wie Essl\u00f6ffel oder Scheibe. Das Ergebnis wird als eigenes Lebensmittel gespeichert und l\u00e4sst sich sp\u00e4ter jederzeit wieder \u00f6ffnen und \u00e4ndern." },
   { id: "verlauf-summary", tab: "verlauf", forceVerlaufSubTab: "woche", ref: "verlauf-summary", title: "Wochenzusammenfassung", text: "Standardm\u00e4\u00dfig eingeklappt \u2014 bei Bedarf antippen f\u00fcr die Wochensumme, den Flexpoint-Verbrauch und, falls erfasst, deine Gewichts- und Bauchumfang-Durchschnitte im Vergleich zur Vorwoche." },
   { id: "verlauf-days", tab: "verlauf", forceVerlaufSubTab: "woche", ref: "verlauf-days", title: "Tage antippen", text: "Ein Tag l\u00e4sst sich antippen, um die Eintr\u00e4ge einzusehen, nachtr\u00e4glich zu bearbeiten oder \u2014 falls du mal etwas vergessen hast \u2014 nachzutragen. Auch hier ist alles nach Mahlzeiten gruppiert. \"Kein Eintrag\" bedeutet: an diesem Tag wurde nichts gespeichert, im Unterschied zu einem Tag mit tats\u00e4chlich 0 Punkten." },
   { id: "gewicht-kacheln", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-kacheln", title: "Gewicht & Ma\u00dfe", text: "Der zweite Reiter im Verlauf. Ganz oben dein aktueller Stand: letzter gemessener Wert, Ver\u00e4nderung der letzten 30 Tage und Abstand zum Zielgewicht. Ein Tipp auf eine Kachel \u00f6ffnet direkt die Eingabe." },
-  { id: "gewicht-verlauf", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-verlauf", title: "Diagramm & Prognose", text: "Gewicht, Bauchumfang und dein tats\u00e4chliches Kaloriendefizit auf einer Zeitachse; antippen zeigt es gro\u00df. Dar\u00fcber schaltest du zwischen Monat und Jahr, darunter findest du Trend und Prognose (ab etwa 6 Messungen \u00fcber 2 Wochen) sowie unter \"Anzeige & Linien\" die Umschaltung auf eine Tabelle und die Auswahl, welche Linien du sehen willst." },
+  { id: "gewicht-verlauf", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-verlauf", title: "Diagramm & Prognose", text: "Gewicht, Bauchumfang und dein tats\u00e4chliches Kaloriendefizit auf einer Zeitachse; antippen zeigt es gro\u00df. Dar\u00fcber w\u00e4hlst du den Zeitraum: 1, 2, 3, 6 oder 12 Monate bis heute \u2014 das Diagramm schiebt sich jeden Tag weiter, ab 6 Monaten mit Wochenmitteln \u2014 oder einen festen Kalendermonat f\u00fcr den R\u00fcckblick. Darunter findest du Trend und Prognose (ab etwa 6 Messungen \u00fcber 2 Wochen) sowie unter \"Anzeige & Linien\" die Umschaltung auf eine Tabelle und die Auswahl, welche Linien du sehen willst." },
   { id: "gewicht-eingabe", tab: "verlauf", forceVerlaufSubTab: "gewicht", ref: "gewicht-eingabe", title: "Werte eintragen", text: "Derselbe runde Plus-Button wie beim Essen: Er \u00f6ffnet die Eingabe f\u00fcr Gewicht und Bauchumfang samt Zielwerten. Den Bauchumfang kannst du dort auch ganz ausblenden, wenn du ihn nicht mitf\u00fchren willst." },
   { id: "profil-grund", tab: "profil", ref: "profil-grund", forceOpenProfilSection: "profil", title: "Grundlagen", text: "Gr\u00f6\u00dfe, Gewicht, Alter und Aktivit\u00e4tslevel flie\u00dfen in deine t\u00e4gliche Punktezahl ein. Hier stellst du auch die individuelle Reset-Uhrzeit ein, falls dein Tag nicht um Mitternacht endet." },
   { id: "profil-sattmacher", tab: "profil", ref: "profil-sattmacher", forceOpenProfilSection: "profil", title: "Sattmacher-Modus", text: "Schaltest du diesen Modus ein, z\u00e4hlen Obst und Gem\u00fcse unabh\u00e4ngig von der Menge 0 Punkte, und klassische Beilagen wie Reis, Nudeln oder Kartoffeln sind auf maximal 7 Punkte gedeckelt. Die N\u00e4hrwerte bleiben dabei immer ehrlich sichtbar \u2014 nur die Punktzahl \u00e4ndert sich. Mehr Details \u00fcber das \u24d8 neben dem Schalter." },
@@ -1761,11 +1829,18 @@ function NutritionPointsTracker() {
   const [targetWaistInput, setTargetWaistInput] = useState("");
   const [weightChartData, setWeightChartData] = useState([]);
   const [weightChartLoading, setWeightChartLoading] = useState(true);
-  const [weightViewMode, setWeightViewMode] = useState("monat");
+  // Zeitraum des Gewichtsdiagramms (siehe WEIGHT_RANGES); wird mit den Diagramm-Einstellungen
+  // gespeichert, damit beim nächsten Öffnen der zuletzt gewählte Zeitraum erscheint.
+  const [weightRange, setWeightRange] = useState("1m");
+  const [weightRangeOffset, setWeightRangeOffset] = useState(0);
   const [weightViewMonth, setWeightViewMonth] = useState(() => { const d = new Date(); d.setDate(1); return d; });
-  const [weightViewYear, setWeightViewYear] = useState(() => new Date().getFullYear());
+  // Tagesauflösung bis 3 Monate und im Kalendermonat, darüber Wochenmittel.
+  const weightDaily = weightRange === "kalender" || weightRange === "1m" || weightRange === "2m" || weightRange === "3m";
   const [waistLog, setWaistLog] = useState([]);
-  const [favoriteFoodIds, setFavoriteFoodIds] = useState([]);
+  // Favoriten mit Menge (siehe favoriteAmount). favoriteFoodIds dient den Herz-Symbolen in den
+  // Listen: Dort ist das Herz ausgefüllt, sobald es irgendeinen Favoriten für das Lebensmittel gibt.
+  const [favorites, setFavorites] = useState([]);
+  const favoriteFoodIds = favorites.map((f) => f.foodId);
   // Zuletzt eingetragene Lebensmittel (nur IDs, neueste zuerst) — die schnellste Wiedervorlage,
   // weil sich die meisten Einträge im Alltag wiederholen.
   const [recentFoodIds, setRecentFoodIds] = useState([]);
@@ -1924,6 +1999,7 @@ function NutritionPointsTracker() {
           if (typeof parsed.chartPrefs.showWaistLine === "boolean") setShowWaistLine(parsed.chartPrefs.showWaistLine);
           if (typeof parsed.chartPrefs.waistEnabled === "boolean") setWaistEnabled(parsed.chartPrefs.waistEnabled);
           if (typeof parsed.chartPrefs.showDeficitLine === "boolean") setShowDeficitLine(parsed.chartPrefs.showDeficitLine);
+          if (WEIGHT_RANGES.some((r) => r.id === parsed.chartPrefs.range)) setWeightRange(parsed.chartPrefs.range);
         }
         if (parsed.uiPrefs) {
           if (parsed.uiPrefs.themeId) setThemeId(parsed.uiPrefs.themeId);
@@ -1972,9 +2048,12 @@ function NutritionPointsTracker() {
     if (rec && rec.value) {
       try { setRecentFoodIds(JSON.parse(rec.value)); } catch (e) {}
     }
+    const favs = storageGet("favorites");
     const fav = storageGet("favoriteFoodIds");
-    if (fav && fav.value) {
-      try { setFavoriteFoodIds(JSON.parse(fav.value)); } catch (e) {}
+    if (favs && favs.value) {
+      try { setFavorites(normalizeFavorites(JSON.parse(favs.value))); } catch (e) {}
+    } else if (fav && fav.value) {
+      try { setFavorites(migrateFavoriteIds(JSON.parse(fav.value))); } catch (e) {}
     }
 
     setLoaded(true);
@@ -2010,9 +2089,9 @@ function NutritionPointsTracker() {
 
   useEffect(() => {
     if (!loaded) return;
-    const ok = storageSet("settings", JSON.stringify({ profile, matrix, chartPrefs: { showWeightLine, showTrendLine, showWaistLine, waistEnabled, showDeficitLine }, uiPrefs: { themeId, fontId } }));
+    const ok = storageSet("settings", JSON.stringify({ profile, matrix, chartPrefs: { showWeightLine, showTrendLine, showWaistLine, waistEnabled, showDeficitLine, range: weightRange }, uiPrefs: { themeId, fontId } }));
     setSaveError(!ok);
-  }, [profile, matrix, showWeightLine, showTrendLine, showWaistLine, waistEnabled, showDeficitLine, themeId, fontId, loaded]);
+  }, [profile, matrix, showWeightLine, showTrendLine, showWaistLine, waistEnabled, showDeficitLine, weightRange, themeId, fontId, loaded]);
 
   // Tageswechsel zur Laufzeit: Als PWA bleibt die App oft über Mitternacht (bzw. über die
   // eingestellte Reset-Zeit) hinweg geöffnet. Ohne diese Prüfung liefen die Einträge des alten
@@ -2121,10 +2200,10 @@ function NutritionPointsTracker() {
   const { weightDomain, waistDomain, deficitDomain } = useMemo(() => {
     const weightValues = [...weightRawValues];
     if (showWeightTarget && profile.targetWeightKg) weightValues.push(Number(profile.targetWeightKg));
-    let wDomain = computeAxisDomain(weightValues, 0.15, weightViewMode === "monat" ? 0.8 : 1.5, false);
+    let wDomain = computeAxisDomain(weightValues, 0.15, weightDaily ? 0.8 : 1.5, false);
     const waistValues = [...waistRawValues];
     if (showWaistTarget && profile.targetWaistCm) waistValues.push(Number(profile.targetWaistCm));
-    let waDomain = computeAxisDomain(waistValues, 0.15, weightViewMode === "monat" ? 0.8 : 1.5, false);
+    let waDomain = computeAxisDomain(waistValues, 0.15, weightDaily ? 0.8 : 1.5, false);
     if (bothSizesShown && wDomain[0] !== null) {
       const range = wDomain[1] - wDomain[0];
       wDomain = [round1(wDomain[0] - range * 0.45), wDomain[1]];
@@ -2145,7 +2224,7 @@ function NutritionPointsTracker() {
     dDomain = applyZoomToDomain(dDomain, deficitRawValues, deficitZoom);
     return { weightDomain: wDomain, waistDomain: waDomain, deficitDomain: dDomain };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weightChartData, bothSizesShown, weightViewMode, showWeightTarget, profile.targetWeightKg,
+  }, [weightChartData, bothSizesShown, weightDaily, showWeightTarget, profile.targetWeightKg,
       showWaistTarget, profile.targetWaistCm, showDeficitTarget, profile.deficitPercent,
       weightZoom, waistZoom, deficitZoom]);
 
@@ -2390,9 +2469,9 @@ function NutritionPointsTracker() {
 
   useEffect(() => {
     if (!loaded) return;
-    const ok = storageSet("favoriteFoodIds", JSON.stringify(favoriteFoodIds));
+    const ok = storageSet("favorites", JSON.stringify(favorites));
     setSaveError(!ok);
-  }, [favoriteFoodIds, loaded]);
+  }, [favorites, loaded]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -2443,172 +2522,105 @@ function NutritionPointsTracker() {
   useEffect(() => {
     if (!loaded) return;
     setWeightChartLoading(true);
-    let points = [];
-
-    if (weightViewMode === "monat") {
-      const year = weightViewMonth.getFullYear();
-      const month = weightViewMonth.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-      const dailyWeightMap = {};
-      const dailyWaistMap = {};
-      const extendedStart = new Date(year, month, 1 - 7);
-      const extendedEnd = new Date(year, month, daysInMonth);
-      for (let d = new Date(extendedStart); d <= extendedEnd; d.setDate(d.getDate() + 1)) {
-        const key = dateKeyFor(d);
-        const dayEntries = weightLog.filter((w) => dateKeyFor(new Date(w.timestamp)) === key);
-        dailyWeightMap[key] = dayEntries.length > 0 ? round1(dayEntries.reduce((s, w) => s + w.weightKg, 0) / dayEntries.length) : null;
-        const waistEntries = waistLog.filter((w) => dateKeyFor(new Date(w.timestamp)) === key);
-        dailyWaistMap[key] = waistEntries.length > 0 ? round1(waistEntries.reduce((s, w) => s + w.waistCm, 0) / waistEntries.length) : null;
+    const bounds = weightRangeBounds(weightRange, weightRangeOffset, weightViewMonth, activeDayKey,
+      !!((trend && !trend.insufficientData) || (waistTrend && !waistTrend.insufficientData)));
+    const today = new Date(activeDayKey + "T00:00:00");
+    const todayKeyChart = activeDayKey;
+    // Messwerte je Tag einmal vorsortieren statt für jeden Tag das ganze Log zu durchsuchen.
+    const weightByDay = {};
+    for (const w of weightLog) { const k = dateKeyFor(new Date(w.timestamp)); (weightByDay[k] = weightByDay[k] || []).push(Number(w.weightKg)); }
+    const waistByDay = {};
+    for (const w of waistLog) { const k = dateKeyFor(new Date(w.timestamp)); (waistByDay[k] = waistByDay[k] || []).push(Number(w.waistCm)); }
+    const dayAvg = (map, k) => (map[k] && map[k].length > 0 ? round1(map[k].reduce((a, b) => a + b, 0) / map[k].length) : null);
+    const movingAvg = (map, date) => {
+      const vals = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(date);
+        d.setDate(d.getDate() - i);
+        const v = dayAvg(map, dateKeyFor(d));
+        if (v !== null) vals.push(v);
       }
-      function movingAverageFromMap(map, targetDate) {
-        const vals = [];
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(targetDate);
-          d.setDate(d.getDate() - i);
-          const v = map[dateKeyFor(d)];
-          if (v !== null && v !== undefined) vals.push(v);
-        }
-        return vals.length > 0 ? round1(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
-      }
-
-      const now1 = new Date();
-      now1.setHours(0, 0, 0, 0);
-      const isThisMonth = year === now1.getFullYear() && month === now1.getMonth();
-      const trendStopDate =
-        trend && !trend.insufficientData && trend.targetDate && trend.status === "on_track"
-          ? trend.targetDate
-          : new Date(year, month + 1, 0);
-      const waistTrendStopDate =
-        waistTrend && !waistTrend.insufficientData && waistTrend.targetDate && waistTrend.status === "on_track"
-          ? waistTrend.targetDate
-          : new Date(year, month + 1, 0);
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const d = new Date(year, month, day);
-        const key = dateKeyFor(d);
-        const weightKg = dailyWeightMap[key];
-        const weightMA = d <= now1 ? movingAverageFromMap(dailyWeightMap, d) : null;
-        const waistCm = dailyWaistMap[key];
-        const waistMA = d <= now1 ? movingAverageFromMap(dailyWaistMap, d) : null;
-        let weightTrendLine = null;
-        if (isThisMonth && trend && !trend.insufficientData && d >= now1 && d <= trendStopDate) {
-          const diffDays = Math.round((d - now1) / 86400000);
-          weightTrendLine = round1(trend.predictedToday + trend.slope * diffDays);
-        }
-        let waistTrendLine = null;
-        if (isThisMonth && waistTrend && !waistTrend.insufficientData && d >= now1 && d <= waistTrendStopDate) {
-          const diffDays = Math.round((d - now1) / 86400000);
-          waistTrendLine = round1(waistTrend.predictedToday + waistTrend.slope * diffDays);
-        }
-        let pointsUsed = null;
-        let dayEffectiveTarget = null;
-        if (key === activeDayKey) {
-          // Der heutige Tag ist noch nicht abgeschlossen — er würde als unvollständiger, oft
-          // extrem wirkender Datenpunkt (z.B. direkt nach dem Frühstück ein riesiges "Defizit")
-          // die Grafik verzerren. Er erscheint daher erst ab morgen, wenn der Tag vollständig ist.
-        } else {
-          const res = storageGet(`log:${key}`);
-          if (res && res.value) {
-            try {
-              const parsed = JSON.parse(res.value);
-              const list = Array.isArray(parsed) ? parsed : parsed.entries || [];
-              if (list.length > 0) {
-                pointsUsed = list.reduce((s, e) => s + e.points, 0);
-                const baseTarget = !Array.isArray(parsed) ? parsed.target : null;
-                const sportBonusDay = !Array.isArray(parsed) && parsed.sport && parsed.sport.done ? Number(parsed.sport.bonusPoints) || 0 : 0;
-                dayEffectiveTarget = baseTarget !== null ? baseTarget + sportBonusDay : null;
-              }
-            } catch (e) {}
+      return vals.length > 0 ? round1(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+    };
+    const trendStop = (t) => (t && !t.insufficientData && t.targetDate && t.status === "on_track" ? t.targetDate : bounds.end);
+    const trendAt = (t, date) => {
+      if (!t || t.insufficientData || date < today || date > trendStop(t)) return null;
+      const diffDays = Math.round((date - today) / 86400000);
+      return round1(t.predictedToday + t.slope * diffDays);
+    };
+    // Punkte und Defizit eines abgeschlossenen Tages (der laufende Tag zählt erst ab morgen mit).
+    const dayDeficit = (key) => {
+      if (key >= todayKeyChart) return { pointsUsed: null, deficitPercent: null };
+      try {
+        const res = storageGet(`log:${key}`);
+        if (res && res.value) {
+          const parsed = JSON.parse(res.value);
+          const list = Array.isArray(parsed) ? parsed : parsed.entries || [];
+          if (list.length > 0) {
+            const used = list.reduce((s, e) => s + e.points, 0);
+            const baseTarget = !Array.isArray(parsed) ? parsed.target : null;
+            const sportBonusDay = !Array.isArray(parsed) && parsed.sport && parsed.sport.done ? Number(parsed.sport.bonusPoints) || 0 : 0;
+            const dayTarget = baseTarget !== null && baseTarget !== undefined ? baseTarget + sportBonusDay : null;
+            return { pointsUsed: used, deficitPercent: computeDayDeficitPercent(used, dayTarget, profile.deficitPercent) };
           }
         }
-        const deficitPercent = computeDayDeficitPercent(pointsUsed, dayEffectiveTarget, profile.deficitPercent);
-        points.push({ date: key, label: String(day), weightKg, weightMA, waistCm, waistMA, weightTrendLine, waistTrendLine, pointsUsed, deficitPercent });
+      } catch (e) {}
+      return { pointsUsed: null, deficitPercent: null };
+    };
+    const points = [];
+    if (bounds.daily) {
+      for (let d = new Date(bounds.start); d <= bounds.end; d.setDate(d.getDate() + 1)) {
+        const date = new Date(d);
+        const key = dateKeyFor(date);
+        const past = date <= today;
+        const def = dayDeficit(key);
+        points.push({
+          date: key,
+          label: bounds.calendar ? String(date.getDate()) : formatDayMonth(date),
+          weightKg: dayAvg(weightByDay, key), weightMA: past ? movingAvg(weightByDay, date) : null,
+          waistCm: dayAvg(waistByDay, key), waistMA: past ? movingAvg(waistByDay, date) : null,
+          weightTrendLine: trendAt(trend, date), waistTrendLine: trendAt(waistTrend, date),
+          pointsUsed: def.pointsUsed, deficitPercent: def.deficitPercent,
+        });
       }
     } else {
-      const year = weightViewYear;
-      const now1 = new Date();
-      now1.setHours(0, 0, 0, 0);
-      const isThisYear = year === now1.getFullYear();
-      const trendStopMonth =
-        trend && !trend.insufficientData && trend.targetDate && trend.status === "on_track" && trend.targetDate.getFullYear() === year
-          ? trend.targetDate.getMonth()
-          : 11;
-      const waistTrendStopMonth =
-        waistTrend && !waistTrend.insufficientData && waistTrend.targetDate && waistTrend.status === "on_track" && waistTrend.targetDate.getFullYear() === year
-          ? waistTrend.targetDate.getMonth()
-          : 11;
-
-      for (let month = 0; month < 12; month++) {
-        const monthStart = new Date(year, month, 1);
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const monthEntries = weightLog.filter((w) => {
-          const wd = new Date(w.timestamp);
-          return wd.getFullYear() === year && wd.getMonth() === month;
-        });
-        const weightKg = monthEntries.length > 0 ? round1(monthEntries.reduce((s, w) => s + w.weightKg, 0) / monthEntries.length) : null;
-        const monthWaistEntries = waistLog.filter((w) => {
-          const wd = new Date(w.timestamp);
-          return wd.getFullYear() === year && wd.getMonth() === month;
-        });
-        const waistCm = monthWaistEntries.length > 0 ? round1(monthWaistEntries.reduce((s, w) => s + w.waistCm, 0) / monthWaistEntries.length) : null;
-
-        let weightTrendLine = null;
-        if (isThisYear && trend && !trend.insufficientData && month >= now1.getMonth() && month <= trendStopMonth) {
-          const midMonth = new Date(year, month, 15);
-          const diffDays = Math.round((midMonth - now1) / 86400000);
-          weightTrendLine = round1(trend.predictedToday + trend.slope * diffDays);
-        }
-        let waistTrendLine = null;
-        if (isThisYear && waistTrend && !waistTrend.insufficientData && month >= now1.getMonth() && month <= waistTrendStopMonth) {
-          const midMonth = new Date(year, month, 15);
-          const diffDays = Math.round((midMonth - now1) / 86400000);
-          waistTrendLine = round1(waistTrend.predictedToday + waistTrend.slope * diffDays);
-        }
-
-        const dailyValues = [];
-        for (let day = 1; day <= daysInMonth; day++) {
-          const d = new Date(year, month, day);
+      // Ab 6 Monaten: Wochenmittel (Montag bis Sonntag), sonst wird die Kurve auf dem Handy unruhig.
+      for (let ws = mondayOf(bounds.start); ws <= bounds.end; ws.setDate(ws.getDate() + 7)) {
+        const weekStart = new Date(ws);
+        const wVals = [], waVals = [], defVals = [], ptVals = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(weekStart);
+          d.setDate(weekStart.getDate() + i);
+          if (d < bounds.start || d > today) continue;
           const key = dateKeyFor(d);
-          if (key === activeDayKey) {
-            // Der heutige Tag ist noch nicht abgeschlossen und erscheint daher erst ab morgen als
-            // Datenpunkt — sonst würde ein unvollständiger Tag (z.B. direkt nach dem Frühstück) den
-            // Monatsdurchschnitt verfälschen und optisch wie ein extremer Ausreißer wirken.
-            dailyValues.push({ pointsUsed: null, deficitPercent: null });
-            continue;
-          }
-          const res = storageGet(`log:${key}`);
-          if (res && res.value) {
-            try {
-              const parsed = JSON.parse(res.value);
-              const list = Array.isArray(parsed) ? parsed : parsed.entries || [];
-              if (list.length > 0) {
-                const dayPointsUsed = list.reduce((s, e) => s + e.points, 0);
-                const baseTarget = !Array.isArray(parsed) ? parsed.target : null;
-                const sportBonusDay = !Array.isArray(parsed) && parsed.sport && parsed.sport.done ? Number(parsed.sport.bonusPoints) || 0 : 0;
-                const dayEffectiveTarget = baseTarget !== null ? baseTarget + sportBonusDay : null;
-                const dayDeficit = computeDayDeficitPercent(dayPointsUsed, dayEffectiveTarget, profile.deficitPercent);
-                dailyValues.push({ pointsUsed: dayPointsUsed, deficitPercent: dayDeficit });
-              } else {
-                dailyValues.push({ pointsUsed: null, deficitPercent: null });
-              }
-            } catch (e) { dailyValues.push({ pointsUsed: null, deficitPercent: null }); }
-          } else {
-            dailyValues.push({ pointsUsed: null, deficitPercent: null });
-          }
+          if (weightByDay[key]) wVals.push(...weightByDay[key]);
+          if (waistByDay[key]) waVals.push(...waistByDay[key]);
+          const def = dayDeficit(key);
+          if (def.deficitPercent !== null) defVals.push(def.deficitPercent);
+          if (def.pointsUsed !== null) ptVals.push(def.pointsUsed);
         }
-        const withData = dailyValues.filter((v) => v.pointsUsed !== null);
-        const pointsUsed = withData.length > 0 ? Math.round(withData.reduce((a, b) => a + b.pointsUsed, 0) / withData.length) : null;
-        const withDeficit = dailyValues.filter((v) => v.deficitPercent !== null);
-        const deficitPercent = withDeficit.length > 0 ? round1(withDeficit.reduce((a, b) => a + b.deficitPercent, 0) / withDeficit.length) : null;
-        points.push({ date: `${year}-${String(month + 1).padStart(2, "0")}`, label: monthStart.toLocaleDateString("de-DE", { month: "short" }), weightKg, waistCm, weightTrendLine, waistTrendLine, pointsUsed, deficitPercent });
+        const mean = (arr) => (arr.length > 0 ? round1(arr.reduce((a, b) => a + b, 0) / arr.length) : null);
+        const mid = new Date(weekStart);
+        mid.setDate(weekStart.getDate() + 3);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        // Die Prognose beginnt in der laufenden Woche bei "heute" und geht dann wochenweise weiter.
+        const trendDate = weekEnd >= today ? (mid < today ? today : mid) : null;
+        points.push({
+          date: dateKeyFor(weekStart),
+          label: formatDayMonth(weekStart),
+          weightKg: mean(wVals), waistCm: mean(waVals),
+          weightTrendLine: trendDate ? trendAt(trend, trendDate) : null,
+          waistTrendLine: trendDate ? trendAt(waistTrend, trendDate) : null,
+          pointsUsed: ptVals.length > 0 ? Math.round(ptVals.reduce((a, b) => a + b, 0) / ptVals.length) : null,
+          deficitPercent: mean(defVals),
+        });
       }
     }
-
     setWeightChartData(points);
     setWeightChartLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weightViewMode, weightViewMonth, weightViewYear, weightLog, waistLog, trend, waistTrend, loaded, profile.dayResetMinutes, activeDayKey, dataRevision]);
+  }, [weightRange, weightRangeOffset, weightViewMonth, weightLog, waistLog, trend, waistTrend, loaded, profile.dayResetMinutes, profile.deficitPercent, activeDayKey, dataRevision]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -2642,7 +2654,7 @@ function NutritionPointsTracker() {
 
   function buildWeightChartConfig() {
     const c = currentTheme.vars;
-    const isMonthView = weightViewMode === "monat";
+    const isMonthView = weightDaily;
     const datasets = [];
 
     if (showWeightLine && showWeightTarget && profile.targetWeightKg) {
@@ -2652,7 +2664,7 @@ function NutritionPointsTracker() {
       datasets.push({ label: "Gewicht (roh)", data: weightChartData.map((d) => d.weightKg), borderColor: hexToRgba(COLOR_WEIGHT, 0.4), backgroundColor: hexToRgba(COLOR_WEIGHT, 0.4), borderWidth: 1.5, spanGaps: true, yAxisID: "weight", tension: 0.3, pointRadius: 2 });
       datasets.push({ label: "Ø 7 Tage", data: weightChartData.map((d) => d.weightMA), borderColor: COLOR_WEIGHT, backgroundColor: COLOR_WEIGHT, borderWidth: 2.5, spanGaps: true, yAxisID: "weight", tension: 0.3, pointRadius: 0 });
     } else if (showWeightLine) {
-      datasets.push({ label: "Gewicht (kg, Ø je Monat)", data: weightChartData.map((d) => d.weightKg), borderColor: COLOR_WEIGHT, backgroundColor: COLOR_WEIGHT, borderWidth: 2, spanGaps: true, yAxisID: "weight", tension: 0.3, pointRadius: 3 });
+      datasets.push({ label: "Gewicht (kg, Ø je Woche)", data: weightChartData.map((d) => d.weightKg), borderColor: COLOR_WEIGHT, backgroundColor: COLOR_WEIGHT, borderWidth: 2, spanGaps: true, yAxisID: "weight", tension: 0.3, pointRadius: 3 });
     }
     if (showWeightLine && showTrendLine && trend && !trend.insufficientData) {
       datasets.push({ label: "Prognose Gewicht", data: weightChartData.map((d) => d.weightTrendLine), borderColor: COLOR_WEIGHT, backgroundColor: COLOR_WEIGHT, borderWidth: 1.5, borderDash: [5, 4], spanGaps: true, pointRadius: 0, yAxisID: "weight", tension: 0.3 });
@@ -2677,7 +2689,7 @@ function NutritionPointsTracker() {
     }
 
     const scales = {
-      x: { ticks: { color: c.chalkDim, font: { size: 10 } }, grid: { color: c.line } },
+      x: { ticks: { color: c.chalkDim, font: { size: 10 }, maxRotation: 0, autoSkip: true, autoSkipPadding: 10 }, grid: { color: c.line } },
     };
     if (showWeightLine) {
       scales.weight = { type: "linear", position: "left", min: weightDomain[0] ?? undefined, max: weightDomain[1] ?? undefined, ticks: { color: COLOR_WEIGHT, font: { size: 9 }, callback: (v) => `${v}kg` }, grid: { color: c.line } };
@@ -2724,7 +2736,7 @@ function NutritionPointsTracker() {
     // das Canvas existiert also erst NACH dem Wechsel auf diesen Tab. Ohne "tab" hier würde der
     // Effekt beim Wechsel nicht erneut laufen und das frisch gemountete (leere) Canvas nie befüllt.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, verlaufSubTab, weightViewDisplay, weightChartData, weightViewMode, profile.targetWeightKg, profile.targetWaistCm, profile.deficitPercent, trend, waistTrend, showWeightLine, showTrendLine, showWeightTarget, waistEnabled, showWaistLine, showWaistTarget, showWaistTrendLine, showDeficitLine, showDeficitTarget, currentTheme, weightDomain, waistDomain, deficitDomain]);
+  }, [tab, verlaufSubTab, weightViewDisplay, weightChartData, weightDaily, profile.targetWeightKg, profile.targetWaistCm, profile.deficitPercent, trend, waistTrend, showWeightLine, showTrendLine, showWeightTarget, waistEnabled, showWaistLine, showWaistTarget, showWaistTrendLine, showDeficitLine, showDeficitTarget, currentTheme, weightDomain, waistDomain, deficitDomain]);
 
   useEffect(() => {
     if (!chartZoomed) return;
@@ -2734,7 +2746,7 @@ function NutritionPointsTracker() {
     const ctx = weightChartZoomCanvasRef.current.getContext("2d");
     weightChartZoomInstanceRef.current = new Chart(ctx, buildWeightChartConfig());
     return () => { if (weightChartZoomInstanceRef.current) { weightChartZoomInstanceRef.current.destroy(); weightChartZoomInstanceRef.current = null; } };
-  }, [chartZoomed, weightChartData, weightViewMode, profile.targetWeightKg, profile.targetWaistCm, profile.deficitPercent, trend, waistTrend, showWeightLine, showTrendLine, showWeightTarget, waistEnabled, showWaistLine, showWaistTarget, showWaistTrendLine, showDeficitLine, showDeficitTarget, currentTheme, weightDomain, waistDomain, deficitDomain]);
+  }, [chartZoomed, weightChartData, weightDaily, profile.targetWeightKg, profile.targetWaistCm, profile.deficitPercent, trend, waistTrend, showWeightLine, showTrendLine, showWeightTarget, waistEnabled, showWaistLine, showWaistTarget, showWaistTrendLine, showDeficitLine, showDeficitTarget, currentTheme, weightDomain, waistDomain, deficitDomain]);
 
   useEffect(() => {
     function handleOrientation() {
@@ -2943,10 +2955,15 @@ function NutritionPointsTracker() {
     return calcFoodPointsWithMode(f, matrix, profile.sattmacherMode, f.category, !!f.sattmacherExempt);
   }
   function selectFood(food) {
-    const defaultAmountG = food.isRecipe && food.recipeServingG ? food.recipeServingG : 100;
-    const factor = defaultAmountG / 100;
+    const def = defaultAmountFor(food);
+    selectFoodWithAmount(food, def.value, def.unit);
+  }
+  // Wählt ein Lebensmittel mit einer bestimmten Menge aus (Standardmenge oder Favoriten-Menge).
+  function selectFoodWithAmount(food, value, unit) {
+    const grams = resolveAmountToGrams(food, value, unit);
+    const factor = grams / 100;
     setForm((prev) => ({
-      ...prev, name: food.name, selectedFoodId: food.id, amountG: defaultAmountG, amountUnitValue: defaultAmountG, amountUnit: food.category === "Getränk" ? "ml" : "g", carbs: "",
+      ...prev, name: food.name, selectedFoodId: food.id, amountG: round1(grams), amountUnitValue: value, amountUnit: unit, carbs: "",
       calories: Math.round(food.calories * factor), fat: round1(food.fat * factor), satFat: satFatFormValue(food, factor), protein: round1(food.protein * factor), fiber: round1(food.fiber * factor),
     }));
     setNutrientBasis("kalorien");
@@ -2985,8 +3002,9 @@ function NutritionPointsTracker() {
   // geöffnet wurde (Verlauf → "+ Eintrag für diesen Tag"), an genau diesen Tag. Vorher landeten
   // Schnellgetränke und direkt gebuchte neue Getränke dort immer bei heute.
   function appendEntry(entryData) {
+    const id = newId();
     if (showForm && formTargetDay && formTargetDay !== activeDayKey) {
-      const entryWithId = { ...entryData, id: newId() };
+      const entryWithId = { ...entryData, id };
       const targetDay = formTargetDay;
       setExpandedDayEntries((prev) => {
         const updated = [...prev, entryWithId];
@@ -2994,10 +3012,23 @@ function NutritionPointsTracker() {
         return updated;
       });
       buzz(10);
-      return;
+      return { id, day: targetDay };
     }
-    setEntries((prev) => [...prev, { id: newId(), ...entryData }]);
+    setEntries((prev) => [...prev, { id, ...entryData }]);
     flashPoints(entryData.points);
+    return { id, day: null };
+  }
+  function undoAppendedEntry(ref) {
+    if (!ref) return;
+    if (ref.day) {
+      setExpandedDayEntries((prev) => {
+        const updated = prev.filter((e) => e.id !== ref.id);
+        persistDayEntries(ref.day, updated);
+        return updated;
+      });
+    } else {
+      setEntries((prev) => prev.filter((e) => e.id !== ref.id));
+    }
   }
   function quickAddDirectDrink(foodName, amountG) {
     const food = resolveDrinkFood(foodName);
@@ -3599,8 +3630,14 @@ function NutritionPointsTracker() {
     setUndoToast({ message, restore: restoreFn });
     undoTimerRef.current = setTimeout(() => setUndoToast(null), 6000);
   }
+  // Kurzer Hinweis ohne Rückgängig-Knopf (z. B. "Als Favorit gespeichert").
+  function showInfoToast(message) {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    setUndoToast({ message, restore: null });
+    undoTimerRef.current = setTimeout(() => setUndoToast(null), 2800);
+  }
   function undoLastDelete() {
-    if (undoToast) undoToast.restore();
+    if (undoToast && undoToast.restore) undoToast.restore();
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     setUndoToast(null);
   }
@@ -3745,13 +3782,13 @@ function NutritionPointsTracker() {
     if (idx === -1) return;
     const item = customFoods[idx];
     // Ein gelöschtes Lebensmittel darf nicht als "Leiche" in den Favoriten zurückbleiben.
-    const wasFavorite = favoriteFoodIds.includes(id);
+    const favsOfFood = favorites.filter((f) => f.foodId === id);
     askDelete(`„${item.name}“ aus deinen Lebensmitteln löschen?`, () => {
       setCustomFoods((prev) => prev.filter((f) => f.id !== id));
-      if (wasFavorite) setFavoriteFoodIds((prev) => prev.filter((fid) => fid !== id));
+      if (favsOfFood.length > 0) setFavorites((prev) => prev.filter((f) => f.foodId !== id));
       showUndoToast("Lebensmittel gelöscht", () => {
         restoreAt(setCustomFoods, item, idx);
-        if (wasFavorite) setFavoriteFoodIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+        if (favsOfFood.length > 0) setFavorites((prev) => [...prev, ...favsOfFood.filter((x) => !prev.some((p) => p.id === x.id))]);
       });
     });
   }
@@ -4383,8 +4420,95 @@ function NutritionPointsTracker() {
   }
 
   // ---------- Favoriten ----------
+  // Herz in Such- und Lebensmittellisten: legt einen Favoriten mit Standardmenge an bzw. entfernt
+  // alle Favoriten dieses Lebensmittels (mit "Rückgängig", falls es mehrere Mengen waren).
   function toggleFavorite(foodId) {
-    setFavoriteFoodIds((prev) => (prev.includes(foodId) ? prev.filter((id) => id !== foodId) : [...prev, foodId]));
+    const existing = favorites.filter((f) => f.foodId === foodId);
+    if (existing.length === 0) {
+      setFavorites((prev) => [...prev, { id: newId(), foodId, amountValue: null, unit: null }]);
+      return;
+    }
+    const before = favorites;
+    setFavorites((prev) => prev.filter((f) => f.foodId !== foodId));
+    showUndoToast(existing.length > 1 ? `${existing.length} Favoriten entfernt` : "Favorit entfernt", () => setFavorites(before));
+  }
+  function removeFavorite(favId) {
+    const before = favorites;
+    setFavorites((prev) => prev.filter((f) => f.id !== favId));
+    showUndoToast("Favorit entfernt", () => setFavorites(before));
+  }
+  // Favorit, der genau der im Eintragsfenster eingestellten Menge entspricht (für das Herz dort).
+  function favoriteForCurrentAmount() {
+    if (!form.selectedFoodId) return null;
+    const food = combinedFoods.find((f) => f.id === form.selectedFoodId);
+    if (!food) return null;
+    const value = Number(form.amountUnitValue) || 0;
+    return favorites.find((fav) => {
+      if (fav.foodId !== food.id) return false;
+      const amt = favoriteAmount(fav, food);
+      return amt.unit === form.amountUnit && Math.abs(amt.value - value) < 0.01;
+    }) || null;
+  }
+  // Herz im Eintragsfenster: merkt sich das Lebensmittel MIT der gerade eingestellten Menge.
+  function toggleCurrentAmountFavorite() {
+    const food = combinedFoods.find((f) => f.id === form.selectedFoodId);
+    const value = Number(form.amountUnitValue) || 0;
+    if (!food || value <= 0) return;
+    const match = favoriteForCurrentAmount();
+    if (match) { removeFavorite(match.id); return; }
+    const def = defaultAmountFor(food);
+    const isDefault = def.unit === form.amountUnit && Math.abs(def.value - value) < 0.01;
+    setFavorites((prev) => [...prev, { id: newId(), foodId: food.id, amountValue: isDefault ? null : value, unit: isDefault ? null : form.amountUnit }]);
+    showInfoToast(`Als Favorit gespeichert: ${amountLabel(value, form.amountUnit, Number(form.amountG) || 0)} ${food.name}`);
+  }
+  // Punkte für eine bestimmte Menge eines Lebensmittels (Rezepte zutatengenau).
+  function pointsForAmount(food, grams) {
+    if (food.isRecipe && food.recipeIngredients && food.recipeTotalG) return calcRecipePoints(food, grams, matrix, profile.sattmacherMode);
+    const factor = grams / 100;
+    return calcFoodPointsWithMode(
+      { calories: (Number(food.calories) || 0) * factor, fat: (Number(food.fat) || 0) * factor, protein: (Number(food.protein) || 0) * factor, fiber: (Number(food.fiber) || 0) * factor },
+      matrix, profile.sattmacherMode, food.category, !!food.sattmacherExempt
+    );
+  }
+  // Baut einen fertigen Eintrag aus Lebensmittel + Menge — wie das Eintragsformular, inklusive
+  // Zutaten-Snapshot bei Rezepten (für eine spätere Neuberechnung im Sattmacher-Modus).
+  function buildEntryFromFood(food, grams, meal) {
+    const factor = grams / 100;
+    let recipeSnapshot = null;
+    if (food.isRecipe && food.recipeIngredients && food.recipeTotalG) {
+      const fraction = grams / food.recipeTotalG;
+      recipeSnapshot = { recipeTotalG: grams, recipeIngredients: food.recipeIngredients.map((ing) => ({ ...ing, amountG: (ing.amountG || 0) * fraction })) };
+    }
+    const isDrink = food.category === "Getränk";
+    return {
+      name: food.name,
+      calories: Math.round((Number(food.calories) || 0) * factor),
+      carbs: null,
+      fat: round1((Number(food.fat) || 0) * factor),
+      protein: round1((Number(food.protein) || 0) * factor),
+      fiber: round1((Number(food.fiber) || 0) * factor),
+      ...satFatFields(food, factor),
+      calcBasis: "kalorien",
+      points: pointsForAmount(food, grams),
+      category: recipeSnapshot ? undefined : food.category,
+      sattmacherExempt: recipeSnapshot ? undefined : !!food.sattmacherExempt,
+      countsToFluid: recipeSnapshot ? undefined : !!food.countsToFluid,
+      recipeSnapshot,
+      amountG: round1(grams),
+      meal: isDrink ? "getraenke" : meal,
+      createdAt: new Date().toISOString(),
+    };
+  }
+  // Plus in der Favoritenliste: sofort mit der gespeicherten Menge eintragen (mit "Rückgängig").
+  function quickLogFavorite(fav) {
+    const food = combinedFoods.find((f) => f.id === fav.foodId);
+    if (!food) return;
+    const amt = favoriteAmount(fav, food);
+    const grams = resolveAmountToGrams(food, amt.value, amt.unit);
+    if (!(grams > 0)) return;
+    const ref = appendEntry(buildEntryFromFood(food, grams, formMeal));
+    rememberRecentFood(food.id);
+    showUndoToast(`Eingetragen: ${amountLabel(amt.value, amt.unit, grams)} ${food.name}`, () => undoAppendedEntry(ref));
   }
 
   function deleteWaistEntry(id) {
@@ -4442,11 +4566,16 @@ function NutritionPointsTracker() {
     return matches.length > 0 ? matches[matches.length - 1] : null;
   }
   function shiftWeightView(delta) {
-    if (weightViewMode === "monat") {
+    if (weightRange === "kalender") {
       setWeightViewMonth((m) => { const d = new Date(m); d.setMonth(d.getMonth() + delta); return d; });
     } else {
-      setWeightViewYear((y) => y + delta);
+      setWeightRangeOffset((o) => Math.max(0, o - delta));
     }
+  }
+  function selectWeightRange(id) {
+    setWeightRange(id);
+    setWeightRangeOffset(0);
+    if (id === "kalender") { const d = new Date(activeDayKey + "T12:00:00"); d.setDate(1); setWeightViewMonth(d); }
   }
 
   function exportBackup() {
@@ -4530,9 +4659,10 @@ function NutritionPointsTracker() {
 
   const now = new Date();
   const isCurrentWeightPeriod =
-    weightViewMode === "monat"
+    weightRange === "kalender"
       ? weightViewMonth.getFullYear() === now.getFullYear() && weightViewMonth.getMonth() === now.getMonth()
-      : weightViewYear === now.getFullYear();
+      : weightRangeOffset === 0;
+  const weightRangeLabel = weightRangeTitle(weightRangeBounds(weightRange, weightRangeOffset, weightViewMonth, activeDayKey, false));
 
   const currentFont = FONTS.find((f) => f.id === fontId) || FONTS[0];
   const rootStyle = {
@@ -4734,6 +4864,12 @@ function NutritionPointsTracker() {
         .npt-dropdown-item { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 12px; background: transparent; border: none; border-bottom: 1px solid var(--line); color: var(--chalk); font-size: 13px; cursor: pointer; text-align: left; }
         .npt-fav-btn { background: none; border: none; padding: 2px; cursor: pointer; color: var(--chalk-dim); display: flex; align-items: center; }
         .npt-fav-btn.active { color: var(--coral); }
+        .npt-range-row { display: flex; gap: 6px; margin-bottom: 12px; }
+        .npt-range-chip { flex: 1; min-width: 0; padding: 7px 0; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--chalk-dim); font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; }
+        .npt-range-chip.calendar { flex: 1.6; }
+        .npt-range-chip.active { background: var(--teal); border-color: var(--teal); color: var(--bg); }
+        .npt-fav-toggle { display: inline-flex; align-items: center; gap: 7px; margin: -2px 0 14px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--chalk-dim); font-size: 12.5px; font-family: inherit; cursor: pointer; }
+        .npt-fav-toggle.active { color: var(--coral); border-color: var(--coral); }
         .npt-dropdown-item:last-child { border-bottom: none; }
         .npt-dropdown-item:hover { background: var(--surface); }
         .npt-dropdown-kcal { font-family: ${currentFont.display}; font-size: 11px; color: var(--chalk-dim); flex-shrink: 0; }
@@ -5576,14 +5712,16 @@ function NutritionPointsTracker() {
               </button>
             </div>
 
-            <div className="npt-chip-row split">
-              <button className={`npt-chip ${weightViewMode === "monat" ? "active" : ""}`} onClick={() => setWeightViewMode("monat")}>Monat</button>
-              <button className={`npt-chip ${weightViewMode === "jahr" ? "active" : ""}`} onClick={() => setWeightViewMode("jahr")}>Jahr</button>
+            <div className="npt-range-row" role="group" aria-label="Zeitraum">
+              {WEIGHT_RANGES.map((r) => (
+                <button key={r.id} className={`npt-range-chip${weightRange === r.id ? " active" : ""}${r.id === "kalender" ? " calendar" : ""}`} onClick={() => selectWeightRange(r.id)}
+                  aria-label={r.id === "kalender" ? "Kalendermonat" : `Letzte ${r.months} ${r.months === 1 ? "Monat" : "Monate"}`}>{r.label}</button>
+              ))}
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <button className="npt-week-nav" onClick={() => shiftWeightView(-1)} aria-label="Zurück">‹</button>
               <div className="npt-font-display" style={{ fontWeight: 700, fontSize: 14 }}>
-                {weightViewMode === "monat" ? weightViewMonth.toLocaleDateString("de-DE", { month: "long", year: "numeric" }) : weightViewYear}
+                {weightRangeLabel}
               </div>
               <button className="npt-week-nav" onClick={() => shiftWeightView(1)} disabled={isCurrentWeightPeriod} aria-label="Weiter">›</button>
             </div>
@@ -5599,23 +5737,23 @@ function NutritionPointsTracker() {
                 <div className="npt-empty">Lädt …</div>
               ) : (
                 <>
-                  <div style={{ overflowX: "auto", marginBottom: weightViewMode === "jahr" ? 4 : 16 }}>
+                  <div style={{ overflowX: "auto", marginBottom: !weightDaily ? 4 : 16 }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid var(--line)" }}>
-                        <th style={{ textAlign: "left", padding: "6px 4px", color: "var(--chalk-dim)" }}>{weightViewMode === "monat" ? "Datum" : "Monat"}</th>
+                        <th style={{ textAlign: "left", padding: "6px 4px", color: "var(--chalk-dim)" }}>{weightDaily ? "Datum" : "Woche ab"}</th>
                         <th style={{ textAlign: "right", padding: "6px 4px", color: COLOR_WEIGHT }}>Gewicht</th>
                         {waistEnabled && <th style={{ textAlign: "right", padding: "6px 4px", color: COLOR_WAIST }}>Bauch</th>}
                         <th style={{ textAlign: "right", padding: "6px 4px", color: COLOR_DEFICIT }}>Defizit</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {weightChartData.map((d, i) => {
-                        const weightEntry = weightViewMode === "monat" ? findWeightEntryForDay(d.date) : null;
-                        const waistEntry = weightViewMode === "monat" && waistEnabled ? findWaistEntryForDay(d.date) : null;
+                      {weightChartData.filter((d) => d.date <= activeDayKey).map((d, i) => {
+                        const weightEntry = weightDaily ? findWeightEntryForDay(d.date) : null;
+                        const waistEntry = weightDaily && waistEnabled ? findWaistEntryForDay(d.date) : null;
                         return (
                           <tr key={i} style={{ borderBottom: "1px solid var(--line)" }}>
-                            <td style={{ padding: "6px 4px", color: "var(--chalk-dim)" }}>{weightViewMode === "monat" ? formatTableDateLabel(d.date) : d.label}</td>
+                            <td style={{ padding: "6px 4px", color: "var(--chalk-dim)" }}>{weightDaily ? formatTableDateLabel(d.date) : formatTableDateLabel(d.date)}</td>
                             <td style={{ textAlign: "right", padding: "6px 4px" }}>
                               {editingWeightId && weightEntry && editingWeightId === weightEntry.id ? (
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
@@ -5679,9 +5817,9 @@ function NutritionPointsTracker() {
                     </tbody>
                   </table>
                   </div>
-                  {weightViewMode === "jahr" && (
+                  {!weightDaily && (
                     <div style={{ fontSize: 11, color: "var(--chalk-dim)", textAlign: "center", marginBottom: 12 }}>
-                      In der Jahresansicht sind das Monatsmittelwerte – zum Bearbeiten einzelner Tage bitte zur Monatsansicht wechseln.
+                      Ab 6 Monaten sind das Wochenmittelwerte – zum Bearbeiten einzelner Tage bitte einen kürzeren Zeitraum wählen.
                     </div>
                   )}
                 </>
@@ -6188,20 +6326,32 @@ function NutritionPointsTracker() {
 
             {entryMethod === "favorites" && (
               <>
-                {favoriteFoodIds.length === 0 ? (
-                  <div className="npt-empty">Noch keine Favoriten markiert. Tippe beim Suchen oder bei "Eigene Lebensmittel" auf das Herz-Symbol, um ein Lebensmittel hier für die Schnellauswahl zu speichern.</div>
+                {favorites.length === 0 ? (
+                  <div className="npt-empty">Noch keine Favoriten. Tippe beim Suchen auf das Herz — oder wähle ein Lebensmittel aus und tippe unter der Menge auf „als Favorit merken“, dann wird die Menge gleich mitgespeichert.</div>
                 ) : (
-                  <div className="npt-dropdown" style={{ position: "static", maxHeight: "none", border: "1px solid var(--line)", borderRadius: 8, marginTop: 0 }}>
-                    {combinedFoods.filter((f) => favoriteFoodIds.includes(f.id)).map((f) => (
-                      <div key={f.id} className="npt-dropdown-item" onClick={() => { selectFood(f); setEntryMethod("search"); }}>
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}{f.isRecipe ? <span className="npt-recipe-badge">Rezept</span> : ""}</span>
-                        <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                          <span className="npt-dropdown-kcal">{f.calories} kcal · {fmtNum(pointsPer100(f))} P</span>
-                          <button className="npt-fav-btn active" onClick={(ev) => { ev.stopPropagation(); toggleFavorite(f.id); }} aria-label="Favorit entfernen"><IconHeart size={15} filled={true} /></button>
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <div className="npt-dropdown" style={{ position: "static", maxHeight: "none", border: "1px solid var(--line)", borderRadius: 8, marginTop: 0 }}>
+                      {favorites.map((fav) => {
+                        const f = combinedFoods.find((x) => x.id === fav.foodId);
+                        if (!f) return null;
+                        const amt = favoriteAmount(fav, f);
+                        const grams = resolveAmountToGrams(f, amt.value, amt.unit);
+                        return (
+                          <div key={fav.id} className="npt-dropdown-item" onClick={() => { selectFoodWithAmount(f, amt.value, amt.unit); setEntryMethod("search"); }}>
+                            <span style={{ minWidth: 0, flex: 1 }}>
+                              <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}{f.isRecipe ? <span className="npt-recipe-badge">Rezept</span> : ""}</span>
+                              <span className="npt-dropdown-kcal">{amountLabel(amt.value, amt.unit, grams)} · {fmtNum(pointsForAmount(f, grams))} P</span>
+                            </span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                              <button className="npt-fav-btn active" onClick={(ev) => { ev.stopPropagation(); removeFavorite(fav.id); }} aria-label="Favorit entfernen"><IconHeart size={15} filled={true} /></button>
+                              <button className="npt-del-btn" style={{ width: 30, height: 30 }} onClick={(ev) => { ev.stopPropagation(); quickLogFavorite(fav); }} aria-label={`${f.name} direkt eintragen`}><IconPlus size={16} /></button>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="npt-field-hint" style={{ marginTop: 8 }}>Antippen öffnet den Eintrag mit der gespeicherten Menge zum Anpassen, das Plus trägt sofort ein.</div>
+                  </>
                 )}
               </>
             )}
@@ -6421,6 +6571,16 @@ function NutritionPointsTracker() {
                         </select>
                       </div>
                     </div>
+                    {!editingEntryId && Number(form.amountUnitValue) > 0 && (() => {
+                      const favHere = favoriteForCurrentAmount();
+                      const label = amountLabel(Number(form.amountUnitValue) || 0, form.amountUnit, Number(form.amountG) || 0);
+                      return (
+                        <button className={`npt-fav-toggle${favHere ? " active" : ""}`} onClick={toggleCurrentAmountFavorite}>
+                          <IconHeart size={15} filled={!!favHere} />
+                          <span>{favHere ? `Favorit mit ${label}` : `Mit ${label} als Favorit merken`}</span>
+                        </button>
+                      );
+                    })()}
                     <div className="npt-form-row">
                       <label>Bezeichnung *</label>
                       <input type="text" className={!form.name.trim() ? "npt-input-error" : ""} value={form.name} onChange={(ev) => setForm({ ...form, name: ev.target.value })} />
@@ -6635,7 +6795,7 @@ function NutritionPointsTracker() {
       {undoToast && (
         <div className="npt-toast">
           <span>{undoToast.message}</span>
-          <button onClick={undoLastDelete}>Rückgängig</button>
+          {undoToast.restore && <button onClick={undoLastDelete}>Rückgängig</button>}
         </div>
       )}
 
